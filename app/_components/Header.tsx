@@ -30,16 +30,16 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="#" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
+            <Link href="/" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
               Beranda
             </Link>
-            <Link href="#" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
+            <Link href="/destinations" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
               Destinasi
             </Link>
-            <Link href="#" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
+            {/* <Link href="/" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
               Rencana Perjalanan
-            </Link>
-            <Link href="#" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
+            </Link> */}
+            <Link href="/articles" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
               Artikel
             </Link>
             <Button variant="outline" className="border-sky-500 text-sky-600 hover:bg-sky-50">
