@@ -33,13 +33,13 @@ const Header = () => {
             <Link href="/" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
               Beranda
             </Link>
-            <Link href="/destinations" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
+            <Link href="/destinasi" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
               Destinasi
             </Link>
             {/* <Link href="/" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
               Rencana Perjalanan
             </Link> */}
-            <Link href="/articles" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
+            <Link href="/artikel" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
               Artikel
             </Link>
             <Button variant="outline" className="border-sky-500 text-sky-600 hover:bg-sky-50">

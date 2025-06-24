@@ -1,0 +1,475 @@
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { Slider } from "@/components/ui/slider"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Search,
+  Star,
+  MapPin,
+  Filter,
+  Grid3X3,
+  List,
+  X,
+  ChevronRight,
+  Wifi,
+  Car,
+  Utensils,
+  Waves,
+  TreePine,
+  Building,
+  Users,
+  Heart,
+  Calendar,
+  Menu,
+} from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+
+// Sample destinations data
+const destinations = [
+  {
+    id: 1,
+    name: "Pantai Mahoro",
+    category: "Pantai",
+    rating: 4.8,
+    reviews: 124,
+    location: "Kecamatan Tahuna",
+    price: 15000,
+    image: "/placeholder.svg?height=300&width=400",
+    facilities: ["parking", "toilet", "food"],
+    description: "Pantai dengan pasir putih dan air laut yang jernih",
+  },
+  {
+    id: 2,
+    name: "Pulau Siau",
+    category: "Alam",
+    rating: 4.9,
+    reviews: 89,
+    location: "Kecamatan Siau",
+    price: 25000,
+    image: "/placeholder.svg?height=300&width=400",
+    facilities: ["boat", "guide", "food"],
+    description: "Pulau vulkanik dengan pemandangan menakjubkan",
+  },
+  {
+    id: 3,
+    name: "Air Terjun Sahendaruman",
+    category: "Alam",
+    rating: 4.7,
+    reviews: 67,
+    location: "Kecamatan Tabukan Utara",
+    price: 10000,
+    image: "/placeholder.svg?height=300&width=400",
+    facilities: ["parking", "toilet", "guide"],
+    description: "Air terjun eksotis di tengah hutan tropis",
+  },
+  {
+    id: 4,
+    name: "Pasar Tradisional Tahuna",
+    category: "Budaya",
+    rating: 4.5,
+    reviews: 156,
+    location: "Kecamatan Tahuna",
+    price: 0,
+    image: "/placeholder.svg?height=300&width=400",
+    facilities: ["parking", "food", "wifi"],
+    description: "Pasar tradisional dengan kuliner dan kerajinan lokal",
+  },
+  {
+    id: 5,
+    name: "Gunung Api Karangetang",
+    category: "Alam",
+    rating: 4.6,
+    reviews: 43,
+    location: "Kecamatan Siau",
+    price: 50000,
+    image: "/placeholder.svg?height=300&width=400",
+    facilities: ["guide", "camping"],
+    description: "Gunung berapi aktif dengan trek pendakian menantang",
+  },
+  {
+    id: 6,
+    name: "Pantai Petta",
+    category: "Pantai",
+    rating: 4.4,
+    reviews: 78,
+    location: "Kecamatan Kendahe",
+    price: 12000,
+    image: "/placeholder.svg?height=300&width=400",
+    facilities: ["parking", "toilet", "food"],
+    description: "Pantai tenang dengan sunset yang memukau",
+  },
+]
+
+const categories = ["Semua", "Pantai", "Budaya", "Kuliner", "Alam", "Sejarah"]
+const locations = ["Semua Lokasi", "Kecamatan Tahuna", "Kecamatan Siau", "Kecamatan Tabukan Utara", "Kecamatan Kendahe"]
+
+const facilityIcons = {
+  parking: Car,
+  toilet: Building,
+  food: Utensils,
+  wifi: Wifi,
+  guide: Users,
+  boat: Waves,
+  camping: TreePine,
+}
+
+export default function DestinationsPage() {
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("Semua")
+  const [selectedLocation, setSelectedLocation] = useState("Semua Lokasi")
+  const [minRating, setMinRating] = useState([0])
+  const [priceRange, setPriceRange] = useState([0, 100000])
+  const [sortBy, setSortBy] = useState("popular")
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [activeFilters, setActiveFilters] = useState<string[]>([])
+  const [showFilters, setShowFilters] = useState(false)
+
+  const filteredDestinations = destinations.filter((dest) => {
+    const matchesSearch = dest.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = selectedCategory === "Semua" || dest.category === selectedCategory
+    const matchesLocation = selectedLocation === "Semua Lokasi" || dest.location === selectedLocation
+    const matchesRating = dest.rating >= minRating[0]
+    const matchesPrice = dest.price >= priceRange[0] && dest.price <= priceRange[1]
+
+    return matchesSearch && matchesCategory && matchesLocation && matchesRating && matchesPrice
+  })
+
+  const sortedDestinations = [...filteredDestinations].sort((a, b) => {
+    switch (sortBy) {
+      case "rating":
+        return b.rating - a.rating
+      case "price-low":
+        return a.price - b.price
+      case "newest":
+        return b.id - a.id
+      default:
+        return b.reviews - a.reviews
+    }
+  })
+
+  const removeFilter = (filter: string) => {
+    setActiveFilters((prev) => prev.filter((f) => f !== filter))
+    // Reset corresponding filter
+    if (filter.includes("Kategori")) setSelectedCategory("Semua")
+    if (filter.includes("Lokasi")) setSelectedLocation("Semua Lokasi")
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header - Same as homepage */}
+      <header className="bg-white/95 backdrop-blur-sm border-b border-sky-100 sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">S</span>
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-emerald-600 bg-clip-text text-transparent">
+                SANGIHETRIP
+              </span>
+            </div>
+
+            <nav className="hidden md:flex items-center space-x-8">
+              <Link href="/" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
+                Beranda
+              </Link>
+              <Link href="/destinations" className="text-sky-600 font-medium">
+                Destinasi
+              </Link>
+              <Link href="#" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
+                Rencana Perjalanan
+              </Link>
+              <Link href="#" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
+                Artikel
+              </Link>
+              <Button variant="outline" className="border-sky-500 text-sky-600 hover:bg-sky-50">
+                Login
+              </Button>
+            </nav>
+
+            <Button variant="ghost" size="icon" className="md:hidden">
+              <Menu className="h-6 w-6" />
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 py-6">
+        {/* Breadcrumb */}
+        <div className="flex items-center space-x-2 text-sm text-slate-600 mb-6">
+          <Link href="/" className="hover:text-sky-600">
+            Beranda
+          </Link>
+          <ChevronRight className="w-4 h-4" />
+          <span className="text-slate-900 font-medium">Destinasi</span>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Filters Sidebar */}
+          <div className={`lg:w-80 ${showFilters ? "block" : "hidden lg:block"}`}>
+            <Card className="sticky top-24">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-lg">Filter Pencarian</h3>
+                  <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setShowFilters(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Search */}
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-2 block">Cari Destinasi</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                    <Input
+                      placeholder="Nama destinasi..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                {/* Category Filter */}
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-3 block">Kategori</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {categories.map((category) => (
+                      <Button
+                        key={category}
+                        variant={selectedCategory === category ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedCategory(category)}
+                        className={selectedCategory === category ? "bg-sky-500 hover:bg-sky-600" : ""}
+                      >
+                        {category}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Location Filter */}
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-2 block">Lokasi</label>
+                  <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {locations.map((location) => (
+                        <SelectItem key={location} value={location}>
+                          {location}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Rating Filter */}
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-3 block">
+                    Rating Minimum: {minRating[0].toFixed(1)}
+                  </label>
+                  <Slider
+                    value={minRating}
+                    onValueChange={setMinRating}
+                    max={5}
+                    min={0}
+                    step={0.1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-slate-500 mt-1">
+                    <span>0</span>
+                    <span>5</span>
+                  </div>
+                </div>
+
+                {/* Price Filter */}
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-3 block">
+                    Harga Tiket: Rp {priceRange[0].toLocaleString()} - Rp {priceRange[1].toLocaleString()}
+                  </label>
+                  <Slider
+                    value={priceRange}
+                    onValueChange={setPriceRange}
+                    max={100000}
+                    min={0}
+                    step={5000}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-slate-500 mt-1">
+                    <span>Gratis</span>
+                    <span>100k</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1">
+            {/* Search Bar & Controls */}
+            <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+              <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                  <Button variant="outline" size="sm" className="lg:hidden" onClick={() => setShowFilters(true)}>
+                    <Filter className="w-4 h-4 mr-2" />
+                    Filter
+                  </Button>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600">Urutkan:</span>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="popular">Populer</SelectItem>
+                        <SelectItem value="rating">Rating Tertinggi</SelectItem>
+                        <SelectItem value="price-low">Harga Terendah</SelectItem>
+                        <SelectItem value="newest">Terbaru</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-slate-600">{sortedDestinations.length} destinasi ditemukan</span>
+
+                  <div className="flex items-center border rounded-lg">
+                    <Button
+                      variant={viewMode === "grid" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("grid")}
+                      className={viewMode === "grid" ? "bg-sky-500 hover:bg-sky-600" : ""}
+                    >
+                      <Grid3X3 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === "list" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("list")}
+                      className={viewMode === "list" ? "bg-sky-500 hover:bg-sky-600" : ""}
+                    >
+                      <List className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Filters */}
+              {activeFilters.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {activeFilters.map((filter) => (
+                    <Badge key={filter} variant="secondary" className="flex items-center gap-1">
+                      {filter}
+                      <X className="w-3 h-3 cursor-pointer" onClick={() => removeFilter(filter)} />
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Results Grid/List */}
+            <div className={viewMode === "grid" ? "grid md:grid-cols-2 xl:grid-cols-3 gap-6" : "space-y-4"}>
+              {sortedDestinations.map((destination) => (
+                <Card
+                  key={destination.id}
+                  className={`overflow-hidden hover:shadow-lg transition-shadow duration-300 ${
+                    viewMode === "list" ? "flex flex-row" : ""
+                  }`}
+                >
+                  <div className={viewMode === "list" ? "w-64 flex-shrink-0" : ""}>
+                    <div className="relative h-48 overflow-hidden">
+                      <Image
+                        src={destination.image || "/placeholder.svg"}
+                        alt={destination.name}
+                        fill
+                        className="object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                      <Badge className="absolute top-3 left-3 bg-sky-500">{destination.category}</Badge>
+                      <Button variant="ghost" size="icon" className="absolute top-3 right-3 bg-white/80 hover:bg-white">
+                        <Heart className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex-1">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-bold text-lg text-slate-800 mb-1">{destination.name}</h3>
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="flex items-center">
+                              <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                              <span className="text-sm font-medium ml-1">{destination.rating}</span>
+                            </div>
+                            <span className="text-sm text-slate-500">({destination.reviews} review)</span>
+                          </div>
+                          <div className="flex items-center text-slate-600 mb-2">
+                            <MapPin className="w-4 h-4 mr-1" />
+                            <span className="text-sm">{destination.location}</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-emerald-600">
+                            {destination.price === 0 ? "Gratis" : `Rp ${destination.price.toLocaleString()}`}
+                          </div>
+                          <div className="text-sm text-slate-500">per orang</div>
+                        </div>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="pt-0">
+                      <p className="text-slate-600 text-sm mb-3 line-clamp-2">{destination.description}</p>
+
+                      {/* Facilities */}
+                      <div className="flex items-center gap-2 mb-4">
+                        {destination.facilities.slice(0, 4).map((facility) => {
+                          const Icon = facilityIcons[facility as keyof typeof facilityIcons]
+                          return Icon ? (
+                            <div
+                              key={facility}
+                              className="flex items-center justify-center w-8 h-8 bg-slate-100 rounded-full"
+                            >
+                              <Icon className="w-4 h-4 text-slate-600" />
+                            </div>
+                          ) : null
+                        })}
+                        {destination.facilities.length > 4 && (
+                          <span className="text-xs text-slate-500">+{destination.facilities.length - 4} lainnya</span>
+                        )}
+                      </div>
+                    </CardContent>
+
+                    <CardFooter className="pt-0 gap-2 flex-wrap">
+                      <Button className="flex-1 bg-sky-500 hover:bg-sky-600">Lihat Detail</Button>
+                      <Button variant="outline" className="flex-1">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Tambah ke Rencana
+                      </Button>
+                    </CardFooter>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            {/* Load More */}
+            <div className="text-center mt-8">
+              <Button variant="outline" size="lg" className="cursor-pointer">
+                Muat Lebih Banyak
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
