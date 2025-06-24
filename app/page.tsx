@@ -43,7 +43,7 @@ export default function HomePage() {
             <Button
               size="lg"
               variant="outline"
-              className="border-white text-white hover:bg-white hover:text-slate-900 px-8 py-3 text-lg"
+              className="border-white  hover:text-slate-500 text-slate-900 px-8 py-3 text-lg"
             >
               Lihat Destinasi
             </Button>

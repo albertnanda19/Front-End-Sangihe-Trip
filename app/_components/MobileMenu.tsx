@@ -29,8 +29,6 @@ const menuVariants: Variants = {
   },
 };
 
-
-
 const navLinks = [
   { href: "#", label: "Beranda" },
   { href: "#", label: "Destinasi" },
