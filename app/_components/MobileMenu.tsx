@@ -32,7 +32,6 @@ const menuVariants: Variants = {
 const navLinks = [
   { href: "#", label: "Beranda" },
   { href: "#", label: "Destinasi" },
-  { href: "#", label: "Rencana Perjalanan" },
   { href: "#", label: "Artikel" },
 ];
 
@@ -51,7 +50,12 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
             <span className="text-xl font-bold bg-gradient-to-r from-sky-600 to-emerald-600 bg-clip-text text-transparent">
               Menu
             </span>
-            <Button variant="ghost" size="icon" onClick={onClose} className="text-slate-300 hover:text-white hover:bg-slate-800 rounded-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="text-slate-300 hover:text-white hover:bg-slate-800 rounded-full"
+            >
               <X className="h-6 w-6" />
             </Button>
           </div>
@@ -69,7 +73,7 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
           </nav>
           <div className="mt-auto">
             <Button className="w-full bg-white text-slate-800 hover:bg-slate-200 font-semibold">
-              Login
+              Masuk
             </Button>
           </div>
         </motion.div>

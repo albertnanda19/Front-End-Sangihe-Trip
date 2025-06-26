@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Search,
   Home,
@@ -20,29 +20,30 @@ import {
   Facebook,
   Instagram,
   Twitter,
-} from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Header from "./_components/Header";
 
 export default function NotFound() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const router = useRouter()
+  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
-  }
+  };
 
   const handleGoBack = () => {
     if (window.history.length > 1) {
-      router.back()
+      router.back();
     } else {
-      router.push("/")
+      router.push("/");
     }
-  }
+  };
 
   const popularDestinations = [
     {
@@ -77,69 +78,39 @@ export default function NotFound() {
       image: "/placeholder.svg?height=200&width=300",
       href: "/destinations/pantai-petta",
     },
-  ]
+  ];
 
   const recentArticles = [
     {
       title: "10 Pantai Tersembunyi di Kepulauan Sangihe",
-      excerpt: "Jelajahi pantai-pantai eksotis yang belum banyak dikunjungi wisatawan...",
+      excerpt:
+        "Jelajahi pantai-pantai eksotis yang belum banyak dikunjungi wisatawan...",
       date: "15 Desember 2024",
       image: "/placeholder.svg?height=150&width=250",
       href: "/articles/pantai-tersembunyi-sangihe",
     },
     {
       title: "Kuliner Khas Sangihe yang Wajib Dicoba",
-      excerpt: "Dari ikan bakar hingga kelapa muda, nikmati cita rasa autentik Sangihe...",
+      excerpt:
+        "Dari ikan bakar hingga kelapa muda, nikmati cita rasa autentik Sangihe...",
       date: "12 Desember 2024",
       image: "/placeholder.svg?height=150&width=250",
       href: "/articles/kuliner-khas-sangihe",
     },
     {
       title: "Panduan Lengkap Mendaki Gunung Karangetang",
-      excerpt: "Tips aman dan persiapan untuk mendaki gunung api aktif yang menawan...",
+      excerpt:
+        "Tips aman dan persiapan untuk mendaki gunung api aktif yang menawan...",
       date: "10 Desember 2024",
       image: "/placeholder.svg?height=150&width=250",
       href: "/articles/panduan-mendaki-karangetang",
     },
-  ]
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white">
       {/* Header */}
-      <header className="bg-white/95 backdrop-blur-sm border-b border-sky-100 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-emerald-600 bg-clip-text text-transparent">
-                SANGIHETRIP
-              </span>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
-                Beranda
-              </Link>
-              <Link href="/destinations" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
-                Destinasi
-              </Link>
-              <Link href="/create-trip" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
-                Rencana Perjalanan
-              </Link>
-              <Link href="/articles" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
-                Artikel
-              </Link>
-              <Button variant="outline" className="border-sky-500 text-sky-600 hover:bg-sky-50">
-                Login
-              </Button>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Breadcrumb */}
       <div className="container mx-auto px-4 py-4">
@@ -176,7 +147,9 @@ export default function NotFound() {
               </div>
               {/* 404 Text */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <span className="text-8xl font-bold text-sky-300 opacity-50">404</span>
+                <span className="text-8xl font-bold text-sky-300 opacity-50">
+                  404
+                </span>
               </div>
               {/* Confused Mascot */}
               <div className="absolute bottom-8 right-8">
@@ -189,9 +162,15 @@ export default function NotFound() {
 
           {/* Error Messages */}
           <div className="mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">Oops! Halaman Tidak Ditemukan</h1>
-            <p className="text-xl text-slate-600 mb-2">Sepertinya Anda tersesat di lautan digital 🌊</p>
-            <p className="text-lg text-slate-500">Halaman yang Anda cari mungkin telah dipindahkan atau tidak ada</p>
+            <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
+              Oops! Halaman Tidak Ditemukan
+            </h1>
+            <p className="text-xl text-slate-600 mb-2">
+              Sepertinya Anda tersesat di lautan digital 🌊
+            </p>
+            <p className="text-lg text-slate-500">
+              Halaman yang Anda cari mungkin telah dipindahkan atau tidak ada
+            </p>
           </div>
 
           {/* Navigation Actions */}
@@ -205,11 +184,7 @@ export default function NotFound() {
               Kembali
             </Button>
           </div>
-
-
         </div>
-
-      
       </div>
 
       {/* Footer */}
@@ -225,7 +200,8 @@ export default function NotFound() {
                 <span className="text-xl font-bold">SANGIHETRIP</span>
               </div>
               <p className="text-slate-300 mb-4">
-                Platform terpercaya untuk merencanakan perjalanan wisata ke Kepulauan Sangihe.
+                Platform terpercaya untuk merencanakan perjalanan wisata ke
+                Kepulauan Sangihe.
               </p>
               <div className="flex space-x-4">
                 <Facebook className="w-5 h-5 text-slate-400 hover:text-white cursor-pointer" />
@@ -244,17 +220,26 @@ export default function NotFound() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/destinations" className="text-slate-300 hover:text-white">
+                  <Link
+                    href="/destinations"
+                    className="text-slate-300 hover:text-white"
+                  >
                     Destinasi
                   </Link>
                 </li>
                 <li>
-                  <Link href="/create-trip" className="text-slate-300 hover:text-white">
+                  <Link
+                    href="/create-trip"
+                    className="text-slate-300 hover:text-white"
+                  >
                     Paket Wisata
                   </Link>
                 </li>
                 <li>
-                  <Link href="/articles" className="text-slate-300 hover:text-white">
+                  <Link
+                    href="/articles"
+                    className="text-slate-300 hover:text-white"
+                  >
                     Blog
                   </Link>
                 </li>
@@ -302,17 +287,21 @@ export default function NotFound() {
                 </div>
                 <div className="flex items-start">
                   <MapPin className="w-4 h-4 mr-3 text-slate-400 mt-1" />
-                  <span className="text-slate-300">Tahuna, Kepulauan Sangihe, Sulawesi Utara</span>
+                  <span className="text-slate-300">
+                    Tahuna, Kepulauan Sangihe, Sulawesi Utara
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="border-t border-slate-700 mt-8 pt-8 text-center">
-            <p className="text-slate-400">© 2024 SANGIHETRIP. All rights reserved.</p>
+            <p className="text-slate-400">
+              © 2024 SANGIHETRIP. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }
