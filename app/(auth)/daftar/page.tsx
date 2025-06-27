@@ -24,7 +24,7 @@ export default function RegisterPage() {
       {/* Left Side - Image (Hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 relative">
         <Image
-          src="/placeholder.svg?height=800&width=600"
+          src="/images/pantai-sangihe.jpg"
           alt="Pantai Sangihe"
           fill
           className="object-cover"

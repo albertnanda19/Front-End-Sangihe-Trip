@@ -1,12 +1,23 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { Slider } from "@/components/ui/slider"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Search,
   Star,
@@ -26,9 +37,10 @@ import {
   Heart,
   Calendar,
   Menu,
-} from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import Header from "../../_components/Header";
 
 // Sample destinations data
 const destinations = [
@@ -104,10 +116,16 @@ const destinations = [
     facilities: ["parking", "toilet", "food"],
     description: "Pantai tenang dengan sunset yang memukau",
   },
-]
+];
 
-const categories = ["Semua", "Pantai", "Budaya", "Kuliner", "Alam", "Sejarah"]
-const locations = ["Semua Lokasi", "Kecamatan Tahuna", "Kecamatan Siau", "Kecamatan Tabukan Utara", "Kecamatan Kendahe"]
+const categories = ["Semua", "Pantai", "Budaya", "Kuliner", "Alam", "Sejarah"];
+const locations = [
+  "Semua Lokasi",
+  "Kecamatan Tahuna",
+  "Kecamatan Siau",
+  "Kecamatan Tabukan Utara",
+  "Kecamatan Kendahe",
+];
 
 const facilityIcons = {
   parking: Car,
@@ -117,88 +135,64 @@ const facilityIcons = {
   guide: Users,
   boat: Waves,
   camping: TreePine,
-}
+};
 
 export default function DestinationsPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("Semua")
-  const [selectedLocation, setSelectedLocation] = useState("Semua Lokasi")
-  const [minRating, setMinRating] = useState([0])
-  const [priceRange, setPriceRange] = useState([0, 100000])
-  const [sortBy, setSortBy] = useState("popular")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [activeFilters, setActiveFilters] = useState<string[]>([])
-  const [showFilters, setShowFilters] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Semua");
+  const [selectedLocation, setSelectedLocation] = useState("Semua Lokasi");
+  const [minRating, setMinRating] = useState([0]);
+  const [priceRange, setPriceRange] = useState([0, 100000]);
+  const [sortBy, setSortBy] = useState("popular");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   const filteredDestinations = destinations.filter((dest) => {
-    const matchesSearch = dest.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === "Semua" || dest.category === selectedCategory
-    const matchesLocation = selectedLocation === "Semua Lokasi" || dest.location === selectedLocation
-    const matchesRating = dest.rating >= minRating[0]
-    const matchesPrice = dest.price >= priceRange[0] && dest.price <= priceRange[1]
+    const matchesSearch = dest.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "Semua" || dest.category === selectedCategory;
+    const matchesLocation =
+      selectedLocation === "Semua Lokasi" || dest.location === selectedLocation;
+    const matchesRating = dest.rating >= minRating[0];
+    const matchesPrice =
+      dest.price >= priceRange[0] && dest.price <= priceRange[1];
 
-    return matchesSearch && matchesCategory && matchesLocation && matchesRating && matchesPrice
-  })
+    return (
+      matchesSearch &&
+      matchesCategory &&
+      matchesLocation &&
+      matchesRating &&
+      matchesPrice
+    );
+  });
 
   const sortedDestinations = [...filteredDestinations].sort((a, b) => {
     switch (sortBy) {
       case "rating":
-        return b.rating - a.rating
+        return b.rating - a.rating;
       case "price-low":
-        return a.price - b.price
+        return a.price - b.price;
       case "newest":
-        return b.id - a.id
+        return b.id - a.id;
       default:
-        return b.reviews - a.reviews
+        return b.reviews - a.reviews;
     }
-  })
+  });
 
   const removeFilter = (filter: string) => {
-    setActiveFilters((prev) => prev.filter((f) => f !== filter))
+    setActiveFilters((prev) => prev.filter((f) => f !== filter));
     // Reset corresponding filter
-    if (filter.includes("Kategori")) setSelectedCategory("Semua")
-    if (filter.includes("Lokasi")) setSelectedLocation("Semua Lokasi")
-  }
+    if (filter.includes("Kategori")) setSelectedCategory("Semua");
+    if (filter.includes("Lokasi")) setSelectedLocation("Semua Lokasi");
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header - Same as homepage */}
-      <header className="bg-white/95 backdrop-blur-sm border-b border-sky-100 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-emerald-600 bg-clip-text text-transparent">
-                SANGIHETRIP
-              </span>
-            </div>
-
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
-                Beranda
-              </Link>
-              <Link href="/destinations" className="text-sky-600 font-medium">
-                Destinasi
-              </Link>
-              <Link href="#" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
-                Rencana Perjalanan
-              </Link>
-              <Link href="#" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
-                Artikel
-              </Link>
-              <Button variant="outline" className="border-sky-500 text-sky-600 hover:bg-sky-50">
-                Login
-              </Button>
-            </nav>
-
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu className="h-6 w-6" />
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <div className="container mx-auto px-4 py-6">
         {/* Breadcrumb */}
@@ -212,12 +206,19 @@ export default function DestinationsPage() {
 
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Filters Sidebar */}
-          <div className={`lg:w-80 ${showFilters ? "block" : "hidden lg:block"}`}>
+          <div
+            className={`lg:w-80 ${showFilters ? "block" : "hidden lg:block"}`}
+          >
             <Card className="sticky top-24">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-lg">Filter Pencarian</h3>
-                  <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setShowFilters(false)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="lg:hidden"
+                    onClick={() => setShowFilters(false)}
+                  >
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
@@ -225,7 +226,9 @@ export default function DestinationsPage() {
               <CardContent className="space-y-6">
                 {/* Search */}
                 <div>
-                  <label className="text-sm font-medium text-slate-700 mb-2 block">Cari Destinasi</label>
+                  <label className="text-sm font-medium text-slate-700 mb-2 block">
+                    Cari Destinasi
+                  </label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                     <Input
@@ -239,15 +242,23 @@ export default function DestinationsPage() {
 
                 {/* Category Filter */}
                 <div>
-                  <label className="text-sm font-medium text-slate-700 mb-3 block">Kategori</label>
+                  <label className="text-sm font-medium text-slate-700 mb-3 block">
+                    Kategori
+                  </label>
                   <div className="grid grid-cols-2 gap-2">
                     {categories.map((category) => (
                       <Button
                         key={category}
-                        variant={selectedCategory === category ? "default" : "outline"}
+                        variant={
+                          selectedCategory === category ? "default" : "outline"
+                        }
                         size="sm"
                         onClick={() => setSelectedCategory(category)}
-                        className={selectedCategory === category ? "bg-sky-500 hover:bg-sky-600" : ""}
+                        className={
+                          selectedCategory === category
+                            ? "bg-sky-500 hover:bg-sky-600"
+                            : ""
+                        }
                       >
                         {category}
                       </Button>
@@ -257,8 +268,13 @@ export default function DestinationsPage() {
 
                 {/* Location Filter */}
                 <div>
-                  <label className="text-sm font-medium text-slate-700 mb-2 block">Lokasi</label>
-                  <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                  <label className="text-sm font-medium text-slate-700 mb-2 block">
+                    Lokasi
+                  </label>
+                  <Select
+                    value={selectedLocation}
+                    onValueChange={setSelectedLocation}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -294,7 +310,8 @@ export default function DestinationsPage() {
                 {/* Price Filter */}
                 <div>
                   <label className="text-sm font-medium text-slate-700 mb-3 block">
-                    Harga Tiket: Rp {priceRange[0].toLocaleString()} - Rp {priceRange[1].toLocaleString()}
+                    Harga Tiket: Rp {priceRange[0].toLocaleString()} - Rp{" "}
+                    {priceRange[1].toLocaleString()}
                   </label>
                   <Slider
                     value={priceRange}
@@ -319,7 +336,12 @@ export default function DestinationsPage() {
             <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
               <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div className="flex items-center gap-4 w-full md:w-auto">
-                  <Button variant="outline" size="sm" className="lg:hidden" onClick={() => setShowFilters(true)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="lg:hidden"
+                    onClick={() => setShowFilters(true)}
+                  >
                     <Filter className="w-4 h-4 mr-2" />
                     Filter
                   </Button>
@@ -333,7 +355,9 @@ export default function DestinationsPage() {
                       <SelectContent>
                         <SelectItem value="popular">Populer</SelectItem>
                         <SelectItem value="rating">Rating Tertinggi</SelectItem>
-                        <SelectItem value="price-low">Harga Terendah</SelectItem>
+                        <SelectItem value="price-low">
+                          Harga Terendah
+                        </SelectItem>
                         <SelectItem value="newest">Terbaru</SelectItem>
                       </SelectContent>
                     </Select>
@@ -341,14 +365,18 @@ export default function DestinationsPage() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-slate-600">{sortedDestinations.length} destinasi ditemukan</span>
+                  <span className="text-sm text-slate-600">
+                    {sortedDestinations.length} destinasi ditemukan
+                  </span>
 
                   <div className="flex items-center border rounded-lg">
                     <Button
                       variant={viewMode === "grid" ? "default" : "ghost"}
                       size="sm"
                       onClick={() => setViewMode("grid")}
-                      className={viewMode === "grid" ? "bg-sky-500 hover:bg-sky-600" : ""}
+                      className={
+                        viewMode === "grid" ? "bg-sky-500 hover:bg-sky-600" : ""
+                      }
                     >
                       <Grid3X3 className="w-4 h-4" />
                     </Button>
@@ -356,7 +384,9 @@ export default function DestinationsPage() {
                       variant={viewMode === "list" ? "default" : "ghost"}
                       size="sm"
                       onClick={() => setViewMode("list")}
-                      className={viewMode === "list" ? "bg-sky-500 hover:bg-sky-600" : ""}
+                      className={
+                        viewMode === "list" ? "bg-sky-500 hover:bg-sky-600" : ""
+                      }
                     >
                       <List className="w-4 h-4" />
                     </Button>
@@ -368,9 +398,16 @@ export default function DestinationsPage() {
               {activeFilters.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-4">
                   {activeFilters.map((filter) => (
-                    <Badge key={filter} variant="secondary" className="flex items-center gap-1">
+                    <Badge
+                      key={filter}
+                      variant="secondary"
+                      className="flex items-center gap-1"
+                    >
                       {filter}
-                      <X className="w-3 h-3 cursor-pointer" onClick={() => removeFilter(filter)} />
+                      <X
+                        className="w-3 h-3 cursor-pointer"
+                        onClick={() => removeFilter(filter)}
+                      />
                     </Badge>
                   ))}
                 </div>
@@ -378,7 +415,13 @@ export default function DestinationsPage() {
             </div>
 
             {/* Results Grid/List */}
-            <div className={viewMode === "grid" ? "grid md:grid-cols-2 xl:grid-cols-3 gap-6" : "space-y-4"}>
+            <div
+              className={
+                viewMode === "grid"
+                  ? "grid md:grid-cols-2 xl:grid-cols-3 gap-6"
+                  : "space-y-4"
+              }
+            >
               {sortedDestinations.map((destination) => (
                 <Card
                   key={destination.id}
@@ -386,7 +429,9 @@ export default function DestinationsPage() {
                     viewMode === "list" ? "flex flex-row" : ""
                   }`}
                 >
-                  <div className={viewMode === "list" ? "w-64 flex-shrink-0" : ""}>
+                  <div
+                    className={viewMode === "list" ? "w-64 flex-shrink-0" : ""}
+                  >
                     <div className="relative h-48 overflow-hidden">
                       <Image
                         src={destination.image || "/placeholder.svg"}
@@ -394,8 +439,14 @@ export default function DestinationsPage() {
                         fill
                         className="object-cover hover:scale-105 transition-transform duration-300"
                       />
-                      <Badge className="absolute top-3 left-3 bg-sky-500">{destination.category}</Badge>
-                      <Button variant="ghost" size="icon" className="absolute top-3 right-3 bg-white/80 hover:bg-white">
+                      <Badge className="absolute top-3 left-3 bg-sky-500">
+                        {destination.category}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-3 right-3 bg-white/80 hover:bg-white"
+                      >
                         <Heart className="w-4 h-4" />
                       </Button>
                     </div>
@@ -405,35 +456,52 @@ export default function DestinationsPage() {
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div>
-                          <h3 className="font-bold text-lg text-slate-800 mb-1">{destination.name}</h3>
+                          <h3 className="font-bold text-lg text-slate-800 mb-1">
+                            {destination.name}
+                          </h3>
                           <div className="flex items-center gap-2 mb-2">
                             <div className="flex items-center">
                               <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                              <span className="text-sm font-medium ml-1">{destination.rating}</span>
+                              <span className="text-sm font-medium ml-1">
+                                {destination.rating}
+                              </span>
                             </div>
-                            <span className="text-sm text-slate-500">({destination.reviews} review)</span>
+                            <span className="text-sm text-slate-500">
+                              ({destination.reviews} review)
+                            </span>
                           </div>
                           <div className="flex items-center text-slate-600 mb-2">
                             <MapPin className="w-4 h-4 mr-1" />
-                            <span className="text-sm">{destination.location}</span>
+                            <span className="text-sm">
+                              {destination.location}
+                            </span>
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="text-lg font-bold text-emerald-600">
-                            {destination.price === 0 ? "Gratis" : `Rp ${destination.price.toLocaleString()}`}
+                            {destination.price === 0
+                              ? "Gratis"
+                              : `Rp ${destination.price.toLocaleString()}`}
                           </div>
-                          <div className="text-sm text-slate-500">per orang</div>
+                          <div className="text-sm text-slate-500">
+                            per orang
+                          </div>
                         </div>
                       </div>
                     </CardHeader>
 
                     <CardContent className="pt-0">
-                      <p className="text-slate-600 text-sm mb-3 line-clamp-2">{destination.description}</p>
+                      <p className="text-slate-600 text-sm mb-3 line-clamp-2">
+                        {destination.description}
+                      </p>
 
                       {/* Facilities */}
                       <div className="flex items-center gap-2 mb-4">
                         {destination.facilities.slice(0, 4).map((facility) => {
-                          const Icon = facilityIcons[facility as keyof typeof facilityIcons]
+                          const Icon =
+                            facilityIcons[
+                              facility as keyof typeof facilityIcons
+                            ];
                           return Icon ? (
                             <div
                               key={facility}
@@ -441,16 +509,20 @@ export default function DestinationsPage() {
                             >
                               <Icon className="w-4 h-4 text-slate-600" />
                             </div>
-                          ) : null
+                          ) : null;
                         })}
                         {destination.facilities.length > 4 && (
-                          <span className="text-xs text-slate-500">+{destination.facilities.length - 4} lainnya</span>
+                          <span className="text-xs text-slate-500">
+                            +{destination.facilities.length - 4} lainnya
+                          </span>
                         )}
                       </div>
                     </CardContent>
 
                     <CardFooter className="pt-0 gap-2 flex-wrap">
-                      <Button className="flex-1 bg-sky-500 hover:bg-sky-600">Lihat Detail</Button>
+                      <Button className="flex-1 bg-sky-500 hover:bg-sky-600">
+                        Lihat Detail
+                      </Button>
                       <Button variant="outline" className="flex-1">
                         <Calendar className="w-4 h-4 mr-2" />
                         Tambah ke Rencana
@@ -471,5 +543,5 @@ export default function DestinationsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
