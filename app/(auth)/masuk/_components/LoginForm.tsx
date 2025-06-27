@@ -298,7 +298,7 @@ const LoginForm = () => {
               <p className="text-slate-600">
                 Belum punya akun?{" "}
                 <Link
-                  href="/register"
+                  href="/daftar"
                   className="text-sky-600 hover:text-sky-700 font-medium"
                 >
                   Daftar sekarang

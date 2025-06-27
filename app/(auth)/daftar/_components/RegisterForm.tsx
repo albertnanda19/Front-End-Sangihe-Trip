@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRegister } from "@/hooks/use-register";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,7 +48,10 @@ const RegisterForm = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  // Loading states
+  const [socialLoading, setSocialLoading] = useState(false);
+  const { register, isLoading, error: registerError } = useRegister();
+  const combinedLoading = isLoading || socialLoading;
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [generalError, setGeneralError] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
@@ -129,9 +133,7 @@ const RegisterForm = () => {
       newErrors.confirmPassword = "Password tidak cocok";
     }
 
-    if (!formData.acceptTerms) {
-      newErrors.acceptTerms = "Anda harus menyetujui syarat dan ketentuan";
-    }
+
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -151,136 +153,37 @@ const RegisterForm = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleRegister = async () => {
     if (!validateForm()) {
       return;
     }
 
-    setIsLoading(true);
     setGeneralError("");
-
     try {
-      // Simulate API call
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // Simulate registration logic
-          if (formData.email === "existing@sangihetrip.com") {
-            reject(new Error("Email sudah terdaftar"));
-          } else {
-            resolve("success");
-          }
-        }, 2000);
+      await register({
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password,
       });
-
-      // Success - show email verification message
-      setIsSuccess(true);
+      // register hook will redirect on success
     } catch (error) {
       setGeneralError(
         error instanceof Error
           ? error.message
           : "Terjadi kesalahan saat mendaftar"
       );
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleSocialRegister = async (provider: string) => {
-    setIsLoading(true);
-    try {
-      // Simulate social registration
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log(`Register with ${provider}`);
-      router.push("/dashboard");
-    } catch (error) {
-      setGeneralError(`Gagal mendaftar dengan ${provider}`);
-    } finally {
-      setIsLoading(false);
+  // Trigger register on Enter key within any input
+  const handleEnterKey = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleRegister();
     }
   };
 
-  const handleResendVerification = async () => {
-    setIsResending(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      // Show success message or update UI
-    } catch (error) {
-      setGeneralError("Gagal mengirim ulang email verifikasi");
-    } finally {
-      setIsResending(false);
-    }
-  };
-
-  if (isSuccess) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <Card className="w-full max-w-md shadow-xl border-0">
-          <CardHeader className="text-center pb-6">
-            <div className="flex items-center justify-center space-x-2 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">S</span>
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-emerald-600 bg-clip-text text-transparent">
-                SANGIHETRIP
-              </span>
-            </div>
-
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600" />
-            </div>
-
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">
-              Periksa Email Anda
-            </h2>
-            <p className="text-slate-600">
-              Kami telah mengirim link verifikasi ke{" "}
-              <strong>{formData.email}</strong>
-            </p>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <Alert className="bg-sky-50 border-sky-200">
-              <AlertCircle className="h-4 w-4 text-sky-600" />
-              <AlertDescription className="text-sky-800">
-                Klik link di email untuk mengaktifkan akun Anda. Periksa folder
-                spam jika tidak ditemukan.
-              </AlertDescription>
-            </Alert>
-
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleResendVerification}
-              disabled={isResending}
-            >
-              {isResending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Mengirim ulang...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Kirim Ulang Email
-                </>
-              )}
-            </Button>
-
-            <div className="text-center">
-              <Link
-                href="/login"
-                className="text-sky-600 hover:text-sky-700 font-medium"
-              >
-                Kembali ke Login
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const commonInputProps = { onKeyDown: handleEnterKey } as const;
 
   return (
     <div className="w-full max-w-md">
@@ -320,13 +223,13 @@ const RegisterForm = () => {
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-4" role="group">
             {/* Full Name Field */}
             <div className="space-y-2">
               <Label htmlFor="fullName">Nama Lengkap</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                <Input
+                <Input {...commonInputProps}
                   id="fullName"
                   type="text"
                   placeholder="Masukkan nama lengkap"
@@ -337,7 +240,7 @@ const RegisterForm = () => {
                   className={`pl-10 ${
                     errors.fullName ? "border-red-500 focus:border-red-500" : ""
                   }`}
-                  disabled={isLoading}
+                  disabled={combinedLoading}
                 />
               </div>
               {errors.fullName && (
@@ -350,7 +253,7 @@ const RegisterForm = () => {
               <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                <Input
+                <Input {...commonInputProps}
                   id="email"
                   type="email"
                   placeholder="nama@email.com"
@@ -359,7 +262,7 @@ const RegisterForm = () => {
                   className={`pl-10 ${
                     errors.email ? "border-red-500 focus:border-red-500" : ""
                   }`}
-                  disabled={isLoading}
+                  disabled={combinedLoading}
                 />
               </div>
               {errors.email && (
@@ -372,7 +275,7 @@ const RegisterForm = () => {
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                <Input
+                <Input {...commonInputProps}
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Buat password"
@@ -383,13 +286,13 @@ const RegisterForm = () => {
                   className={`pl-10 pr-10 ${
                     errors.password ? "border-red-500 focus:border-red-500" : ""
                   }`}
-                  disabled={isLoading}
+                  disabled={combinedLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  disabled={isLoading}
+                  disabled={combinedLoading}
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -433,7 +336,7 @@ const RegisterForm = () => {
               <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                <Input
+                <Input {...commonInputProps}
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Ulangi password"
@@ -446,13 +349,13 @@ const RegisterForm = () => {
                       ? "border-red-500 focus:border-red-500"
                       : ""
                   }`}
-                  disabled={isLoading}
+                  disabled={combinedLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  disabled={isLoading}
+                  disabled={combinedLoading}
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -475,7 +378,7 @@ const RegisterForm = () => {
                   onCheckedChange={(checked) =>
                     handleInputChange("acceptTerms", checked as boolean)
                   }
-                  disabled={isLoading}
+                  disabled={combinedLoading}
                 />
                 <Label htmlFor="terms" className="text-sm text-slate-600">
                   Saya menyetujui{" "}
@@ -503,9 +406,10 @@ const RegisterForm = () => {
 
             {/* Register Button */}
             <Button
-              type="submit"
+              type="button"
+              onClick={handleRegister}
               className="w-full bg-sky-500 hover:bg-sky-600 text-white py-3"
-              disabled={isLoading}
+              disabled={combinedLoading}
             >
               {isLoading ? (
                 <>
@@ -516,7 +420,7 @@ const RegisterForm = () => {
                 "Daftar"
               )}
             </Button>
-          </form>
+          </div>
 
           {/* Divider */}
           {/* <div className="relative">
@@ -535,7 +439,7 @@ const RegisterForm = () => {
               variant="outline"
               className="w-full py-3"
               onClick={() => handleSocialRegister("Google")}
-              disabled={isLoading}
+              disabled={combinedLoading}
             >
               <Chrome className="w-4 h-4 mr-2" />
               Daftar dengan Google
@@ -545,7 +449,7 @@ const RegisterForm = () => {
               variant="outline"
               className="w-full py-3"
               onClick={() => handleSocialRegister("Facebook")}
-              disabled={isLoading}
+              disabled={combinedLoading}
             >
               <Facebook className="w-4 h-4 mr-2" />
               Daftar dengan Facebook
