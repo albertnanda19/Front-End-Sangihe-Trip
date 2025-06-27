@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 const LoginForm = () => {
+  const { login } = useAuth();
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
@@ -79,23 +81,11 @@ const LoginForm = () => {
     setGeneralError("");
 
     try {
-      // Simulate API call
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // Simulate login logic
-          if (
-            formData.email === "demo@sangihetrip.com" &&
-            formData.password === "password"
-          ) {
-            resolve("success");
-          } else {
-            reject(new Error("Email atau password salah"));
-          }
-        }, 2000);
+      await login({
+        email: formData.email,
+        password: formData.password,
+        rememberMe: formData.rememberMe,
       });
-
-      // Success - redirect to dashboard or previous page
-      router.push("/dashboard");
     } catch (error) {
       setGeneralError(
         error instanceof Error ? error.message : "Terjadi kesalahan saat login"
@@ -105,19 +95,19 @@ const LoginForm = () => {
     }
   };
 
-  const handleSocialLogin = async (provider: string) => {
-    setIsLoading(true);
-    try {
-      // Simulate social login
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log(`Login with ${provider}`);
-      router.push("/dashboard");
-    } catch (error) {
-      setGeneralError(`Gagal login dengan ${provider}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // const handleSocialLogin = async (provider: string) => {
+  //   setIsLoading(true);
+  //   try {
+  //     // Simulate social login
+  //     await new Promise((resolve) => setTimeout(resolve, 1500));
+  //     console.log(`Login with ${provider}`);
+  //     router.push("/dashboard");
+  //   } catch (error) {
+  //     setGeneralError(`Gagal login dengan ${provider}`);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
   return (
     <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
