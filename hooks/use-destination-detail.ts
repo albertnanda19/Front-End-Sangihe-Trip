@@ -16,9 +16,7 @@ export interface DestinationDetail {
   id: string;
   name: string;
   category: string;
-  /** Normalised location string for UI purposes */
   location: string;
-  /** Raw geo location object from API (optional) */
   locationObj?: Location;
   price: number | null;
   openHours: string;
