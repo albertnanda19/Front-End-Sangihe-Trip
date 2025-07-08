@@ -199,11 +199,12 @@ const comments = [
   },
 ];
 
-export default function ArticleDetailPage({
+export default async function ArticleDetailPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
+  const { slug } = await params;
   const [activeSection, setActiveSection] = useState("");
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [newComment, setNewComment] = useState("");

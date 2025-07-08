@@ -24,7 +24,6 @@ export interface DestinationDetail {
   facilities: Facility[];
   tips: string[];
   images: string[];
-  /** Whether the destination contains a promotional video */
   hasVideo: boolean;
   /** Computed or placeholder rating so the existing UI keeps working */
   rating: number;
