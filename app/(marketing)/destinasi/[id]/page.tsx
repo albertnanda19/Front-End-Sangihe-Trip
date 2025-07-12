@@ -1,16 +1,19 @@
 import Header from "@/app/_components/Header";
 import DestinationDetailContent from "./_components/DestinationDetailContent";
 
-export default function DestinationDetailPage({
+export default async function DestinationDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  // Next.js 15: params is a Promise in server components
+  const { id } = await params;
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header - Same as other pages */}
+      {/* Header */}
       <Header />
-      <DestinationDetailContent id={params.id} />
+      <DestinationDetailContent id={id} />
     </div>
   );
 }

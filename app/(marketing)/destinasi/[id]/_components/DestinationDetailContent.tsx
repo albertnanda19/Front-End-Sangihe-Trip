@@ -55,6 +55,7 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
     return counts;
   }, [reviews, destination]);
 
+  // Early return for loading / error / missing data
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -103,6 +104,12 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
         break;
     }
   };
+  // --- visibility flags based on API data ---
+  // Guard against null values by optional chaining
+  const hasFacilities = Boolean(destination?.facilities?.length);
+  const hasTips = Boolean(destination?.tips?.length);
+  const hasReviews = (destination?.totalReviews ?? 0) > 0;
+  const hasRelated = relatedDestinations.length > 0;
   return (
     <>
       <div className="container mx-auto px-4 py-6">
@@ -247,6 +254,7 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
             </div>
 
             {/* Facilities */}
+            {hasFacilities && (
             <Card>
               <CardHeader>
                 <h3 className="text-xl font-semibold">Fasilitas Tersedia</h3>
@@ -279,6 +287,10 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
                         {facility.icon === "waves" && (
                           <div className="w-4 h-4 bg-blue-400 rounded-full" />
                         )}
+                        {facility.icon === "parking" && <Car className="w-4 h-4" />}
+                        {facility.icon === "toilet" && (
+                          <div className="w-4 h-4 bg-slate-400 rounded" />
+                        )}
                       </div>
                       <span className="font-medium">{facility.name}</span>
                     </div>
@@ -286,6 +298,7 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
                 </div>
               </CardContent>
             </Card>
+            )}
 
             {/* Operating Hours & Price */}
             <div className="grid md:grid-cols-2 gap-6">
@@ -317,6 +330,7 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
             </div>
 
             {/* Tips */}
+            {hasTips && (
             <Card>
               <CardHeader>
                 <h3 className="text-xl font-semibold">Tips Berkunjung</h3>
@@ -336,6 +350,7 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
                 </ul>
               </CardContent>
             </Card>
+            )}
           </div>
 
           {/* Right Column - Sticky Card */}
@@ -378,6 +393,8 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
           </div>
         </div>
 
+        {hasReviews && (
+          <>
         {/* Reviews Section */}
         <div className="mt-12">
           <Card>
@@ -506,7 +523,11 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
             </CardContent>
           </Card>
         </div>
+          </>
+        )}
 
+        {hasRelated && (
+        <>
         {/* Related Destinations */}
         <div className="mt-12">
           <h3 className="text-2xl font-semibold mb-6">Destinasi Terkait</h3>
@@ -540,6 +561,8 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
             ))}
           </div>
         </div>
+        </>
+        )}
       </div>
 
       {/* Floating Elements */}

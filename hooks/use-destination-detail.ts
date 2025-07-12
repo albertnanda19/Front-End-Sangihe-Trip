@@ -44,7 +44,7 @@ interface HookState {
 export function useDestinationDetail(id: string) {
   const [state, setState] = useState<HookState>({
     destination: null,
-    loading: false,
+    loading: true,
     error: null,
   });
 
@@ -78,7 +78,9 @@ export function useDestinationDetail(id: string) {
           facilities: apiData.facilities ?? [],
           tips: apiData.tips ?? [],
           images: apiData.images ?? [],
-          hasVideo: Boolean(apiData.video),
+          hasVideo: Array.isArray(apiData.images)
+            ? apiData.images.some((url: string) => /\.(mp4|mov|webm)$/i.test(url))
+            : false,
           rating: apiData.rating ?? 0,
           totalReviews: apiData.totalReviews ?? 0,
         };

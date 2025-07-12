@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // Data is now fetched from the back-end API via custom hook `useDestinations`
 /*
@@ -153,6 +154,7 @@ const DestinationContent = () => {
   const [sortBy, setSortBy] = useState<"popular" | "rating" | "price-low" | "newest">("popular");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const router = useRouter();
   const [showFilters, setShowFilters] = useState(false);
 
   // Build filter object for API query
@@ -503,7 +505,10 @@ const DestinationContent = () => {
                   </CardContent>
 
                   <CardFooter className="pt-0 gap-2 flex-wrap">
-                    <Button className="flex-1 bg-sky-500 hover:bg-sky-600">
+                    <Button
+                      className="flex-1 bg-sky-500 hover:bg-sky-600"
+                      onClick={() => router.push(`/destinasi/${destination.id}`)}
+                    >
                       Lihat Detail
                     </Button>
                     <Button variant="outline" className="flex-1">
