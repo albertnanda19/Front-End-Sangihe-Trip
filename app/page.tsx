@@ -1,37 +1,51 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import {  Star, MapPin, Calendar, Phone, Mail, Facebook, Instagram, Twitter, Menu } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import Header from "./_components/Header"
-import Footer from "./_components/Footer"
-import Articles from "./_components/Articles"
-import Destinations from "./_components/Destinations"
-import SearchDestination from "./_components/SearchDestination"
-import Hero from "./_components/Hero"
+"use client"
+
+import React from "react";
+import Header from "./_components/Header";
+import Footer from "./_components/Footer";
+import Articles from "./_components/Articles";
+import Destinations from "./_components/Destinations";
+import SearchDestination from "./_components/SearchDestination";
+import Hero from "./_components/Hero";
+
+import { useLandingPage } from "@/hooks/use-landing-page";
 
 export default function HomePage() {
+  const { hero, filters, destinations, articles, loading, error } = useLandingPage();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <span>Loading...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen text-red-500">
+        {error.message}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <Header />
 
       {/* Hero Section */}
-      <Hero />
+      {hero && <Hero hero={hero} />}
 
       {/* Search Section */}
-      <SearchDestination />
+      {filters.length > 0 && <SearchDestination filters={filters} />}
 
       {/* Destinasi Unggulan */}
-      <Destinations />
+      {destinations.length > 0 && <Destinations destinations={destinations} />}
 
       {/* Artikel Terbaru */}
-      <Articles />
+      {articles.length > 0 && <Articles articles={articles} />}
 
-      {/* Footer */}
       <Footer />
     </div>
-  )
+  );
 }

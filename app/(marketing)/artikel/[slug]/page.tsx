@@ -16,6 +16,7 @@ import {
   Menu,
   Mail,
   MapPin,
+  Star,
   ThumbsUp,
   Reply,
   User,
@@ -24,6 +25,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useArticleDetail } from "@/hooks/use-article-detail";
+import { useAuthStatus } from "@/hooks/use-auth-status";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function ArticleDetailPage({
   params,
@@ -32,9 +35,19 @@ export default function ArticleDetailPage({
 }) {
   const { slug } = params;
   const { article, tableOfContents, relatedArticles, comments, loading, error } = useArticleDetail(slug);
+  const isLoggedIn = useAuthStatus();
   const [activeSection, setActiveSection] = useState("");
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [newComment, setNewComment] = useState("");
+  const [rating, setRating] = useState(0);
+
+  const handleSubmitComment = () => {
+    if (!newComment.trim()) return;
+    // TODO: Integrasi API untuk mengirim komentar & rating
+    console.log({ rating, comment: newComment });
+    setNewComment("");
+    setRating(0);
+  };
 
   const shareArticle = (platform: string) => {
     if (!article) return;
@@ -431,28 +444,66 @@ export default function ArticleDetailPage({
               </h3>
 
               {/* Login Notice */}
-              <Card className="mb-6 bg-sky-50 border-sky-200">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <User className="w-5 h-5 text-sky-600" />
-                    <div>
-                      <p className="font-medium text-sky-800">
-                        Ingin berkomentar?
-                      </p>
-                      <p className="text-sm text-sky-600">
-                        <Link href="/masuk" className="underline">
-                          Login
-                        </Link>{" "}
-                        atau{" "}
-                        <Link href="/daftar" className="underline">
-                          daftar
-                        </Link>{" "}
-                        untuk bergabung dalam diskusi
-                      </p>
+              {!isLoggedIn && (
+                <Card className="mb-6 bg-sky-50 border-sky-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <User className="w-5 h-5 text-sky-600" />
+                      <div>
+                        <p className="font-medium text-sky-800">
+                          Ingin berkomentar?
+                        </p>
+                        <p className="text-sm text-sky-600">
+                          <Link href="/masuk" className="underline">
+                            Login
+                          </Link>{" "}
+                          atau{" "}
+                          <Link href="/daftar" className="underline">
+                            daftar
+                          </Link>{" "}
+                          untuk bergabung dalam diskusi
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Comment Form – hanya untuk pengguna login */}
+              {isLoggedIn && (
+                <Card className="mb-6 border-slate-200">
+                  <CardContent className="p-4">
+                    <h4 className="font-semibold mb-4">Tulis Komentar &amp; Ulasan</h4>
+
+                    {/* Rating */}
+                    <div className="flex items-center gap-1 mb-4">
+                      <span className="text-sm text-slate-600 mr-2">Rating:</span>
+                      {[1, 2, 3, 4, 5].map((value) => (
+                        <Star
+                          key={value}
+                          className={`w-5 h-5 cursor-pointer transition-colors ${
+                            value <= rating ? "fill-yellow-400 text-yellow-400" : "text-slate-300"
+                          }`}
+                          onClick={() => setRating(value)}
+                          fill={value <= rating ? "currentColor" : "none"}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Textarea */}
+                    <Textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Tulis komentar Anda..."
+                      className="mb-4 min-h-[100px]"
+                    />
+
+                    <Button onClick={handleSubmitComment} disabled={!newComment.trim()}>
+                      Kirim Komentar
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Comments List */}
               {comments && comments.length > 0 ? (
