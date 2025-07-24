@@ -24,16 +24,13 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useArticleDetail } from "@/hooks/use-article-detail";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 import { Textarea } from "@/components/ui/textarea";
 
-export default function ArticleDetailPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const { slug } = params;
+export default function ArticleDetailPage() {
+  const { slug } = useParams<{ slug: string }>();
   const { article, tableOfContents, relatedArticles, comments, loading, error } = useArticleDetail(slug);
   const isLoggedIn = useAuthStatus();
   const [activeSection, setActiveSection] = useState("");
