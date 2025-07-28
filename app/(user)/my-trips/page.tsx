@@ -25,6 +25,7 @@ import {
   LogOut,
   Menu,
   X,
+  Plus,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -233,6 +234,25 @@ export default function MyTripPage() {
       </header>
 
       <div className="container mx-auto px-4 py-6">
+        {/* Top bar: title & action */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800 mb-1">
+              Daftar Perjalanan
+            </h2>
+            {trips.length > 0 && (
+              <p className="text-sm text-slate-600">
+                {trips.length} perjalanan
+              </p>
+            )}
+          </div>
+          <Link href="/create-trip">
+            <Button className="bg-sky-500 hover:bg-sky-600 flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Buat Perjalanan
+            </Button>
+          </Link>
+        </div>
         {loading ? (
           <p className="text-center text-slate-600">Memuat perjalanan...</p>
         ) : error ? (
@@ -305,7 +325,7 @@ export default function MyTripPage() {
                   >
                     {getTripTypeLabel(trip.tripType)}
                   </Badge>
-                  <Link href={`/trip/${trip.slug}`}>
+                  <Link href={`/my-trips/${trip.slug}`}>
                     <Button size="sm" variant="outline">
                       Lihat Detail
                     </Button>
