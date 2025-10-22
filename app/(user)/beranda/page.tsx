@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +19,6 @@ import {
   User,
   MapPin,
   Star,
-  Award,
   Plus,
   Edit,
   Calendar,
@@ -35,131 +35,14 @@ import {
   ChevronRight,
   Target,
   Map,
+  AlertCircle,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useUserProfile } from "@/hooks/use-user-profile";
+import { useUserDashboard } from "@/hooks/use-user-dashboard";
+import { DashboardSkeleton, SidebarSkeleton } from "@/components/shared/dashboard-skeleton";
 
-// Sample user data
-const userData = {
-  name: "Sarah Wijaya",
-  email: "sarah@email.com",
-  avatar: "/placeholder.svg?height=40&width=40",
-  joinDate: "Maret 2024",
-  profileCompletion: 75,
-  stats: {
-    tripPlans: 5,
-    visitedDestinations: 12,
-    reviewsWritten: 8,
-    points: 1250,
-    badges: 3,
-  },
-};
-
-const recentTrips = [
-  {
-    id: 1,
-    name: "Eksplorasi Pulau Siau",
-    dates: "25-28 Des 2024",
-    status: "Upcoming",
-    progress: 85,
-    image: "/placeholder.svg?height=100&width=150",
-    destinations: 4,
-  },
-  {
-    id: 2,
-    name: "Weekend di Pantai Mahoro",
-    dates: "15-17 Des 2024",
-    status: "Planning",
-    progress: 45,
-    image: "/placeholder.svg?height=100&width=150",
-    destinations: 2,
-  },
-  {
-    id: 3,
-    name: "Pendakian Karangetang",
-    dates: "5-7 Jan 2025",
-    status: "Draft",
-    progress: 20,
-    image: "/placeholder.svg?height=100&width=150",
-    destinations: 1,
-  },
-];
-
-const recentReviews = [
-  {
-    id: 1,
-    destination: "Pantai Mahoro",
-    rating: 5,
-    date: "2 hari lalu",
-    excerpt: "Pantai yang luar biasa indah dengan pasir vulkanik yang unik...",
-    likes: 12,
-  },
-  {
-    id: 2,
-    destination: "Air Terjun Sahendaruman",
-    rating: 4,
-    date: "1 minggu lalu",
-    excerpt: "Air terjun yang menakjubkan di tengah hutan tropis...",
-    likes: 8,
-  },
-];
-
-const recommendedDestinations = [
-  {
-    id: 1,
-    name: "Pulau Tagulandang",
-    image: "/placeholder.svg?height=150&width=200",
-    rating: 4.7,
-    price: "Rp 180.000",
-    category: "Alam",
-  },
-  {
-    id: 2,
-    name: "Desa Adat Bowongkali",
-    image: "/placeholder.svg?height=150&width=200",
-    rating: 4.8,
-    price: "Rp 100.000",
-    category: "Budaya",
-  },
-  {
-    id: 3,
-    name: "Pantai Petta",
-    image: "/placeholder.svg?height=150&width=200",
-    rating: 4.4,
-    price: "Rp 120.000",
-    category: "Pantai",
-  },
-];
-
-const recommendedArticles = [
-  {
-    id: 1,
-    title: "Tips Fotografi di Sangihe",
-    image: "/placeholder.svg?height=80&width=120",
-    readTime: "5 menit",
-    category: "Tips",
-  },
-  {
-    id: 2,
-    title: "Kuliner Khas yang Wajib Dicoba",
-    image: "/placeholder.svg?height=80&width=120",
-    readTime: "8 menit",
-    category: "Kuliner",
-  },
-];
-
-const upcomingTrips = [
-  {
-    name: "Eksplorasi Pulau Siau",
-    date: "25 Des",
-    daysLeft: 10,
-  },
-  {
-    name: "Weekend di Pantai Mahoro",
-    date: "15 Des",
-    daysLeft: 0,
-  },
-];
 
 const weatherData = {
   location: "Tahuna, Sangihe",
@@ -177,6 +60,26 @@ const quickTips = [
 
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const { profile, stats, loading: profileLoading, error: profileError } = useUserProfile();
+  const {
+    recentTrips,
+    recentReviews,
+    recommendedDestinations,
+    recommendedArticles,
+    upcomingTrips,
+    loading: dashboardLoading,
+    error: dashboardError,
+  } = useUserDashboard();
+
+  const loading = profileLoading || dashboardLoading;
+  const error = profileError || dashboardError;
+
+  const userName = profile?.name || "User";
+  const userAvatar = profile?.avatar || "/placeholder.svg";
+  const userJoinDate = profile?.joinDate 
+    ? new Date(profile.joinDate).toLocaleDateString("id-ID", { month: "long", year: "numeric" })
+    : "2024";
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -264,14 +167,14 @@ export default function DashboardPage() {
                   >
                     <Avatar className="h-8 w-8">
                       <AvatarImage
-                        src={userData.avatar || "/placeholder.svg"}
+                        src={userAvatar}
                       />
-                      <AvatarFallback>{userData.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>{userName.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="hidden md:block text-left">
-                      <p className="text-sm font-medium">{userData.name}</p>
+                      <p className="text-sm font-medium">{userName}</p>
                       <p className="text-xs text-slate-500">
-                        Member sejak {userData.joinDate}
+                        Member sejak {userJoinDate}
                       </p>
                     </div>
                   </Button>
@@ -314,139 +217,145 @@ export default function DashboardPage() {
       </header>
 
       <div className="container mx-auto px-4 py-6">
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {error} - Silakan muat ulang halaman.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="grid lg:grid-cols-4 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Welcome Section */}
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-3xl font-bold text-slate-800 mb-2">
-                  Selamat datang, {userData.name}! 👋
-                </h1>
-                <p className="text-slate-600">
-                  Siap untuk petualangan baru di Kepulauan Sangihe?
-                </p>
-              </div>
+            {loading ? (
+              <DashboardSkeleton />
+            ) : (
+              <>
+                {/* Welcome Section */}
+                <div className="space-y-6">
+                  <div>
+                    <h1 className="text-3xl font-bold text-slate-800 mb-2">
+                      Selamat datang, {userName}! 👋
+                    </h1>
+                    <p className="text-slate-600">
+                      Siap untuk petualangan baru di Kepulauan Sangihe?
+                    </p>
+                  </div>
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4 text-center">
-                    <div className="w-12 h-12 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Map className="w-6 h-6 text-sky-600" />
-                    </div>
-                    <p className="text-2xl font-bold text-slate-800">
-                      {userData.stats.tripPlans}
-                    </p>
-                    <p className="text-sm text-slate-600">Rencana Perjalanan</p>
-                  </CardContent>
-                </Card>
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <Card className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4 text-center">
+                        <div className="w-12 h-12 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Map className="w-6 h-6 text-sky-600" />
+                        </div>
+                        <p className="text-2xl font-bold text-slate-800">
+                          {stats?.tripPlans || 0}
+                        </p>
+                        <p className="text-sm text-slate-600">Rencana Perjalanan</p>
+                      </CardContent>
+                    </Card>
 
-                <Card className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4 text-center">
-                    <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <MapPin className="w-6 h-6 text-emerald-600" />
-                    </div>
-                    <p className="text-2xl font-bold text-slate-800">
-                      {userData.stats.visitedDestinations}
-                    </p>
-                    <p className="text-sm text-slate-600">
-                      Destinasi Dikunjungi
-                    </p>
-                  </CardContent>
-                </Card>
+                    <Card className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4 text-center">
+                        <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <MapPin className="w-6 h-6 text-emerald-600" />
+                        </div>
+                        <p className="text-2xl font-bold text-slate-800">
+                          {stats?.visitedDestinations || 0}
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          Destinasi Dikunjungi
+                        </p>
+                      </CardContent>
+                    </Card>
 
-                <Card className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4 text-center">
-                    <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Star className="w-6 h-6 text-orange-600" />
-                    </div>
-                    <p className="text-2xl font-bold text-slate-800">
-                      {userData.stats.reviewsWritten}
-                    </p>
-                    <p className="text-sm text-slate-600">Review Ditulis</p>
-                  </CardContent>
-                </Card>
+                    <Card className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4 text-center">
+                        <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Star className="w-6 h-6 text-orange-600" />
+                        </div>
+                        <p className="text-2xl font-bold text-slate-800">
+                          {stats?.reviewsWritten || 0}
+                        </p>
+                        <p className="text-sm text-slate-600">Review Ditulis</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
 
-                <Card className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4 text-center">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Award className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <p className="text-2xl font-bold text-slate-800">
-                      {userData.stats.points}
-                    </p>
-                    <p className="text-sm text-slate-600">
-                      Poin & {userData.stats.badges} Badge
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+                {/* Quick Actions */}
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold text-slate-800">
+                    Aksi Cepat
+                  </h2>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Link href="/create-trip">
+                      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                        <CardContent className="p-6 text-center">
+                          <div className="w-16 h-16 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                            <Plus className="w-8 h-8 text-white" />
+                          </div>
+                          <h3 className="font-semibold text-slate-800 mb-2">
+                            Buat Rencana Baru
+                          </h3>
+                          <p className="text-sm text-slate-600">
+                            Mulai merencanakan perjalanan impian Anda
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </Link>
 
-            {/* Quick Actions */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-slate-800">
-                Aksi Cepat
-              </h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                      <Plus className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-slate-800 mb-2">
-                      Buat Rencana Baru
-                    </h3>
-                    <p className="text-sm text-slate-600">
-                      Mulai merencanakan perjalanan impian Anda
-                    </p>
-                  </CardContent>
-                </Card>
+                    <Link href="/destinasi">
+                      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                        <CardContent className="p-6 text-center">
+                          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                            <Compass className="w-8 h-8 text-white" />
+                          </div>
+                          <h3 className="font-semibold text-slate-800 mb-2">
+                            Jelajahi Destinasi
+                          </h3>
+                          <p className="text-sm text-slate-600">
+                            Temukan tempat-tempat menakjubkan
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </Link>
 
-                <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                      <Compass className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-slate-800 mb-2">
-                      Jelajahi Destinasi
-                    </h3>
-                    <p className="text-sm text-slate-600">
-                      Temukan tempat-tempat menakjubkan
-                    </p>
-                  </CardContent>
-                </Card>
+                    <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                      <CardContent className="p-6 text-center">
+                        <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                          <Edit className="w-8 h-8 text-white" />
+                        </div>
+                        <h3 className="font-semibold text-slate-800 mb-2">
+                          Tulis Review
+                        </h3>
+                        <p className="text-sm text-slate-600">
+                          Bagikan pengalaman perjalanan Anda
+                        </p>
+                      </CardContent>
+                    </Card>
 
-                <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                      <Edit className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-slate-800 mb-2">
-                      Tulis Review
-                    </h3>
-                    <p className="text-sm text-slate-600">
-                      Bagikan pengalaman perjalanan Anda
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                      <BookOpen className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-slate-800 mb-2">
-                      Lihat Artikel
-                    </h3>
-                    <p className="text-sm text-slate-600">
-                      Baca tips dan panduan wisata
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+                    <Link href="/artikel">
+                      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                        <CardContent className="p-6 text-center">
+                          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                            <BookOpen className="w-8 h-8 text-white" />
+                          </div>
+                          <h3 className="font-semibold text-slate-800 mb-2">
+                            Lihat Artikel
+                          </h3>
+                          <p className="text-sm text-slate-600">
+                            Baca tips dan panduan wisata
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </div>
+                </div>
 
             {/* Recent Activity */}
             <div className="grid md:grid-cols-2 gap-6">
@@ -495,15 +404,24 @@ export default function DashboardPage() {
                               {trip.dates}
                             </p>
                             <div className="flex items-center justify-between">
-                              <div className="flex-1 mr-4">
-                                <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-                                  <span>Progress</span>
-                                  <span>{trip.progress}%</span>
+                              <div className="flex items-center gap-3 text-xs text-slate-500 flex-1">
+                                <div className="flex items-center gap-1">
+                                  <User className="w-3.5 h-3.5" />
+                                  <span>{trip.peopleCount} orang</span>
                                 </div>
-                                <Progress
-                                  value={trip.progress}
-                                  className="h-2"
-                                />
+                                <span className="text-slate-300">•</span>
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-3.5 h-3.5" />
+                                  <span>{trip.destinations} destinasi</span>
+                                </div>
+                                {trip.budget > 0 && (
+                                  <>
+                                    <span className="text-slate-300">•</span>
+                                    <span className="font-medium text-sky-600">
+                                      Rp {trip.budget.toLocaleString("id-ID")}
+                                    </span>
+                                  </>
+                                )}
                               </div>
                               <Button variant="ghost" size="sm">
                                 <Edit className="w-4 h-4" />
@@ -654,6 +572,8 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
+              </>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -662,32 +582,36 @@ export default function DashboardPage() {
               sidebarOpen ? "block" : "hidden lg:block"
             }`}
           >
-            {/* Profile Completion */}
-            <Card>
-              <CardHeader>
-                <h3 className="font-semibold flex items-center">
-                  <Target className="w-4 h-4 mr-2 text-sky-500" />
-                  Kelengkapan Profil
-                </h3>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-slate-800 mb-1">
-                    {userData.profileCompletion}%
-                  </div>
-                  <Progress
-                    value={userData.profileCompletion}
-                    className="mb-3"
-                  />
-                  <p className="text-sm text-slate-600">
-                    Lengkapi profil untuk rekomendasi yang lebih baik
-                  </p>
-                </div>
-                <Button variant="outline" size="sm" className="w-full">
-                  Lengkapi Profil
-                </Button>
-              </CardContent>
-            </Card>
+            {loading ? (
+              <SidebarSkeleton />
+            ) : (
+              <>
+                {/* Profile Completion */}
+                <Card>
+                  <CardHeader>
+                    <h3 className="font-semibold flex items-center">
+                      <Target className="w-4 h-4 mr-2 text-sky-500" />
+                      Kelengkapan Profil
+                    </h3>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-slate-800 mb-1">
+                        {profile?.profileCompletion || 0}%
+                      </div>
+                      <Progress
+                        value={profile?.profileCompletion || 0}
+                        className="mb-3"
+                      />
+                      <p className="text-sm text-slate-600">
+                        Lengkapi profil untuk rekomendasi yang lebih baik
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" className="w-full">
+                      Lengkapi Profil
+                    </Button>
+                  </CardContent>
+                </Card>
 
             {/* Upcoming Trips */}
             <Card>
@@ -760,6 +684,8 @@ export default function DashboardPage() {
                 ))}
               </CardContent>
             </Card>
+              </>
+            )}
           </div>
         </div>
       </div>

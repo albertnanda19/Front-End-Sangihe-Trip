@@ -1,0 +1,7 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#e5e7eb"/>
+  <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af" text-anchor="middle" dominant-baseline="middle">
+    <tspan x="50%" dy="-10">No Image Available</tspan>
+    <tspan x="50%" dy="25">Placeholder</tspan>
+  </text>
+</svg>
