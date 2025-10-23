@@ -1,10 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/api";
 import { getCookie } from "@/lib/cookies";
+import type {
+  TripResponse,
+  ReviewResponse,
+  DestinationResponse,
+  ArticleResponse,
+} from "@/lib/api-response";
 
+// Frontend Display Interfaces
 export interface RecentTrip {
   id: string;
   name: string;
@@ -80,13 +86,11 @@ export function useUserDashboard(): UseUserDashboardReturn {
     try {
       const token = getCookie("access_token");
       if (!token) {
-        
         console.warn("No access token found");
         setLoading(false);
         return;
       }
 
-      
       const [tripsRes, reviewsRes, destRes, articlesRes] = await Promise.allSettled([
         fetch(apiUrl("/api/users/me/trips?per_page=3&page=1"), {
           headers: { Authorization: `Bearer ${token}` },
@@ -104,13 +108,11 @@ export function useUserDashboard(): UseUserDashboardReturn {
         }),
       ]);
 
-      
       if (tripsRes.status === "fulfilled" && tripsRes.value.ok) {
         const json = await tripsRes.value.json();
-        
         const tripsData = json.data?.data || [];
-        
-        const trips = tripsData.map((trip: any) => {
+
+        const trips = tripsData.map((trip: TripResponse) => {
           const now = new Date();
           const start = new Date(trip.startDate);
           const end = new Date(trip.endDate);
@@ -168,11 +170,10 @@ export function useUserDashboard(): UseUserDashboardReturn {
 
       if (reviewsRes.status === "fulfilled" && reviewsRes.value.ok) {
         const json = await reviewsRes.value.json();
-        
         const reviewsData = json.data?.data || [];
-        
-        const reviews = reviewsData.map((review: any) => {
-          const reviewDate = new Date(review.createdAt || review.date);
+
+        const reviews = reviewsData.map((review: ReviewResponse) => {
+          const reviewDate = new Date(review.createdAt || review.date || new Date());
           const now = new Date();
           const diffDays = Math.floor((now.getTime() - reviewDate.getTime()) / (1000 * 60 * 60 * 24));
           
@@ -198,10 +199,9 @@ export function useUserDashboard(): UseUserDashboardReturn {
 
       if (destRes.status === "fulfilled" && destRes.value.ok) {
         const json = await destRes.value.json();
-        
         const destinationsData = json.data?.data || [];
-        
-        const destinations = destinationsData.map((dest: any) => ({
+
+        const destinations = destinationsData.map((dest: DestinationResponse) => ({
           id: dest.id,
           name: dest.name,
           image: dest.image || dest.images?.[0] || "/placeholder.svg", 
@@ -214,10 +214,9 @@ export function useUserDashboard(): UseUserDashboardReturn {
 
       if (articlesRes.status === "fulfilled" && articlesRes.value.ok) {
         const json = await articlesRes.value.json();
-        
         const articlesData = json.data?.articles || [];
-        
-        const articles = articlesData.map((article: any) => ({
+
+        const articles = articlesData.map((article: ArticleResponse) => ({
           id: article.id,
           title: article.title,
           image: article.image || "/placeholder.svg", 
@@ -228,9 +227,8 @@ export function useUserDashboard(): UseUserDashboardReturn {
         setRecommendedArticles(articles);
       }
     } catch (err) {
-      
       console.error("useUserDashboard error:", err);
-      
+
       if (err instanceof Error && !err.message.includes("404")) {
         setError(err.message);
       }

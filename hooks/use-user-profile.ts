@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/api";
 import { getCookie } from "@/lib/cookies";
+import type { UserProfileResponse } from "@/lib/api-response";
 
 export interface UserProfile {
   id: string;
@@ -91,7 +92,7 @@ export function useUserProfile(): UseUserProfileReturn {
       }
 
       const json = await response.json();
-      const userData = json.data;
+      const userData: UserProfileResponse = json.data;
 
       const firstName = userData.first_name || userData.firstName || "";
       const lastName = userData.last_name || userData.lastName || "";
@@ -105,7 +106,7 @@ export function useUserProfile(): UseUserProfileReturn {
         email: userData.email,
         avatar: userData.avatar_url || userData.avatar, 
         role: userData.role || "user",
-        joinDate: userData.joinDate || userData.created_at, 
+        joinDate: userData.joinDate || userData.created_at || new Date().toISOString(), 
         profileCompletion: userData.profileCompletion || 0,
       });
 
