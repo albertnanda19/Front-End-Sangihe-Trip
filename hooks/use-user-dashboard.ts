@@ -22,6 +22,8 @@ export interface RecentTrip {
   budget: number;
   startDate: string;
   endDate: string;
+  tripType?: string;
+  isPublic: boolean;
 }
 
 export interface RecentReview {
@@ -144,6 +146,8 @@ export function useUserDashboard(): UseUserDashboardReturn {
             budget: trip.totalBudget || 0,
             startDate: trip.startDate,
             endDate: trip.endDate,
+            tripType: trip.tripType,
+            isPublic: trip.isPublic ?? false,
           };
         });
         setRecentTrips(trips);

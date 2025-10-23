@@ -29,6 +29,8 @@ import {
   Bell,
   Menu,
   X,
+  Globe,
+  Lock,
   Sun,
   Heart,
   ChevronRight,
@@ -381,56 +383,87 @@ export default function DashboardPage() {
                     recentTrips.map((trip) => (
                     <Card
                       key={trip.id}
-                      className="hover:shadow-md transition-shadow"
+                      className="hover:shadow-md transition-all hover:border-sky-300 cursor-pointer"
                     >
                       <CardContent className="p-4">
                         <div className="flex gap-4">
-                          <div className="relative w-20 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                          {/* Enhanced Image with overlay badges */}
+                          <div className="relative w-24 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
                             <Image
                               src={trip.image || "/placeholder.svg"}
                               alt={trip.name}
                               fill
                               className="object-cover"
                             />
+                            {/* Trip Type Badge Overlay */}
+                            <div className="absolute bottom-1 left-1 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded text-[10px] font-medium text-slate-700 border border-slate-200">
+                              {trip.tripType === "family" && "👨‍👩‍👧 Keluarga"}
+                              {trip.tripType === "solo" && "🎒 Solo"}
+                              {trip.tripType === "couple" && "💑 Couple"}
+                              {trip.tripType === "group" && "👥 Group"}
+                              {!trip.tripType && "🗺️ Trip"}
+                            </div>
                           </div>
+
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between mb-2">
-                              <h3 className="font-semibold text-slate-800 truncate">
-                                {trip.name}
-                              </h3>
+                            {/* Title and Status Row */}
+                            <div className="flex items-start justify-between gap-2 mb-1.5">
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <h3 className="font-semibold text-slate-900 truncate text-[15px]">
+                                  {trip.name}
+                                </h3>
+                                {/* Privacy Indicator */}
+                                {trip.isPublic ? (
+                                  <div className="flex-shrink-0 text-sky-600" title="Trip Publik">
+                                    <Globe className="w-3.5 h-3.5" />
+                                  </div>
+                                ) : (
+                                  <div className="flex-shrink-0 text-slate-400" title="Trip Pribadi">
+                                    <Lock className="w-3.5 h-3.5" />
+                                  </div>
+                                )}
+                              </div>
                               <Badge
                                 className={`${getStatusColor(
                                   trip.status
-                                )} text-white text-xs`}
+                                )} text-white text-[11px] px-2 py-0.5 font-medium flex-shrink-0`}
                               >
                                 {getStatusText(trip.status)}
                               </Badge>
                             </div>
-                            <p className="text-sm text-slate-600 mb-2">
-                              {trip.dates}
+
+                            {/* Date */}
+                            <p className="text-xs text-slate-600 mb-2.5">
+                              📅 {trip.dates}
                             </p>
+
+                            {/* Info and Actions Row */}
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3 text-xs text-slate-500 flex-1">
+                              <div className="flex items-center gap-2.5 text-xs text-slate-500 flex-1">
                                 <div className="flex items-center gap-1">
                                   <User className="w-3.5 h-3.5" />
-                                  <span>{trip.peopleCount} orang</span>
+                                  <span>{trip.peopleCount}</span>
                                 </div>
                                 <span className="text-slate-300">•</span>
                                 <div className="flex items-center gap-1">
                                   <MapPin className="w-3.5 h-3.5" />
-                                  <span>{trip.destinations} destinasi</span>
+                                  <span>{trip.destinations}</span>
                                 </div>
                                 {trip.budget > 0 && (
                                   <>
                                     <span className="text-slate-300">•</span>
-                                    <span className="font-medium text-sky-600">
-                                      Rp {trip.budget.toLocaleString("id-ID")}
+                                    <span className="font-semibold text-emerald-600">
+                                      Rp {(trip.budget / 1000000).toFixed(1)}jt
                                     </span>
                                   </>
                                 )}
                               </div>
-                              <Button variant="ghost" size="sm">
-                                <Edit className="w-4 h-4" />
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="h-7 w-7 p-0 hover:bg-sky-50 hover:text-sky-600"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
                               </Button>
                             </div>
                           </div>
