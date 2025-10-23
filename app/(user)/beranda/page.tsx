@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,13 +34,14 @@ import {
   ChevronRight,
   Target,
   Map,
-  AlertCircle,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { useUserDashboard } from "@/hooks/use-user-dashboard";
 import { DashboardSkeleton, SidebarSkeleton } from "@/components/shared/dashboard-skeleton";
+import { EmptyTrips, EmptyReviews, EmptyDestinations, EmptyArticles } from "@/components/shared/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 
 
 const weatherData = {
@@ -61,7 +61,7 @@ const quickTips = [
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const { profile, stats, loading: profileLoading, error: profileError } = useUserProfile();
+  const { profile, stats, loading: profileLoading, error: profileError, refetch: refetchProfile } = useUserProfile();
   const {
     recentTrips,
     recentReviews,
@@ -70,6 +70,7 @@ export default function DashboardPage() {
     upcomingTrips,
     loading: dashboardLoading,
     error: dashboardError,
+    refetch: refetchDashboard,
   } = useUserDashboard();
 
   const loading = profileLoading || dashboardLoading;
@@ -219,12 +220,14 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4 py-6">
         {/* Error Alert */}
         {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {error} - Silakan muat ulang halaman.
-            </AlertDescription>
-          </Alert>
+          <ErrorState
+            message={error}
+            onRetry={() => {
+              refetchProfile();
+              refetchDashboard();
+            }}
+            variant="alert"
+          />
         )}
 
         <div className="grid lg:grid-cols-4 gap-6">
@@ -372,7 +375,10 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="space-y-4">
-                  {recentTrips.map((trip) => (
+                  {recentTrips.length === 0 ? (
+                    <EmptyTrips variant="minimal" />
+                  ) : (
+                    recentTrips.map((trip) => (
                     <Card
                       key={trip.id}
                       className="hover:shadow-md transition-shadow"
@@ -431,7 +437,8 @@ export default function DashboardPage() {
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -448,7 +455,10 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="space-y-4">
-                  {recentReviews.map((review) => (
+                  {recentReviews.length === 0 ? (
+                    <EmptyReviews variant="minimal" />
+                  ) : (
+                    recentReviews.map((review) => (
                     <Card
                       key={review.id}
                       className="hover:shadow-md transition-shadow"
@@ -483,7 +493,8 @@ export default function DashboardPage() {
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             </div>
@@ -495,6 +506,9 @@ export default function DashboardPage() {
                 <h2 className="text-xl font-semibold text-slate-800">
                   Destinasi Untukmu
                 </h2>
+                {recommendedDestinations.length === 0 ? (
+                  <EmptyDestinations />
+                ) : (
                 <div className="grid md:grid-cols-3 gap-4">
                   {recommendedDestinations.map((destination) => (
                     <Card
@@ -531,6 +545,7 @@ export default function DashboardPage() {
                     </Card>
                   ))}
                 </div>
+                )}
               </div>
 
               {/* Recommended Articles */}
@@ -538,6 +553,9 @@ export default function DashboardPage() {
                 <h2 className="text-xl font-semibold text-slate-800">
                   Artikel Menarik
                 </h2>
+                {recommendedArticles.length === 0 ? (
+                  <EmptyArticles />
+                ) : (
                 <div className="grid md:grid-cols-2 gap-4">
                   {recommendedArticles.map((article) => (
                     <Card
@@ -570,6 +588,7 @@ export default function DashboardPage() {
                     </Card>
                   ))}
                 </div>
+                )}
               </div>
             </div>
               </>
