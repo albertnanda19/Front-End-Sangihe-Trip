@@ -2,17 +2,27 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import Link from "next/link";
 import MobileMenu from "./MobileMenu";
 import { useRouter } from "next/navigation";
+import { useAuthStatus } from "@/hooks/use-auth-status";
+import { deleteCookie } from "@/lib/cookies";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
+  const isAuthenticated = useAuthStatus();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = () => {
+    deleteCookie("access_token");
+    deleteCookie("refresh_token");
+    window.dispatchEvent(new Event("auth-change"));
+    router.push("/");
   };
 
   return (
@@ -53,13 +63,35 @@ const Header = () => {
               >
                 Artikel
               </Link>
-              <Button
-                variant="outline"
-                className="border-sky-500 text-sky-600 hover:bg-sky-50 cursor-pointer"
-                onClick={() => router.push("/masuk")}
-              >
-                Masuk
-              </Button>
+              
+              {/* Authentication Buttons */}
+              {isAuthenticated ? (
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="ghost"
+                    className="text-sky-600 hover:bg-sky-50"
+                    onClick={() => router.push("/beranda")}
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Dashboard
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-red-500 text-red-600 hover:bg-red-50"
+                    onClick={handleLogout}
+                  >
+                    Keluar
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="border-sky-500 text-sky-600 hover:bg-sky-50 cursor-pointer"
+                  onClick={() => router.push("/masuk")}
+                >
+                  Masuk
+                </Button>
+              )}
             </nav>
 
             {/* Mobile Menu Button */}

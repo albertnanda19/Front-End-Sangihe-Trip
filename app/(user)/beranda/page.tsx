@@ -147,7 +147,7 @@ export default function DashboardPage() {
                 Dashboard
               </Link>
               <Link
-                href="/destinations"
+                href="/destinasi"
                 className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
               >
                 Destinasi

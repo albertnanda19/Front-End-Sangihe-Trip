@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Star,
   MapPin,
@@ -20,42 +18,46 @@ import {
   Heart,
   Calendar,
   Navigation,
-  ArrowUp,
-  ThumbsUp,
-  Menu,
   Facebook,
   Instagram,
   MessageCircle,
+  MessageSquarePlus,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useDestinationDetail } from "@/hooks/use-destination-detail";
+import { useReviews } from "@/hooks/use-reviews";
+import { useAuthStatus } from "@/hooks/use-auth-status";
+import { ReviewForm } from "@/components/shared/review-form";
+import { ReviewList } from "@/components/shared/review-list";
 
 const DestinationDetailContent = ({ id }: { id: string }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [showBackToTop, setShowBackToTop] = useState(false);
-  const [reviewFilter, setReviewFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState("reviews");
+  const [reviewPage, setReviewPage] = useState(1);
+  const [reviewSortBy, setReviewSortBy] = useState("newest");
 
   const { destination, loading, error } = useDestinationDetail(id);
-  // Placeholder arrays – API does not provide these fields yet
-  const reviews: { rating: number; [key: string]: any }[] = [];
-  const relatedDestinations: any[] = [];
+  const isAuthenticated = useAuthStatus();
+  
+  const {
+    reviews,
+    total,
+    stats,
+    loading: reviewsLoading,
+    error: reviewsError,
+    submitReview,
+    toggleLike,
+    isReviewLiked,
+  } = useReviews(id, {
+    page: reviewPage,
+    limit: 10,
+    sortBy: reviewSortBy as "newest" | "oldest" | "highest" | "lowest" | "helpful",
+    autoFetch: true,
+  });
+  
+  const relatedDestinations: { id: string; name: string; image: string; rating: number; price: number }[] = [];
 
-  const ratingBreakdown = useMemo(() => {
-    if (!destination) return [];
-
-    // Simple derived breakdown from reviews array (placeholder until API provides data)
-    const counts = [5, 4, 3, 2, 1].map((stars) => {
-      const count = reviews.filter((r) => r.rating === stars).length;
-      const percentage = destination.totalReviews
-        ? (count / destination.totalReviews) * 100
-        : 0;
-      return { stars, count, percentage } as const;
-    });
-    return counts;
-  }, [reviews, destination]);
-
-  // Early return for loading / error / missing data
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -94,7 +96,6 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`);
         break;
       case "instagram":
-        // Instagram doesn't support direct sharing, copy to clipboard
         navigator.clipboard.writeText(`${text} ${url}`);
         break;
       case "whatsapp":
@@ -104,12 +105,22 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
         break;
     }
   };
-  // --- visibility flags based on API data ---
-  // Guard against null values by optional chaining
   const hasFacilities = Boolean(destination?.facilities?.length);
   const hasTips = Boolean(destination?.tips?.length);
-  const hasReviews = (destination?.totalReviews ?? 0) > 0;
   const hasRelated = relatedDestinations.length > 0;
+
+  const handleSubmitReview = async (data: {
+    rating: number;
+    comment: string;
+    images: string[];
+  }) => {
+    await submitReview(data);
+    setActiveTab("reviews");
+  };
+
+  const handleLikeReview = async (reviewId: string) => {
+    await toggleLike(reviewId);
+  };
   return (
     <>
       <div className="container mx-auto px-4 py-6">
@@ -393,138 +404,94 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
           </div>
         </div>
 
-        {hasReviews && (
-          <>
         {/* Reviews Section */}
         <div className="mt-12">
           <Card>
             <CardHeader>
-              <h3 className="text-2xl font-semibold">Review Pengunjung</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-semibold">Review Pengunjung</h3>
+                {isAuthenticated && (
+                  <Button
+                    onClick={() => setActiveTab(activeTab === "write" ? "reviews" : "write")}
+                    variant="outline"
+                  >
+                    <MessageSquarePlus className="w-4 h-4 mr-2" />
+                    {activeTab === "write" ? "Lihat Reviews" : "Tulis Review"}
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
-              {/* Rating Statistics */}
-              <div className="grid md:grid-cols-2 gap-8 mb-8">
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-slate-800 mb-2">
-                    {destination.rating}
-                  </div>
-                  <div className="flex justify-center mb-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-5 h-5 ${
-                          star <= Math.floor(destination.rating)
-                            ? "text-yellow-400 fill-current"
-                            : "text-slate-300"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-slate-600">
-                    {destination.totalReviews} review
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  {ratingBreakdown.map((item) => (
-                    <div key={item.stars} className="flex items-center gap-3">
-                      <span className="text-sm w-8">{item.stars}★</span>
-                      <Progress value={item.percentage} className="flex-1" />
-                      <span className="text-sm text-slate-600 w-8">
-                        {item.count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Review Filter */}
-              <Tabs
-                value={reviewFilter}
-                onValueChange={setReviewFilter}
-                className="mb-6"
-              >
-                <TabsList>
-                  <TabsTrigger value="all">Semua</TabsTrigger>
-                  <TabsTrigger value="recent">Terbaru</TabsTrigger>
-                  <TabsTrigger value="high">Rating Tinggi</TabsTrigger>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="hidden">
+                  <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                  <TabsTrigger value="write">Tulis</TabsTrigger>
                 </TabsList>
+
+                {/* Reviews Tab */}
+                <TabsContent value="reviews" className="mt-0">
+                  <ReviewList
+                    reviews={reviews}
+                    total={total}
+                    stats={stats}
+                    loading={reviewsLoading}
+                    currentPage={reviewPage}
+                    limit={10}
+                    sortBy={reviewSortBy}
+                    onPageChange={setReviewPage}
+                    onSortChange={setReviewSortBy}
+                    onLikeReview={handleLikeReview}
+                    isReviewLiked={isReviewLiked}
+                  />
+
+                  {/* Login Prompt for Non-authenticated Users */}
+                  {!isAuthenticated && (
+                    <Card className="mt-6">
+                      <CardContent className="p-8 text-center">
+                        <p className="text-slate-600 mb-4">
+                          Login untuk menulis review dan memberikan like
+                        </p>
+                        <Button asChild>
+                          <Link href="/masuk">Login</Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+
+                {/* Write Review Tab */}
+                <TabsContent value="write" className="mt-0">
+                  {isAuthenticated ? (
+                    <ReviewForm
+                      onSubmit={handleSubmitReview}
+                      loading={reviewsLoading}
+                    />
+                  ) : (
+                    <Card>
+                      <CardContent className="p-8 text-center">
+                        <p className="text-slate-600 mb-4">
+                          Login untuk menulis review
+                        </p>
+                        <Button asChild>
+                          <Link href="/masuk">Login</Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
               </Tabs>
 
-              {/* Review List */}
-              <div className="space-y-6">
-                {reviews.map((review) => (
-                  <div
-                    key={review.id}
-                    className="border-b border-slate-200 pb-6 last:border-b-0"
-                  >
-                    <div className="flex items-start gap-4">
-                      <Avatar>
-                        <AvatarImage
-                          src={review.user.avatar || "/placeholder.svg"}
-                        />
-                        <AvatarFallback>
-                          {review.user.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h5 className="font-semibold">{review.user.name}</h5>
-                          <div className="flex">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`w-4 h-4 ${
-                                  star <= review.rating
-                                    ? "text-yellow-400 fill-current"
-                                    : "text-slate-300"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-sm text-slate-500">
-                            {review.date}
-                          </span>
-                        </div>
-
-                        <p className="text-slate-700 mb-3">{review.text}</p>
-
-                        {review.images && (
-                          <div className="flex gap-2 mb-3">
-                            {review.images?.map((image: string, index: number) => (
-                              <div
-                                key={index}
-                                className="relative w-16 h-16 rounded-lg overflow-hidden"
-                              >
-                                <Image
-                                  src={image || "/placeholder.svg"}
-                                  alt={`Review ${index + 1}`}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-4 text-sm text-slate-500">
-                          <span>Berkunjung pada {review.visitDate}</span>
-                          <button className="flex items-center gap-1 hover:text-sky-600">
-                            <ThumbsUp className="w-4 h-4" />
-                            Membantu ({review.helpful})
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {/* Error Display */}
+              {reviewsError && (
+                <Card className="mt-4 border-red-200">
+                  <CardContent className="p-4 bg-red-50">
+                    <p className="text-red-800">{reviewsError}</p>
+                  </CardContent>
+                </Card>
+              )}
             </CardContent>
           </Card>
         </div>
-          </>
-        )}
 
         {hasRelated && (
         <>
@@ -564,16 +531,6 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
         </>
         )}
       </div>
-
-      {/* Floating Elements */}
-      {showBackToTop && (
-        <Button
-          className="fixed bottom-20 right-6 rounded-full w-12 h-12 bg-sky-500 hover:bg-sky-600 shadow-lg z-40"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        >
-          <ArrowUp className="w-5 h-5" />
-        </Button>
-      )}
 
       {/* Mobile Sticky Button */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 md:hidden z-30">

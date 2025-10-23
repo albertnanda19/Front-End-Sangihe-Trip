@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiUrl } from "@/lib/api";
+import { getCookie } from "@/lib/cookies";
 
 interface ReviewData {
   rating: number;
@@ -75,10 +76,7 @@ export const useReviews = (
         sortBy,
       });
 
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("token="))
-        ?.split("=")[1];
+      const token = getCookie("access_token");
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -89,7 +87,7 @@ export const useReviews = (
       }
 
       const response = await fetch(
-        `${apiUrl}/reviews/destination/${destinationId}?${params}`,
+        `${apiUrl(`/api/reviews/destination/${destinationId}`)}?${params}`,
         { headers }
       );
 
@@ -114,16 +112,13 @@ export const useReviews = (
     setError(null);
 
     try {
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("token="))
-        ?.split("=")[1];
+      const token = getCookie("access_token");
 
       if (!token) {
         throw new Error("Authentication required");
       }
 
-      const response = await fetch(`${apiUrl}/reviews`, {
+      const response = await fetch(apiUrl("/api/reviews"), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -157,16 +152,13 @@ export const useReviews = (
 
   const toggleLike = async (reviewId: string) => {
     try {
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("token="))
-        ?.split("=")[1];
+      const token = getCookie("access_token");
 
       if (!token) {
         throw new Error("Authentication required");
       }
 
-      const response = await fetch(`${apiUrl}/reviews/${reviewId}/like`, {
+      const response = await fetch(apiUrl(`/api/reviews/${reviewId}/like`), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

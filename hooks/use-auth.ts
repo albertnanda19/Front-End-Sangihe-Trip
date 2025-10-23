@@ -47,15 +47,16 @@ export function useAuth(): UseAuthReturn {
         data: { access_token, refresh_token },
       } = json;
 
-      // Access token is always stored (session cookie)
-      setCookie("access_token", access_token);
+      const accessTokenExpiry = rememberMe ? 7 : 1;
+      setCookie("access_token", access_token, { days: accessTokenExpiry });
 
-      // Refresh token stored only when rememberMe is true (7 days)
       if (rememberMe) {
         setCookie("refresh_token", refresh_token, { days: 7 });
       } else {
         deleteCookie("refresh_token");
       }
+
+      window.dispatchEvent(new Event("auth-change"));
 
       // Decode token to determine role-based destination
       type Payload = { role?: string };
