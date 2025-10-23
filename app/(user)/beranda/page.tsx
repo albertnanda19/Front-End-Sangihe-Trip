@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,11 +35,12 @@ import {
   Sun,
   Heart,
   ChevronRight,
+  ExternalLink,
+  MessageSquare,
   Target,
   Map,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { useUserDashboard } from "@/hooks/use-user-dashboard";
 import { DashboardSkeleton, SidebarSkeleton } from "@/components/shared/dashboard-skeleton";
@@ -62,6 +64,7 @@ const quickTips = [
 
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [likedReviews, setLikedReviews] = useState<Set<string>>(new Set());
 
   const { profile, stats, loading: profileLoading, error: profileError, refetch: refetchProfile } = useUserProfile();
   const {
@@ -83,6 +86,18 @@ export default function DashboardPage() {
   const userJoinDate = profile?.joinDate 
     ? new Date(profile.joinDate).toLocaleDateString("id-ID", { month: "long", year: "numeric" })
     : "2024";
+
+  const toggleLike = (reviewId: string) => {
+    setLikedReviews((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(reviewId)) {
+        newSet.delete(reviewId);
+      } else {
+        newSet.add(reviewId);
+      }
+      return newSet;
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -491,42 +506,95 @@ export default function DashboardPage() {
                   {recentReviews.length === 0 ? (
                     <EmptyReviews variant="minimal" />
                   ) : (
-                    recentReviews.map((review) => (
+                    recentReviews.map((review) => {
+                      const isLiked = likedReviews.has(review.id);
+                      const displayLikes = review.likes + (isLiked ? 1 : 0);
+                      
+                      return (
                     <Card
                       key={review.id}
-                      className="hover:shadow-md transition-shadow"
+                      className="hover:shadow-lg transition-all hover:border-sky-200 group"
                     >
                       <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-semibold text-slate-800">
-                            {review.destination}
-                          </h3>
-                          <div className="flex items-center">
+                        {/* Destination Name - Clickable */}
+                        <div className="flex items-start justify-between mb-3">
+                          <Link 
+                            href={`/destinasi/${review.destinationId}`}
+                            className="flex-1 group/link"
+                          >
+                            <h3 className="font-semibold text-slate-900 group-hover/link:text-sky-600 transition-colors flex items-center gap-2">
+                              {review.destination}
+                              <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover/link:opacity-100 transition-opacity" />
+                            </h3>
+                          </Link>
+                          
+                          {/* Enhanced Rating Display */}
+                          <div className="flex items-center gap-0.5">
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}
-                                className={`w-4 h-4 ${
+                                className={`w-4 h-4 transition-all ${
                                   i < review.rating
-                                    ? "text-yellow-400 fill-current"
-                                    : "text-gray-300"
+                                    ? "text-amber-400 fill-amber-400 scale-110"
+                                    : "text-slate-300"
                                 }`}
                               />
                             ))}
+                            <span className="ml-1.5 text-sm font-semibold text-slate-700">
+                              {review.rating}.0
+                            </span>
                           </div>
                         </div>
-                        <p className="text-sm text-slate-600 mb-3 line-clamp-2">
-                          {review.excerpt}
+
+                        {/* Review Excerpt */}
+                        <p className="text-sm text-slate-600 mb-3 line-clamp-2 leading-relaxed">
+                          &ldquo;{review.excerpt}&rdquo;
                         </p>
-                        <div className="flex items-center justify-between text-xs text-slate-500">
-                          <span>{review.date}</span>
-                          <div className="flex items-center gap-1">
-                            <Heart className="w-3 h-3" />
-                            <span>{review.likes}</span>
+
+                        {/* Actions Row */}
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-500 flex items-center gap-1">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {review.date}
+                          </span>
+                          
+                          <div className="flex items-center gap-3">
+                            {/* Like Button */}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`h-7 px-2 gap-1.5 transition-all ${
+                                isLiked 
+                                  ? "text-rose-600 hover:text-rose-700 bg-rose-50" 
+                                  : "text-slate-500 hover:text-rose-600 hover:bg-rose-50"
+                              }`}
+                              onClick={() => toggleLike(review.id)}
+                            >
+                              <Heart 
+                                className={`w-3.5 h-3.5 transition-all ${
+                                  isLiked ? "fill-rose-600" : ""
+                                }`} 
+                              />
+                              <span className="font-medium">{displayLikes}</span>
+                            </Button>
+
+                            {/* View Full Review */}
+                            <Link href={`/destinasi/${review.destinationId}#review-${review.id}`}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 gap-1 text-slate-600 hover:text-sky-600 hover:bg-sky-50"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5" />
+                                <span className="text-xs">Lihat</span>
+                              </Button>
+                            </Link>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>
