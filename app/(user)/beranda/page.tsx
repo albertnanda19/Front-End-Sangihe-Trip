@@ -309,67 +309,114 @@ export default function DashboardPage() {
 
                 {/* Quick Actions */}
                 <div className="space-y-4">
-                  <h2 className="text-xl font-semibold text-slate-800">
-                    Aksi Cepat
-                  </h2>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-slate-800">
+                      Aksi Cepat
+                    </h2>
+                    <span className="text-xs text-slate-500">
+                      Aktivitas Anda
+                    </span>
+                  </div>
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Buat Trip Baru */}
                     <Link href="/create-trip">
-                      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-sky-300 relative">
                         <CardContent className="p-6 text-center">
-                          <div className="w-16 h-16 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                          {/* Stats Badge */}
+                          {stats && stats.tripPlans > 0 && (
+                            <Badge className="absolute top-3 right-3 bg-sky-100 text-sky-700 text-[10px] px-2 py-0.5">
+                              {stats.tripPlans} trips
+                            </Badge>
+                          )}
+                          <div className="w-16 h-16 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
                             <Plus className="w-8 h-8 text-white" />
                           </div>
-                          <h3 className="font-semibold text-slate-800 mb-2">
+                          <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-sky-600 transition-colors">
                             Buat Rencana Baru
                           </h3>
                           <p className="text-sm text-slate-600">
-                            Mulai merencanakan perjalanan impian Anda
+                            {stats && stats.tripPlans > 0 
+                              ? `${stats.tripPlans} trip aktif`
+                              : "Mulai merencanakan perjalanan"}
                           </p>
                         </CardContent>
                       </Card>
                     </Link>
 
+                    {/* Jelajahi Destinasi */}
                     <Link href="/destinasi">
-                      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-emerald-300 relative">
                         <CardContent className="p-6 text-center">
-                          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                          {/* Stats Badge */}
+                          {stats && stats.visitedDestinations > 0 && (
+                            <Badge className="absolute top-3 right-3 bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5">
+                              {stats.visitedDestinations} visited
+                            </Badge>
+                          )}
+                          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
                             <Compass className="w-8 h-8 text-white" />
                           </div>
-                          <h3 className="font-semibold text-slate-800 mb-2">
+                          <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
                             Jelajahi Destinasi
                           </h3>
                           <p className="text-sm text-slate-600">
-                            Temukan tempat-tempat menakjubkan
+                            {stats && stats.visitedDestinations > 0
+                              ? `${stats.visitedDestinations} destinasi dikunjungi`
+                              : "Temukan tempat menakjubkan"}
                           </p>
                         </CardContent>
                       </Card>
                     </Link>
 
-                    <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                    {/* Tulis Review */}
+                    <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-orange-300 relative">
                       <CardContent className="p-6 text-center">
-                        <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                        {/* Stats Badge with Contextual Suggestion */}
+                        {stats && stats.reviewsWritten > 0 ? (
+                          <Badge className="absolute top-3 right-3 bg-orange-100 text-orange-700 text-[10px] px-2 py-0.5">
+                            {stats.reviewsWritten} reviews
+                          </Badge>
+                        ) : stats && stats.visitedDestinations > 0 && (
+                          <Badge className="absolute top-3 right-3 bg-red-100 text-red-700 text-[10px] px-2 py-0.5 animate-pulse">
+                            New!
+                          </Badge>
+                        )}
+                        <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
                           <Edit className="w-8 h-8 text-white" />
                         </div>
-                        <h3 className="font-semibold text-slate-800 mb-2">
+                        <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-orange-600 transition-colors">
                           Tulis Review
                         </h3>
                         <p className="text-sm text-slate-600">
-                          Bagikan pengalaman perjalanan Anda
+                          {stats && stats.reviewsWritten > 0 
+                            ? `${stats.reviewsWritten} review ditulis`
+                            : stats && stats.visitedDestinations > 0
+                            ? "Bagikan pengalaman Anda!"
+                            : "Bagikan pengalaman perjalanan"}
                         </p>
                       </CardContent>
                     </Card>
 
+                    {/* Lihat Artikel */}
                     <Link href="/artikel">
-                      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-purple-300 relative">
                         <CardContent className="p-6 text-center">
-                          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                          {/* Suggestion Badge */}
+                          {stats && stats.tripPlans === 0 && (
+                            <Badge className="absolute top-3 right-3 bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5">
+                              Rekomendasi
+                            </Badge>
+                          )}
+                          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
                             <BookOpen className="w-8 h-8 text-white" />
                           </div>
-                          <h3 className="font-semibold text-slate-800 mb-2">
+                          <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-purple-600 transition-colors">
                             Lihat Artikel
                           </h3>
                           <p className="text-sm text-slate-600">
-                            Baca tips dan panduan wisata
+                            {stats && stats.tripPlans === 0
+                              ? "Mulai dengan tips wisata"
+                              : "Baca tips dan panduan wisata"}
                           </p>
                         </CardContent>
                       </Card>
