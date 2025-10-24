@@ -22,7 +22,6 @@ import {
   Plus,
   Edit,
   Calendar,
-  TrendingUp,
   Compass,
   BookOpen,
   Settings,
@@ -32,7 +31,6 @@ import {
   X,
   Globe,
   Lock,
-  Sun,
   Heart,
   ChevronRight,
   ExternalLink,
@@ -48,19 +46,6 @@ import { EmptyTrips, EmptyReviews, EmptyDestinations, EmptyArticles } from "@/co
 import { ErrorState } from "@/components/shared/error-state";
 
 
-const weatherData = {
-  location: "Tahuna, Sangihe",
-  temperature: 28,
-  condition: "Cerah",
-  humidity: 75,
-  icon: Sun,
-};
-
-const quickTips = [
-  "Bawa sunscreen saat berkunjung ke pantai",
-  "Cek cuaca sebelum mendaki gunung",
-  "Coba kuliner lokal di pasar tradisional",
-];
 
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -137,20 +122,14 @@ export default function DashboardPage() {
                 <span className="text-white font-bold text-lg">S</span>
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-emerald-600 bg-clip-text text-transparent">
-                SANGIHETRIP
+                SANGIHE TRIP
               </span>
             </div>
 
-            {/* Desktop Navigation */}
+            {/* Desktop Navigation (Dashboard-only) */}
             <nav className="hidden md:flex items-center space-x-8">
               <Link href="/beranda" className="text-sky-600 font-medium">
                 Dashboard
-              </Link>
-              <Link
-                href="/destinasi"
-                className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
-              >
-                Destinasi
               </Link>
               <Link
                 href="/my-trips"
@@ -159,10 +138,10 @@ export default function DashboardPage() {
                 Rencana Saya
               </Link>
               <Link
-                href="/articles"
+                href="#reviews"
                 className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
               >
-                Artikel
+                Review Terbaru
               </Link>
             </nav>
 
@@ -432,10 +411,12 @@ export default function DashboardPage() {
                   <h2 className="text-xl font-semibold text-slate-800">
                     Rencana Perjalanan Terbaru
                   </h2>
-                  <Button variant="ghost" size="sm">
-                    Lihat Semua
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
+                  <Link href="/my-trips">
+                    <Button variant="ghost" size="sm">
+                      Lihat Semua
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </Link>
                 </div>
 
                 <div className="space-y-4">
@@ -538,15 +519,17 @@ export default function DashboardPage() {
               </div>
 
               {/* Recent Reviews */}
-              <div className="space-y-4">
+              <div className="space-y-4" id="reviews">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-slate-800">
                     Review Terbaru
                   </h2>
-                  <Button variant="ghost" size="sm">
-                    Lihat Semua
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
+                  <Link href="#reviews">
+                    <Button variant="ghost" size="sm">
+                      Lihat Semua
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </Link>
                 </div>
 
                 <div className="space-y-4">
@@ -789,68 +772,33 @@ export default function DashboardPage() {
                 </h3>
               </CardHeader>
               <CardContent className="space-y-3">
-                {upcomingTrips.map((trip, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div>
-                      <p className="font-medium text-sm text-slate-800">
-                        {trip.name}
-                      </p>
-                      <p className="text-xs text-slate-500">{trip.date}</p>
+                {upcomingTrips.length === 0 ? (
+                  <p className="text-sm text-slate-500 text-center py-2">Belum ada perjalanan mendatang.</p>
+                ) : (
+                  upcomingTrips.map((trip, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium text-sm text-slate-800">
+                          {trip.name}
+                        </p>
+                        <p className="text-xs text-slate-500">{trip.date}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-sky-600">
+                          {trip.daysLeft === 0
+                            ? "Hari ini"
+                            : `${trip.daysLeft} hari`}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-sky-600">
-                        {trip.daysLeft === 0
-                          ? "Hari ini"
-                          : `${trip.daysLeft} hari`}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </CardContent>
             </Card>
-
-            {/* Weather Info */}
-            <Card>
-              <CardHeader>
-                <h3 className="font-semibold flex items-center">
-                  <weatherData.icon className="w-4 h-4 mr-2 text-yellow-500" />
-                  Cuaca Sangihe
-                </h3>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-slate-800 mb-1">
-                    {weatherData.temperature}°C
-                  </div>
-                  <p className="text-slate-600 mb-3">{weatherData.condition}</p>
-                  <div className="flex items-center justify-between text-sm text-slate-500">
-                    <span>Kelembaban</span>
-                    <span>{weatherData.humidity}%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Tips */}
-            <Card>
-              <CardHeader>
-                <h3 className="font-semibold flex items-center">
-                  <TrendingUp className="w-4 h-4 mr-2 text-purple-500" />
-                  Tips Hari Ini
-                </h3>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {quickTips.map((tip, index) => (
-                  <div key={index} className="flex items-start gap-2">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
-                    <p className="text-sm text-slate-600">{tip}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            {/* Removed Weather and Tips sections (mock data) */}
               </>
             )}
           </div>

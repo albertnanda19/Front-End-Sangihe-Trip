@@ -42,21 +42,9 @@ export function useUserProfile(): UseUserProfileReturn {
     try {
       const token = getCookie("access_token");
       if (!token) {
-        console.warn("No access token found");
-        setProfile({
-          id: "guest",
-          name: "Guest User",
-          email: "guest@example.com",
-          avatar: undefined,
-          role: "user",
-          joinDate: new Date().toISOString(),
-          profileCompletion: 0,
-        });
-        setStats({
-          tripPlans: 0,
-          visitedDestinations: 0,
-          reviewsWritten: 0,
-        });
+        setError("Pengguna belum login");
+        setProfile(null);
+        setStats(null);
         setLoading(false);
         return;
       }
@@ -70,25 +58,13 @@ export function useUserProfile(): UseUserProfileReturn {
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.warn("User profile endpoint not ready");
-          setProfile({
-            id: "user-placeholder",
-            name: "User Dashboard",
-            email: "user@example.com",
-            avatar: undefined,
-            role: "user",
-            joinDate: new Date().toISOString(),
-            profileCompletion: 50,
-          });
-          setStats({
-            tripPlans: 0,
-            visitedDestinations: 0,
-            reviewsWritten: 0,
-          });
+          setError("Data profil pengguna belum tersedia");
+          setProfile(null);
+          setStats(null);
           setLoading(false);
           return;
         }
-        throw new Error("Failed to fetch user profile");
+        throw new Error("Gagal memuat profil pengguna");
       }
 
       const json = await response.json();

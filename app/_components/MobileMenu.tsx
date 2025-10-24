@@ -30,9 +30,9 @@ const menuVariants: Variants = {
 };
 
 const navLinks = [
-  { href: "#", label: "Beranda" },
-  { href: "#", label: "Destinasi" },
-  { href: "#", label: "Artikel" },
+  { href: "/", label: "Beranda" },
+  { href: "/destinasi", label: "Destinasi" },
+  { href: "/artikel", label: "Artikel" },
 ];
 
 const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {

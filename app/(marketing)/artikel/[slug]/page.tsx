@@ -33,8 +33,6 @@ export default function ArticleDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const { article, tableOfContents, relatedArticles, comments, loading, error } = useArticleDetail(slug);
   const isLoggedIn = useAuthStatus();
-  const [activeSection, setActiveSection] = useState("");
-  const [showCommentForm, setShowCommentForm] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [rating, setRating] = useState(0);
 
@@ -118,7 +116,7 @@ export default function ArticleDetailPage() {
                 <span className="text-white font-bold text-lg">S</span>
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-emerald-600 bg-clip-text text-transparent">
-                SANGIHETRIP
+                SANGIHE TRIP
               </span>
             </div>
 
@@ -134,12 +132,6 @@ export default function ArticleDetailPage() {
                 className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
               >
                 Destinasi
-              </Link>
-              <Link
-                href="#"
-                className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
-              >
-                Rencana Perjalanan
               </Link>
               <Link
                 href="/artikel"

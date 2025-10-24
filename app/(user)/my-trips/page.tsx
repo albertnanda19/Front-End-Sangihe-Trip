@@ -36,6 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 interface Trip {
   id: string;
@@ -55,11 +56,7 @@ interface Trip {
 
 export default function MyTripPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const userData = {
-    name: "Sarah Wijaya",
-    avatar: "/placeholder.svg?height=40&width=40",
-    joinDate: "Maret 2024",
-  };
+  const { profile } = useUserProfile();
 
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,20 +131,14 @@ export default function MyTripPage() {
                 <span className="text-white font-bold text-lg">S</span>
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-emerald-600 bg-clip-text text-transparent">
-                SANGIHETRIP
+                SANGIHE TRIP
               </span>
             </div>
 
-            {/* Desktop Navigation */}
+            {/* Desktop Navigation (Dashboard-only) */}
             <nav className="hidden md:flex items-center space-x-8">
               <Link href="/beranda" className="text-sky-600 font-medium">
                 Dashboard
-              </Link>
-              <Link
-                href="/destinasi"
-                className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
-              >
-                Destinasi
               </Link>
               <Link
                 href="/my-trips"
@@ -156,10 +147,10 @@ export default function MyTripPage() {
                 Rencana Saya
               </Link>
               <Link
-                href="/articles"
+                href="/beranda#reviews"
                 className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
               >
-                Artikel
+                Review Terbaru
               </Link>
             </nav>
 
@@ -181,16 +172,16 @@ export default function MyTripPage() {
                     className="flex items-center gap-3 hover:bg-gray-100"
                   >
                     <Avatar className="h-8 w-8">
-                      <AvatarImage
-                        src={userData.avatar || "/placeholder.svg"}
-                      />
-                      <AvatarFallback>{userData.name.charAt(0)}</AvatarFallback>
+                      <AvatarImage src={profile?.avatar || "/placeholder.svg"} />
+                      <AvatarFallback>{(profile?.name || "U").charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="hidden md:block text-left">
-                      <p className="text-sm font-medium">{userData.name}</p>
-                      <p className="text-xs text-slate-500">
-                        Member sejak {userData.joinDate}
-                      </p>
+                      <p className="text-sm font-medium">{profile?.name || "Pengguna"}</p>
+                      {profile?.joinDate && (
+                        <p className="text-xs text-slate-500">
+                          Member sejak {new Date(profile.joinDate).toLocaleDateString("id-ID", { month: "long", year: "numeric" })}
+                        </p>
+                      )}
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
