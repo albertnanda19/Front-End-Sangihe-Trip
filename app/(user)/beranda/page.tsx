@@ -138,10 +138,10 @@ export default function DashboardPage() {
                 Rencana Saya
               </Link>
               <Link
-                href="#reviews"
+                href="/reviews"
                 className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
               >
-                Review Terbaru
+                Review Saya
               </Link>
             </nav>
 
@@ -524,7 +524,7 @@ export default function DashboardPage() {
                   <h2 className="text-xl font-semibold text-slate-800">
                     Review Terbaru
                   </h2>
-                  <Link href="#reviews">
+                  <Link href="/reviews">
                     <Button variant="ghost" size="sm">
                       Lihat Semua
                       <ChevronRight className="w-4 h-4 ml-1" />

@@ -11,7 +11,9 @@ export function middleware(req: NextRequest) {
   const isProtected =
     pathname === "/beranda" ||
     pathname === "/create-trip" ||
-    pathname.startsWith("/my-trips");
+    pathname.startsWith("/my-trips") ||
+    pathname === "/reviews" ||
+    pathname.startsWith("/reviews");
 
   if (!isProtected) {
     return NextResponse.next();
@@ -29,5 +31,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/beranda", "/create-trip", "/my-trips/:path*"],
+  matcher: ["/beranda", "/create-trip", "/my-trips/:path*", "/reviews/:path*", "/reviews"],
 };

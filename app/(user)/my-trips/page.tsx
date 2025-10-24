@@ -147,10 +147,10 @@ export default function MyTripPage() {
                 Rencana Saya
               </Link>
               <Link
-                href="/beranda#reviews"
+                href="/reviews"
                 className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
               >
-                Review Terbaru
+                Review Saya
               </Link>
             </nav>
 
