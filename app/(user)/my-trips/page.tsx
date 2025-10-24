@@ -55,8 +55,6 @@ interface Trip {
 
 export default function MyTripPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // TODO: Replace with real user context when available
   const userData = {
     name: "Sarah Wijaya",
     avatar: "/placeholder.svg?height=40&width=40",
@@ -325,7 +323,7 @@ export default function MyTripPage() {
                   >
                     {getTripTypeLabel(trip.tripType)}
                   </Badge>
-                  <Link href={`/my-trips/${trip.slug}`}>
+                  <Link href={`/my-trips/${trip.id}`}>
                     <Button size="sm" variant="outline">
                       Lihat Detail
                     </Button>

@@ -9,7 +9,7 @@ import { Calendar, MapPin, Plus, Edit, Trash2 } from "lucide-react"
 import { format, addDays, differenceInDays } from "date-fns"
 import { id } from "date-fns/locale"
 import Image from "next/image"
-import type { TripData } from "@/app/(user)/create-trip/page"
+import type { TripData, ScheduleItem } from "@/app/(user)/create-trip/page"
 import { Input } from "@/components/ui/input"
 
 interface ScheduleStepProps {
@@ -17,16 +17,6 @@ interface ScheduleStepProps {
   updateData: (data: Partial<TripData>) => void
   onNext: () => void
   onPrev: () => void
-}
-
-interface ScheduleItem {
-  id: string
-  destinationId: string
-  day: number
-  startTime: string
-  endTime: string
-  activity: string
-  notes?: string
 }
 
 const timeSlots = [
@@ -52,7 +42,6 @@ export function ScheduleStep({ data, updateData, onNext, onPrev }: ScheduleStepP
   const [selectedDay, setSelectedDay] = useState(1)
   const [showAddActivity, setShowAddActivity] = useState(false)
   
-  // Form state for adding activity
   const [newActivity, setNewActivity] = useState({
     destinationId: "",
     startTime: "",
@@ -97,7 +86,6 @@ export function ScheduleStep({ data, updateData, onNext, onPrev }: ScheduleStepP
     updateData({ schedule: newSchedule })
     setShowAddActivity(false)
     
-    // Reset form
     setNewActivity({
       destinationId: "",
       startTime: "",
@@ -178,7 +166,7 @@ export function ScheduleStep({ data, updateData, onNext, onPrev }: ScheduleStepP
                 <div className="text-center py-8 text-slate-500">
                   <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>Belum ada aktivitas untuk hari ini</p>
-                  <p className="text-sm">Klik "Tambah Aktivitas" untuk memulai</p>
+                  <p className="text-sm">Klik &quot;Tambah Aktivitas&quot; untuk memulai</p>
                 </div>
               ) : (
                 getDaySchedule(selectedDay)
@@ -198,9 +186,9 @@ export function ScheduleStep({ data, updateData, onNext, onPrev }: ScheduleStepP
 
                         <div className="flex items-center gap-3 flex-1">
                           {destination && (
-                            <div className="relative w-16 h-12 rounded overflow-hidden">
+                            <div className="relative w-16 h-12 rounded overflow-hidden flex-shrink-0">
                               <Image
-                                src={destination.image || "/placeholder.svg"}
+                                src={destination.imageUrl || "/placeholder.svg"}
                                 alt={destination.name}
                                 fill
                                 className="object-cover"
@@ -226,7 +214,7 @@ export function ScheduleStep({ data, updateData, onNext, onPrev }: ScheduleStepP
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => removeActivity(activity.id)}
+                            onClick={() => activity.id && removeActivity(activity.id)}
                             className="text-red-500 hover:text-red-700 hover:bg-red-50"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -335,7 +323,11 @@ export function ScheduleStep({ data, updateData, onNext, onPrev }: ScheduleStepP
         <Button variant="outline" onClick={onPrev}>
           Kembali
         </Button>
-        <Button onClick={onNext} className="bg-sky-500 hover:bg-sky-600">
+        <Button 
+          onClick={onNext} 
+          className="bg-sky-500 hover:bg-sky-600"
+          disabled={data.schedule.length === 0}
+        >
           Selanjutnya
         </Button>
       </div>
