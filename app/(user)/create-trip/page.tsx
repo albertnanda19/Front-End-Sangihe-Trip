@@ -15,6 +15,32 @@ import { ReviewStep } from "@/components/trip-planner/review-step"
 import { TripSummaryCard } from "@/components/trip-planner/trip-summary-card"
 import { SuccessPage } from "@/components/trip-planner/success-page"
 
+export interface Destination {
+  id: string
+  name: string
+  category?: string
+  location?: string
+  price?: number
+  rating?: number
+  imageUrl?: string
+}
+
+export interface ScheduleItem {
+  id?: string
+  day: number
+  destinationId: string
+  destinationName?: string
+  startTime: string
+  endTime: string
+  activity: string
+  notes?: string
+}
+
+export interface ScheduleDay {
+  day: number
+  items: Omit<ScheduleItem, 'id' | 'day'>[]
+}
+
 export interface TripData {
   // Basic Info
   tripName: string
@@ -24,10 +50,10 @@ export interface TripData {
   tripType: string
 
   // Destinations
-  selectedDestinations: any[]
+  selectedDestinations: Destination[]
 
   // Schedule
-  schedule: any[]
+  schedule: ScheduleItem[]
 
   // Budget & Notes
   budget: {
@@ -54,6 +80,8 @@ const steps = [
 export default function CreateTripPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [isCompleted, setIsCompleted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [tripData, setTripData] = useState<TripData>({
     tripName: "",
     startDate: null,
@@ -82,7 +110,7 @@ export default function CreateTripPage() {
       // Clean invalid schedule items when moving to schedule step
       if (currentStep === 2) {
         const validDestinationIds = tripData.selectedDestinations.map(d => d.id)
-        const cleanSchedule = tripData.schedule.filter((item: any) => 
+        const cleanSchedule = tripData.schedule.filter((item: ScheduleItem) => 
           validDestinationIds.includes(item.destinationId)
         )
         if (cleanSchedule.length !== tripData.schedule.length) {
@@ -104,18 +132,23 @@ export default function CreateTripPage() {
   }
 
   const handleComplete = async () => {
+    setIsSubmitting(true)
+    setSubmitError(null)
+    
     try {
       const accessToken = getCookie("access_token")
       if (!accessToken) throw new Error("Pengguna belum login")
 
       // --- Client-side validations ---
       if (tripData.selectedDestinations.length === 0) {
-        alert("Anda belum memilih destinasi apa pun. Silakan pilih minimal satu destinasi.")
+        setSubmitError("Anda belum memilih destinasi apa pun. Silakan pilih minimal satu destinasi.")
+        setIsSubmitting(false)
         return
       }
 
       if (tripData.schedule.length === 0) {
-        alert("Jadwal perjalanan tidak boleh kosong. Tambahkan minimal satu aktivitas.")
+        setSubmitError("Jadwal perjalanan tidak boleh kosong. Tambahkan minimal satu aktivitas.")
+        setIsSubmitting(false)
         return
       }
 
@@ -127,8 +160,8 @@ export default function CreateTripPage() {
         peopleCount: tripData.peopleCount,
         tripType: tripData.tripType,
         isPublic: tripData.isPublic,
-        destinations: tripData.selectedDestinations.map((d: any) => d.id),
-        schedule: tripData.schedule.reduce((acc: any[], item: any) => {
+        destinations: tripData.selectedDestinations.map((d: Destination) => d.id),
+        schedule: tripData.schedule.reduce((acc: ScheduleDay[], item: ScheduleItem) => {
           const dayObj = acc.find((d) => d.day === item.day)
           
           if (!item.destinationId) {
@@ -182,7 +215,9 @@ export default function CreateTripPage() {
       setIsCompleted(true)
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Terjadi kesalahan"
-      alert(msg)
+      setSubmitError(msg)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -204,6 +239,8 @@ export default function CreateTripPage() {
             onComplete={handleComplete}
             onPrev={prevStep}
             onEdit={goToStep}
+            isSubmitting={isSubmitting}
+            submitError={submitError}
           />
         )
       default:

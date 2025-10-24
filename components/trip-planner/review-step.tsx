@@ -9,7 +9,7 @@ import { Check, Edit, Calendar, Users, DollarSign, Clock, Globe, Lock } from "lu
 import { format } from "date-fns"
 import { id } from "date-fns/locale"
 import Image from "next/image"
-import type { TripData } from "@/app/(user)/create-trip/page"
+import type { TripData, ScheduleItem } from "@/app/(user)/create-trip/page"
 
 interface ReviewStepProps {
   data: TripData
@@ -17,9 +17,11 @@ interface ReviewStepProps {
   onComplete: () => void
   onPrev: () => void
   onEdit: (step: number) => void
+  isSubmitting?: boolean
+  submitError?: string | null
 }
 
-export function ReviewStep({ data, updateData, onComplete, onPrev, onEdit }: ReviewStepProps) {
+export function ReviewStep({ data, updateData, onComplete, onPrev, onEdit, isSubmitting, submitError }: ReviewStepProps) {
   const totalBudget = Object.values(data.budget).reduce((sum, value) => sum + value, 0)
   const tripDuration =
     data.startDate && data.endDate
@@ -149,7 +151,7 @@ export function ReviewStep({ data, updateData, onComplete, onPrev, onEdit }: Rev
                       </div>
                       <div className="relative w-16 h-12 rounded overflow-hidden">
                         <Image
-                          src={destination.image || "/placeholder.svg"}
+                          src={destination.imageUrl || "/placeholder.svg"}
                           alt={destination.name}
                           fill
                           className="object-cover"
@@ -162,7 +164,7 @@ export function ReviewStep({ data, updateData, onComplete, onPrev, onEdit }: Rev
                       <Badge variant="outline">{destination.category}</Badge>
                       <div className="text-right">
                         <p className="text-sm font-medium text-emerald-600">
-                          {destination.price === 0 ? "Gratis" : `Rp ${destination.price.toLocaleString()}`}
+                          {destination.price === 0 || !destination.price ? "Gratis" : `Rp ${destination.price.toLocaleString()}`}
                         </p>
                       </div>
                     </div>
@@ -188,14 +190,14 @@ export function ReviewStep({ data, updateData, onComplete, onPrev, onEdit }: Rev
                 ) : (
                   <div className="space-y-4">
                     {Array.from({ length: tripDuration }, (_, i) => i + 1).map((day) => {
-                      const daySchedule = data.schedule.filter((item: any) => item.day === day)
+                      const daySchedule = data.schedule.filter((item: ScheduleItem) => item.day === day)
                       if (daySchedule.length === 0) return null
 
                       return (
                         <div key={day} className="bg-white rounded-lg p-4">
                           <h4 className="font-medium text-slate-800 mb-3">Hari {day}</h4>
                           <div className="space-y-2">
-                            {daySchedule.map((activity: any) => (
+                            {daySchedule.map((activity: ScheduleItem) => (
                               <div key={activity.id} className="flex items-center gap-3 text-sm">
                                 <span className="text-slate-600">
                                   {activity.startTime} - {activity.endTime}
@@ -328,13 +330,32 @@ export function ReviewStep({ data, updateData, onComplete, onPrev, onEdit }: Rev
       </Card>
 
       {/* Navigation */}
+      {submitError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-sm text-red-600">{submitError}</p>
+        </div>
+      )}
+      
       <div className="flex justify-between">
-        <Button variant="outline" onClick={onPrev}>
+        <Button variant="outline" onClick={onPrev} disabled={isSubmitting}>
           Kembali
         </Button>
-        <Button onClick={onComplete} className="bg-green-500 hover:bg-green-600 px-8">
-          <Check className="w-4 h-4 mr-2" />
-          Simpan Rencana Perjalanan
+        <Button 
+          onClick={onComplete} 
+          className="bg-green-500 hover:bg-green-600 px-8"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <span className="animate-spin mr-2">⏳</span>
+              Menyimpan...
+            </>
+          ) : (
+            <>
+              <Check className="w-4 h-4 mr-2" />
+              Simpan Rencana Perjalanan
+            </>
+          )}
         </Button>
       </div>
     </div>
