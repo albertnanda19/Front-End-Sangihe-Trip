@@ -143,9 +143,10 @@ export default function DetailTripPage() {
                   </Badge>
                 </div>
               </div>
-              <Link href={`/my-trips/${trip.id}/edit`}>
+              {/* TODO: Implement edit functionality */}
+              {/* <Link href={`/my-trips/${trip.id}/edit`}>
                 <Button variant="outline">Edit Perjalanan</Button>
-              </Link>
+              </Link> */}
             </div>
 
             {/* Basic Info Card */}

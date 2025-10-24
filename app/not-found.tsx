@@ -221,7 +221,7 @@ export default function NotFound() {
                 </li>
                 <li>
                   <Link
-                    href="/destinations"
+                    href="/destinasi"
                     className="text-slate-300 hover:text-white"
                   >
                     Destinasi
@@ -237,7 +237,7 @@ export default function NotFound() {
                 </li>
                 <li>
                   <Link
-                    href="/articles"
+                    href="/artikel"
                     className="text-slate-300 hover:text-white"
                   >
                     Blog

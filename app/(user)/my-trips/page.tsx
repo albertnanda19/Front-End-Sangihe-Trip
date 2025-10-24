@@ -140,11 +140,11 @@ export default function MyTripPage() {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/dashboard" className="text-sky-600 font-medium">
+              <Link href="/beranda" className="text-sky-600 font-medium">
                 Dashboard
               </Link>
               <Link
-                href="/destinations"
+                href="/destinasi"
                 className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
               >
                 Destinasi

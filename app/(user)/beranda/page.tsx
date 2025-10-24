@@ -143,7 +143,7 @@ export default function DashboardPage() {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/dashboard" className="text-sky-600 font-medium">
+              <Link href="/beranda" className="text-sky-600 font-medium">
                 Dashboard
               </Link>
               <Link

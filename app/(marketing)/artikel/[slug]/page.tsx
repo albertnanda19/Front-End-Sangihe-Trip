@@ -130,7 +130,7 @@ export default function ArticleDetailPage() {
                 Beranda
               </Link>
               <Link
-                href="/destinations"
+                href="/destinasi"
                 className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
               >
                 Destinasi
@@ -142,7 +142,7 @@ export default function ArticleDetailPage() {
                 Rencana Perjalanan
               </Link>
               <Link
-                href="/articles"
+                href="/artikel"
                 className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
               >
                 Artikel

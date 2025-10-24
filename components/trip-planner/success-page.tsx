@@ -61,7 +61,7 @@ export function SuccessPage({ tripData }: SuccessPageProps) {
             <h1 className="text-3xl font-bold text-slate-800 mb-4">Rencana Perjalanan Berhasil Dibuat! 🎉</h1>
 
             <p className="text-lg text-slate-600 mb-6">
-              Selamat! Rencana perjalanan "{tripData.tripName}" telah tersimpan dan siap untuk petualangan Anda.
+              Selamat! Rencana perjalanan &quot;{tripData.tripName}&quot; telah tersimpan dan siap untuk petualangan Anda.
             </p>
 
             <div className="bg-gradient-to-r from-sky-50 to-emerald-50 border border-sky-200 rounded-lg p-6 mb-6">
@@ -90,11 +90,11 @@ export function SuccessPage({ tripData }: SuccessPageProps) {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/dashboard">
+              <Link href="/beranda">
                 <Button className="bg-sky-500 hover:bg-sky-600">Kembali ke Dashboard</Button>
               </Link>
               <Link href="/my-trips">
-                <Button variant="outline">Lihat Semua Rencana</Button>
+                <Button variant="outline">Lihat Semua Perjalanan</Button>
               </Link>
             </div>
           </CardContent>

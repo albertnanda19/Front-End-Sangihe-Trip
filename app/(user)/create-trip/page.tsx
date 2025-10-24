@@ -259,7 +259,7 @@ export default function CreateTripPage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link href="/dashboard" className="flex items-center text-slate-600 hover:text-sky-600 transition-colors">
+              <Link href="/beranda" className="flex items-center text-slate-600 hover:text-sky-600 transition-colors">
                 <ArrowLeft className="w-5 h-5 mr-2" />
                 Kembali ke Dashboard
               </Link>
