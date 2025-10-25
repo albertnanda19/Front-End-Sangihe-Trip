@@ -5,10 +5,8 @@ import { useParams } from "next/navigation";
 import { apiUrl } from "@/lib/api";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
-import Header from "@/app/_components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { 
   MapPin, 
@@ -21,7 +19,7 @@ import {
   Package,
   CheckCircle2
 } from "lucide-react";
-import Link from "next/link";
+// import Link from "next/link";
 
 interface ScheduleItem {
   destinationId: string;
@@ -119,9 +117,7 @@ export default function DetailTripPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="container mx-auto px-4 py-8">
+      <div className="space-y-6">
         {loading ? (
           <p className="text-center text-slate-600">Memuat detail perjalanan...</p>
         ) : error ? (
@@ -309,6 +305,5 @@ export default function DetailTripPage() {
           </div>
         )}
       </div>
-    </div>
   );
 }

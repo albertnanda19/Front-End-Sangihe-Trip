@@ -7,11 +7,23 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   User,
   MapPin,
   Star,
   Plus,
   Edit,
+  Trash2,
   Calendar,
   Compass,
   BookOpen,  
@@ -30,12 +42,15 @@ import { useUserDashboard } from "@/hooks/use-user-dashboard";
 import { DashboardSkeleton, SidebarSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyTrips, EmptyReviews, EmptyDestinations, EmptyArticles } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { apiUrl } from "@/lib/api";
+import { getCookie } from "@/lib/cookies";
 
 
 
 export default function DashboardPage() {
   const [sidebarOpen] = useState(false);
   const [likedReviews, setLikedReviews] = useState<Set<string>>(new Set());
+  const [deletedRecentIds, setDeletedRecentIds] = useState<Set<string>>(new Set());
 
   const { profile, stats, loading: profileLoading, error: profileError, refetch: refetchProfile } = useUserProfile();
   const {
@@ -54,6 +69,25 @@ export default function DashboardPage() {
 
   const userName = profile?.name || "User";
   
+  const handleDeleteRecent = async (id: string) => {
+    setDeletedRecentIds((prev) => new Set(prev).add(id));
+    try {
+      const token = getCookie("access_token");
+      if (!token) throw new Error("Pengguna belum login");
+      const res = await fetch(apiUrl(`/api/users/me/trips/${id}`), {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Gagal menghapus perjalanan");
+      refetchDashboard();
+  } catch {
+      setDeletedRecentIds((prev) => {
+        const s = new Set(prev);
+        s.delete(id);
+        return s;
+      });
+    }
+  };
 
   const toggleLike = (reviewId: string) => {
     setLikedReviews((prev) => {
@@ -301,10 +335,12 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="space-y-4">
-                  {recentTrips.length === 0 ? (
+                  {recentTrips.filter((t) => !deletedRecentIds.has(t.id)).length === 0 ? (
                     <EmptyTrips variant="minimal" />
                   ) : (
-                    recentTrips.map((trip) => (
+                    recentTrips
+                      .filter((t) => !deletedRecentIds.has(t.id))
+                      .map((trip) => (
                     <Card
                       key={trip.id}
                       className="hover:shadow-md transition-all hover:border-sky-300 cursor-pointer"
@@ -382,13 +418,42 @@ export default function DashboardPage() {
                                   </>
                                 )}
                               </div>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                className="h-7 w-7 p-0 hover:bg-sky-50 hover:text-sky-600"
-                              >
-                                <Edit className="w-3.5 h-3.5" />
-                              </Button>
+                              <div className="flex items-center gap-1.5">
+                                <Link href={`/my-trips/${trip.id}`}>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    className="h-7 px-2 gap-1 hover:bg-sky-50 hover:text-sky-600"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" /> Edit
+                                  </Button>
+                                </Link>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 px-2 gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" /> Hapus
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Hapus perjalanan?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Tindakan ini tidak dapat dibatalkan. Perjalanan akan dihapus permanen.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Batal</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDeleteRecent(trip.id)}>
+                                        Ya, hapus
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
                             </div>
                           </div>
                         </div>
