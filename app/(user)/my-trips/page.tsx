@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { apiUrl } from "@/lib/api";
-import { getCookie } from "@/lib/cookies";
+import { get, del, ApiError } from "@/lib/api";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,33 +45,31 @@ export default function MyTripPage() {
   const [error, setError] = useState<string | null>(null);
   const [, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadTrips() {
-      try {
-        const token = getCookie("access_token");
-        if (!token) {
-          setError("Pengguna belum login");
-          setLoading(false);
-          return;
-        }
-        const res = await fetch(apiUrl("/api/users/me/trips"), {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          cache: "no-store",
-        });
-        if (!res.ok) {
-          throw new Error("Gagal memuat data perjalanan");
-        }
-        const json = await res.json();
-        setTrips(json.data?.data ?? []);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Terjadi kesalahan";
-        setError(msg);
-      } finally {
-        setLoading(false);
+  const loadTrips = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await get<Trip[]>("/api/users/me/trips", {
+        auth: "required",
+        cache: "no-store",
+      });
+      let list: Trip[] = [];
+      if (Array.isArray(data)) {
+        list = data as Trip[];
+      } else if (data && typeof data === "object") {
+        const nested = (data as Record<string, unknown>)["data"] as unknown;
+        if (Array.isArray(nested)) list = nested as Trip[];
       }
+      setTrips(list);
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Terjadi kesalahan";
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadTrips();
   }, []);
 
@@ -79,23 +77,11 @@ export default function MyTripPage() {
     const prev = trips;
     setTrips((t) => t.filter((x) => x.id !== id));
     try {
-      const token = getCookie("access_token");
-      if (!token) throw new Error("Pengguna belum login");
-      const res = await fetch(apiUrl(`/api/users/me/trips/${id}`), {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        let msg = "Gagal menghapus perjalanan";
-        try {
-          const j = await res.json();
-          msg = j?.message || j?.error || msg;
-        } catch {}
-        throw new Error(msg);
-      }
+      await del(`/api/users/me/trips/${id}`, { auth: "required" });
     } catch (err) {
       setTrips(prev);
-      setError(err instanceof Error ? err.message : "Terjadi kesalahan");
+      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Terjadi kesalahan";
+      setError(msg);
     } finally {
       setDeletingId(null);
     }
@@ -148,7 +134,9 @@ export default function MyTripPage() {
       {loading ? (
         <p className="text-center text-slate-600">Memuat perjalanan...</p>
       ) : error ? (
-        <p className="text-center text-red-600">{error}</p>
+        <div className="mb-4">
+          <ErrorState message={error} onRetry={loadTrips} variant="alert" />
+        </div>
       ) : trips.length === 0 ? (
         <div className="text-center py-20 text-slate-600">
           <Image

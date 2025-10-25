@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { apiUrl } from "@/lib/api";
-import { getCookie } from "@/lib/cookies";
+import { get, ApiError } from "@/lib/api";
 import type { ReviewResponse } from "@/lib/api-response";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -41,13 +40,6 @@ export default function UserReviewsPage() {
     setLoading(true);
     setError(null);
     try {
-      const token = getCookie("access_token");
-      if (!token) {
-        setError("Pengguna belum login");
-        setLoading(false);
-        return;
-      }
-
       const params = new URLSearchParams();
       params.set("page", String(page));
       params.set("per_page", String(perPage));
@@ -55,21 +47,14 @@ export default function UserReviewsPage() {
       params.set("order", order);
       if (rating !== "all") params.set("rating", rating);
 
-      const url = apiUrl(`/api/users/me/reviews?${params.toString()}`);
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
+      const urlPath = `/api/users/me/reviews?${params.toString()}`;
+      const { data: items, meta } = await get<ReviewResponse[], ReviewsMeta>(urlPath, {
+        auth: "required",
         cache: "no-store",
       });
-      if (!res.ok) {
-        throw new Error(`Gagal memuat review (status ${res.status})`);
-      }
-      const json = await res.json();
-
-      const items: ReviewResponse[] = json?.data?.data ?? json?.data?.items ?? [];
-      const meta: ReviewsMeta | undefined = json?.data?.meta;
-      setData({ items, meta });
+      setData({ items: items ?? [], meta });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Terjadi kesalahan";
+      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Terjadi kesalahan";
       setError(msg);
     } finally {
       setLoading(false);
