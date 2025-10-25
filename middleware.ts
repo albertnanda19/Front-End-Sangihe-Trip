@@ -13,7 +13,9 @@ export function middleware(req: NextRequest) {
     pathname === "/create-trip" ||
     pathname.startsWith("/my-trips") ||
     pathname === "/reviews" ||
-    pathname.startsWith("/reviews");
+    pathname.startsWith("/reviews") ||
+    pathname === "/profil" ||
+    pathname === "/settings";
 
   if (!isProtected) {
     return NextResponse.next();
@@ -31,5 +33,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/beranda", "/create-trip", "/my-trips/:path*", "/reviews/:path*", "/reviews"],
+  matcher: ["/beranda", "/create-trip", "/my-trips/:path*", "/reviews/:path*", "/reviews", "/profil", "/settings"],
 };

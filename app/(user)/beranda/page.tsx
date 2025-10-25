@@ -638,9 +638,11 @@ export default function DashboardPage() {
                         Lengkapi profil untuk rekomendasi yang lebih baik
                       </p>
                     </div>
-                    <Button variant="outline" size="sm" className="w-full">
-                      Lengkapi Profil
-                    </Button>
+                    <Link href="/profil">
+                      <Button variant="outline" size="sm" className="w-full">
+                        Lengkapi Profil
+                      </Button>
+                    </Link>
                   </CardContent>
                 </Card>
 
