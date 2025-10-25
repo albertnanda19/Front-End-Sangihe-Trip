@@ -5,13 +5,12 @@ import Link from "next/link";
 import { apiUrl } from "@/lib/api";
 import { getCookie } from "@/lib/cookies";
 import type { ReviewResponse } from "@/lib/api-response";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { EmptyReviews } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { Calendar, ChevronRight, Heart, Menu, Star, X } from "lucide-react";
+import { Calendar, ChevronRight, Heart, Star } from "lucide-react";
 
 type Order = "asc" | "desc";
 
@@ -28,7 +27,6 @@ interface ReviewsResult {
 }
 
 export default function UserReviewsPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -104,48 +102,7 @@ export default function UserReviewsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header (dashboard-style) */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-emerald-600 bg-clip-text text-transparent">
-                SANGIHE TRIP
-              </span>
-            </div>
-
-            {/* Desktop Navigation (Dashboard-only) */}
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/beranda" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
-                Dashboard
-              </Link>
-              <Link href="/my-trips" className="text-slate-700 hover:text-sky-600 font-medium transition-colors">
-                Rencana Saya
-              </Link>
-              <Link href="/reviews" className="text-sky-600 font-medium">
-                Review Saya
-              </Link>
-            </nav>
-
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-6">
+      <div>
         {/* Title & Filters */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
@@ -279,6 +236,5 @@ export default function UserReviewsPage() {
           </div>
         )}
       </div>
-    </div>
   );
 }

@@ -18,25 +18,9 @@ import { Button } from "@/components/ui/button";
 import {
   MapPin,
   Users,
-  Calendar as CalendarIcon,
-  Bell,
-  User,
-  Settings,
-  LogOut,
-  Menu,
-  X,
+  Calendar as CalendarIcon,  
   Plus,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useUserProfile } from "@/hooks/use-user-profile";
 
 interface Trip {
   id: string;
@@ -55,8 +39,6 @@ interface Trip {
 }
 
 export default function MyTripPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { profile } = useUserProfile();
 
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,109 +102,7 @@ export default function MyTripPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-emerald-600 bg-clip-text text-transparent">
-                SANGIHE TRIP
-              </span>
-            </div>
-
-            {/* Desktop Navigation (Dashboard-only) */}
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/beranda" className="text-sky-600 font-medium">
-                Dashboard
-              </Link>
-              <Link
-                href="/my-trips"
-                className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
-              >
-                Rencana Saya
-              </Link>
-              <Link
-                href="/reviews"
-                className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
-              >
-                Review Saya
-              </Link>
-            </nav>
-
-            {/* Right Side */}
-            <div className="flex items-center gap-4">
-              {/* Notifications */}
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                  3
-                </span>
-              </Button>
-
-              {/* User Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="flex items-center gap-3 hover:bg-gray-100"
-                  >
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={profile?.avatar || "/placeholder.svg"} />
-                      <AvatarFallback>{(profile?.name || "U").charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="hidden md:block text-left">
-                      <p className="text-sm font-medium">{profile?.name || "Pengguna"}</p>
-                      {profile?.joinDate && (
-                        <p className="text-xs text-slate-500">
-                          Member sejak {new Date(profile.joinDate).toLocaleDateString("id-ID", { month: "long", year: "numeric" })}
-                        </p>
-                      )}
-                    </div>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>Akun Saya</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profil</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Pengaturan</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Keluar</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Mobile Menu Button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-              >
-                {sidebarOpen ? (
-                  <X className="h-6 w-6" />
-                ) : (
-                  <Menu className="h-6 w-6" />
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-6">
+      <div>
         {/* Top bar: title & action */}
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -325,6 +205,5 @@ export default function MyTripPage() {
           </div>
         )}
       </div>
-    </div>
   );
 }
