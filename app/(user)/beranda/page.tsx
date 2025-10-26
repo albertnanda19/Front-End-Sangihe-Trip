@@ -7,23 +7,11 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
   User,
   MapPin,
   Star,
   Plus,
   Edit,
-  Trash2,
   Calendar,
   Compass,
   BookOpen,  
@@ -32,7 +20,6 @@ import {
   Heart,
   ChevronRight,
   ExternalLink,
-  MessageSquare,
   Target,
   Map,
 } from "lucide-react";
@@ -42,15 +29,10 @@ import { useUserDashboard } from "@/hooks/use-user-dashboard";
 import { DashboardSkeleton, SidebarSkeleton } from "@/components/dashboard-skeleton";
 import { EmptyTrips, EmptyReviews, EmptyDestinations, EmptyArticles } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
-import { apiUrl } from "@/lib/api";
-import { getCookie } from "@/lib/cookies";
-
-
 
 export default function DashboardPage() {
   const [sidebarOpen] = useState(false);
   const [likedReviews, setLikedReviews] = useState<Set<string>>(new Set());
-  const [deletedRecentIds, setDeletedRecentIds] = useState<Set<string>>(new Set());
 
   const { profile, stats, loading: profileLoading, error: profileError, refetch: refetchProfile } = useUserProfile();
   const {
@@ -68,26 +50,6 @@ export default function DashboardPage() {
   const error = profileError || dashboardError;
 
   const userName = profile?.name || "User";
-  
-  const handleDeleteRecent = async (id: string) => {
-    setDeletedRecentIds((prev) => new Set(prev).add(id));
-    try {
-      const token = getCookie("access_token");
-      if (!token) throw new Error("Pengguna belum login");
-      const res = await fetch(apiUrl(`/api/users/me/trips/${id}`), {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Gagal menghapus perjalanan");
-      refetchDashboard();
-  } catch {
-      setDeletedRecentIds((prev) => {
-        const s = new Set(prev);
-        s.delete(id);
-        return s;
-      });
-    }
-  };
 
   const toggleLike = (reviewId: string) => {
     setLikedReviews((prev) => {
@@ -213,7 +175,7 @@ export default function DashboardPage() {
                       Aktivitas Anda
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     {/* Buat Trip Baru */}
                     <Link href="/create-trip">
                       <Card className="h-full hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-sky-300 relative">
@@ -321,7 +283,7 @@ export default function DashboardPage() {
             {/* Recent Activity */}
             <div className="grid md:grid-cols-2 gap-6">
               {/* Recent Trip Plans */}
-              <div className="space-y-4">
+              <div className="space-y-4" id="recent-trips">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-slate-800">
                     Rencana Terbaru
@@ -335,17 +297,15 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="space-y-4">
-                  {recentTrips.filter((t) => !deletedRecentIds.has(t.id)).length === 0 ? (
+                  {recentTrips.length === 0 ? (
                     <EmptyTrips variant="minimal" />
                   ) : (
-                    recentTrips
-                      .filter((t) => !deletedRecentIds.has(t.id))
-                      .map((trip) => (
+                    recentTrips.map((trip) => (
                     <Card
                       key={trip.id}
                       className="hover:shadow-md transition-all hover:border-sky-300 cursor-pointer"
                     >
-                      <CardContent className="p-3">
+                      <CardContent className="">
                         <div className="flex gap-3">
                           {/* Enhanced Image with overlay badges */}
                           <div className="relative w-24 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
@@ -368,8 +328,11 @@ export default function DashboardPage() {
                           <div className="flex-1 min-w-0">
                             {/* Title and Status Row */}
                             <div className="flex items-start justify-between gap-2 mb-1.5">
-                              <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <h3 className="font-semibold text-slate-900 truncate text-[15px]">
+                              <Link 
+                                href={`/my-trips/${trip.id}`}
+                                className="flex items-center gap-2 flex-1 min-w-0 group/link"
+                              >
+                                <h3 className="font-semibold text-slate-900 group-hover/link:text-sky-600 transition-colors truncate text-[15px]">
                                   {trip.name}
                                 </h3>
                                 {/* Privacy Indicator */}
@@ -382,7 +345,7 @@ export default function DashboardPage() {
                                     <Lock className="w-3.5 h-3.5" />
                                   </div>
                                 )}
-                              </div>
+                              </Link>
                               <Badge
                                 className={`${getStatusColor(
                                   trip.status
@@ -393,13 +356,13 @@ export default function DashboardPage() {
                             </div>
 
                             {/* Date */}
-                            <p className="text-xs text-slate-600 mb-2.5">
+                            <p className="text-xs text-slate-600 my-3">
                               📅 {trip.dates}
                             </p>
 
                             {/* Info and Actions Row */}
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2.5 text-xs text-slate-500 flex-1">
+                              <div className="flex items-center gap-2.5 text-xs text-slate-500">
                                 <div className="flex items-center gap-1">
                                   <User className="w-3.5 h-3.5" />
                                   <span>{trip.peopleCount}</span>
@@ -417,42 +380,6 @@ export default function DashboardPage() {
                                     </span>
                                   </>
                                 )}
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <Link href={`/my-trips/${trip.id}`}>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    className="h-7 px-2 gap-1 hover:bg-sky-50 hover:text-sky-600"
-                                  >
-                                    <Edit className="w-3.5 h-3.5" /> Edit
-                                  </Button>
-                                </Link>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-7 px-2 gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" /> Hapus
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Hapus perjalanan?</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Tindakan ini tidak dapat dibatalkan. Perjalanan akan dihapus permanen.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Batal</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDeleteRecent(trip.id)}>
-                                        Ya, hapus
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
                               </div>
                             </div>
                           </div>
@@ -489,82 +416,71 @@ export default function DashboardPage() {
                       return (
                     <Card
                       key={review.id}
-                      className="hover:shadow-lg transition-all hover:border-sky-200 group"
+                      className="hover:shadow-md transition-all hover:border-sky-300 cursor-pointer"
                     >
-                      <CardContent className="p-3">
-                        {/* Destination Name - Clickable */}
-                        <div className="flex items-start justify-between mb-2">
-                          <Link 
-                            href={`/destinasi/${review.destinationId}`}
-                            className="flex-1 group/link"
-                          >
-                            <h3 className="font-semibold text-slate-900 group-hover/link:text-sky-600 transition-colors flex items-center gap-2">
-                              {review.destination}
-                              <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover/link:opacity-100 transition-opacity" />
-                            </h3>
-                          </Link>
-                          
-                          {/* Enhanced Rating Display */}
-                          <div className="flex items-center gap-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 transition-all ${
-                                  i < review.rating
-                                    ? "text-amber-400 fill-amber-400 scale-110"
-                                    : "text-slate-300"
-                                }`}
-                              />
-                            ))}
-                            <span className="ml-1.5 text-sm font-semibold text-slate-700">
-                              {review.rating}.0
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Review Excerpt */}
-                        <p className="text-sm text-slate-600 mb-2 line-clamp-2 leading-relaxed">
-                          &ldquo;{review.excerpt}&rdquo;
-                        </p>
-
-                        {/* Actions Row */}
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-500 flex items-center gap-1">
-                            <Calendar className="w-3.5 h-3.5" />
-                            {review.date}
-                          </span>
-                          
-                          <div className="flex items-center gap-3">
-                            {/* Like Button */}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className={`h-7 px-2 gap-1.5 transition-all ${
-                                isLiked 
-                                  ? "text-rose-600 hover:text-rose-700 bg-rose-50" 
-                                  : "text-slate-500 hover:text-rose-600 hover:bg-rose-50"
-                              }`}
-                              onClick={() => toggleLike(review.id)}
-                            >
-                              <Heart 
-                                className={`w-3.5 h-3.5 transition-all ${
-                                  isLiked ? "fill-rose-600" : ""
-                                }`} 
-                              />
-                              <span className="font-medium">{displayLikes}</span>
-                            </Button>
-
-                            {/* View Full Review */}
-                            <Link href={`/destinasi/${review.destinationId}#review-${review.id}`}>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2 gap-1 text-slate-600 hover:text-sky-600 hover:bg-sky-50"
+                      <CardContent className="">
+                        <div className="flex gap-3">
+                          <div className="flex-1 min-w-0">
+                            {/* Destination Name and Rating */}
+                            <div className="flex items-start justify-between gap-2 mb-1.5">
+                              <Link 
+                                href={`/destinasi/${review.destinationId}`}
+                                className="flex-1 min-w-0 group/link"
                               >
-                                <MessageSquare className="w-3.5 h-3.5" />
-                                <span className="text-xs">Lihat</span>
-                              </Button>
-                            </Link>
+                                <h3 className="font-semibold text-slate-900 group-hover/link:text-sky-600 transition-colors flex items-center gap-2 truncate text-[15px]">
+                                  {review.destination}
+                                  <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover/link:opacity-100 transition-opacity flex-shrink-0" />
+                                </h3>
+                              </Link>
+                              
+                              {/* Rating Display - Right Side */}
+                              <div className="flex items-center gap-0.5 mt-1 flex-shrink-0">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-3.5 h-3.5 ${
+                                      i < review.rating
+                                        ? "text-amber-400 fill-amber-400"
+                                        : "text-slate-300"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Review Excerpt */}
+                            <p className="text-xs text-slate-600 my-2 line-clamp-2 leading-relaxed">
+                              &ldquo;{review.excerpt}&rdquo;
+                            </p>
+
+                            {/* Actions Row */}
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-slate-500 flex items-center gap-1">
+                                <Calendar className="w-3.5 h-3" />
+                                {review.date}
+                              </span>
+                              
+                              <div className="flex items-center">
+                                {/* Like Button */}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className={`h-5.5 px-1.5 gap-1 transition-all ${
+                                    isLiked 
+                                      ? "text-rose-600 hover:text-rose-700" 
+                                      : "text-slate-500 hover:text-rose-600"
+                                  }`}
+                                  onClick={() => toggleLike(review.id)}
+                                >
+                                  <Heart 
+                                    className={`w-3.5 h-3.5 ${
+                                      isLiked ? "fill-rose-600" : ""
+                                    }`} 
+                                  />
+                                  <span className="text-xs font-medium">{displayLikes}</span>
+                                </Button>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </CardContent>

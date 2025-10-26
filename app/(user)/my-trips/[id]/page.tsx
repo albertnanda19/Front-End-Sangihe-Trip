@@ -3,6 +3,21 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { apiUrl } from "@/lib/api";
+import { getCookie } from "@/lib/cookies";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,6 +83,7 @@ export default function DetailTripPage() {
   const [trip, setTrip] = useState<TripDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (!id) return;
@@ -139,10 +155,44 @@ export default function DetailTripPage() {
                   </Badge>
                 </div>
               </div>
-              {/* TODO: Implement edit functionality */}
-              {/* <Link href={`/my-trips/${trip.id}/edit`}>
-                <Button variant="outline">Edit Perjalanan</Button>
-              </Link> */}
+              <div className="flex items-center gap-3">
+                <Link href={`/my-trips/${trip.id}/edit`}>
+                  <Button variant="outline">Edit</Button>
+                </Link>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive">Hapus</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Hapus perjalanan?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tindakan ini tidak dapat dikembalikan. Apakah Anda yakin ingin menghapus perjalanan ini?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Batal</AlertDialogCancel>
+                      <AlertDialogAction onClick={async () => {
+                        try {
+                          const token = getCookie("access_token");
+                          const res = await fetch(apiUrl(`/api/trip/${trip.id}`), {
+                            method: "DELETE",
+                            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                          });
+                          if (!res.ok) throw new Error("Gagal menghapus perjalanan");
+                          router.push("/my-trips");
+                        } catch (err) {
+                          console.error(err);
+                          alert("Gagal menghapus perjalanan");
+                        }
+                      }}>
+                        Ya, hapus
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
 
             {/* Basic Info Card */}
