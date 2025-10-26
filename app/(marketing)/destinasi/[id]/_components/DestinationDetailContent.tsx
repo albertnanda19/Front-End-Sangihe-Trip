@@ -333,7 +333,7 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold text-emerald-600">
-                    Rp {(destination.price ?? 0).toLocaleString()}
+                    Rp {(destination.price ?? 0).toLocaleString('id-ID')}
                   </p>
                   <p className="text-slate-600">per orang</p>
                 </CardContent>
@@ -520,7 +520,7 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
                       <span className="ml-1 text-sm">{dest.rating}</span>
                     </div>
                     <span className="font-semibold text-emerald-600">
-                      Rp {dest.price.toLocaleString()}
+                      Rp {dest.price.toLocaleString('id-ID')}
                     </span>
                   </div>
                 </CardContent>

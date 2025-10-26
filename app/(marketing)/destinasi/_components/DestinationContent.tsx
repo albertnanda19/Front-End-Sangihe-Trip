@@ -221,8 +221,8 @@ const DestinationContent = () => {
               {/* Price Filter */}
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-3 block">
-                  Harga Tiket: Rp {priceRange[0].toLocaleString()} - Rp{" "}
-                  {priceRange[1].toLocaleString()}
+                  Harga Tiket: Rp {priceRange[0].toLocaleString('id-ID')} - Rp{" "}
+                  {priceRange[1].toLocaleString('id-ID')}
                 </label>
                 <Slider
                   value={priceRange}
@@ -396,7 +396,7 @@ const DestinationContent = () => {
                         <div className="text-lg font-bold text-emerald-600">
                           {(destination.price ?? 0) === 0
                             ? "Gratis"
-                            : `Rp ${(destination.price ?? 0).toLocaleString()}`}
+                            : `Rp ${(destination.price ?? 0).toLocaleString('id-ID')}`}
                         </div>
                         <div className="text-sm text-slate-500">per orang</div>
                       </div>
