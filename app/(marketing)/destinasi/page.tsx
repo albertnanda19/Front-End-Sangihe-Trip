@@ -1,4 +1,4 @@
-import Header from "../../_components/Header";
+import Header from "@/components/layout/header";
 import DestinationContent from "./_components/DestinationContent";
 
 export default function DestinationsPage() {

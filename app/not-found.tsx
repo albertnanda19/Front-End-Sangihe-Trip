@@ -4,27 +4,18 @@ import type React from "react";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
-  Search,
-  Home,
   MapPin,
-  Calendar,
-  BookOpen,
   ArrowLeft,
-  Star,
   Phone,
   Mail,
   Facebook,
   Instagram,
   Twitter,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Header from "./_components/Header";
+import Header from "@/components/layout/header";
 
 export default function NotFound() {
   const [searchQuery, setSearchQuery] = useState("");
