@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { getCookie } from "@/lib/cookies";
+import { decodeJwt } from "@/lib/jwt";
+import { logout } from "@/lib/auth";
 
 /**
  * useAuthStatus – mengembalikan boolean apakah pengguna telah terautentikasi
@@ -13,14 +15,22 @@ export function useAuthStatus(): boolean {
   useEffect(() => {
     const checkAuth = () => {
       const token = getCookie("access_token");
-      const newAuthState = Boolean(token);
-      
-      setIsAuthenticated((prev) => {
-        if (prev !== newAuthState) {
-          return newAuthState;
+
+      if (token) {
+        try {
+          const payload = decodeJwt<{ exp?: number }>(token);
+          const exp = payload?.exp;
+          if (typeof exp === "number" && exp * 1000 < Date.now()) {
+            logout("/beranda");
+            setIsAuthenticated(false);
+            return;
+          }
+        } catch {
         }
-        return prev;
-      });
+      }
+
+      const newAuthState = Boolean(token);
+      setIsAuthenticated((prev) => (prev !== newAuthState ? newAuthState : prev));
     };
 
     checkAuth();
@@ -37,4 +47,4 @@ export function useAuthStatus(): boolean {
   }, []);
 
   return isAuthenticated;
-} 
+}

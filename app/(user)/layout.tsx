@@ -15,6 +15,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, Menu, X, User, Settings, LogOut } from "lucide-react";
 import { useUserProfile } from "@/hooks/use-user-profile";
+import { logout } from "@/lib/auth";
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -107,9 +108,11 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Keluar</span>
+                  <DropdownMenuItem asChild>
+                    <button onClick={() => logout("/beranda")} className="flex items-center w-full text-left">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Keluar</span>
+                    </button>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
