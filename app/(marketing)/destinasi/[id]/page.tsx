@@ -1,4 +1,4 @@
-import Header from "@/app/_components/Header";
+import Header from "@/components/layout/header";
 import DestinationDetailContent from "./_components/DestinationDetailContent";
 
 export default async function DestinationDetailPage({

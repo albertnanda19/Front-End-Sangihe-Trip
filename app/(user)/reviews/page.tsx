@@ -7,8 +7,8 @@ import type { ReviewResponse } from "@/lib/api-response";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { EmptyReviews } from "@/components/shared/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { EmptyReviews } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { Calendar, ChevronRight, Heart, Star } from "lucide-react";
 
 type Order = "asc" | "desc";

@@ -9,18 +9,12 @@ import {
   Calendar,
   Clock,
   Share2,
-  Facebook,
-  Twitter,
-  Instagram,
-  ChevronRight,
-  Menu,
   Mail,
   MapPin,
   Star,
   ThumbsUp,
   Reply,
   User,
-  Loader2,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,6 +22,13 @@ import { useParams } from "next/navigation";
 import { useArticleDetail } from "@/hooks/use-article-detail";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 import { Textarea } from "@/components/ui/textarea";
+import Header from "@/components/layout/header";
+import { Breadcrumb } from "@/components/breadcrumb";
+import { ShareButtons } from "@/components/share-buttons";
+import { AuthorCard, AuthorCardSidebar } from "@/components/author-card";
+import { PageLoader } from "@/components/page-loader";
+import { ROUTES } from "@/lib/constants/routes";
+import { DEFAULT_IMAGES } from "@/lib/constants/site";
 
 interface RelatedArticle {
   id: string;
@@ -70,37 +71,8 @@ export default function ArticleDetailPage() {
     setRating(0);
   };
 
-  const shareArticle = (platform: string) => {
-    if (!article) return;
-    const url = window.location.href;
-    const text = `Baca artikel menarik: ${article.title}`;
-
-    switch (platform) {
-      case "facebook":
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`);
-        break;
-      case "twitter":
-        window.open(
-          `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-            text
-          )}&url=${url}`
-        );
-        break;
-      case "instagram":
-        navigator.clipboard.writeText(`${text} ${url}`);
-        break;
-    }
-  };
-
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Memuat artikel...</span>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Memuat artikel..." />;
   }
 
   if (error) {
@@ -120,7 +92,7 @@ export default function ArticleDetailPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Artikel Tidak Ditemukan</h1>
           <p className="text-gray-600">Artikel yang Anda cari tidak dapat ditemukan.</p>
-          <Link href="/artikel" className="mt-4 inline-block text-sky-600 hover:underline">
+          <Link href={ROUTES.articles} className="mt-4 inline-block text-sky-600 hover:underline">
             Kembali ke daftar artikel
           </Link>
         </div>
@@ -128,70 +100,19 @@ export default function ArticleDetailPage() {
     );
   }
 
+  const breadcrumbItems = [
+    { label: "Beranda", href: ROUTES.home },
+    { label: "Artikel", href: ROUTES.articles },
+    { label: article.title }
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header - Same as other pages */}
-      <header className="bg-white/95 backdrop-blur-sm border-b border-sky-100 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-emerald-600 bg-clip-text text-transparent">
-                SANGIHE TRIP
-              </span>
-            </div>
-
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link
-                href="/"
-                className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
-              >
-                Beranda
-              </Link>
-              <Link
-                href="/destinasi"
-                className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
-              >
-                Destinasi
-              </Link>
-              <Link
-                href="/artikel"
-                className="text-slate-700 hover:text-sky-600 font-medium transition-colors"
-              >
-                Artikel
-              </Link>
-              <Button
-                variant="outline"
-                className="border-sky-500 text-sky-600 hover:bg-sky-50"
-              >
-                Login
-              </Button>
-            </nav>
-
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu className="h-6 w-6" />
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <div className="container mx-auto px-4 py-6">
         {/* Breadcrumb */}
-        <div className="flex items-center space-x-2 text-sm text-slate-600 mb-6">
-          <Link href="/" className="hover:text-sky-600">
-            Beranda
-          </Link>
-          <ChevronRight className="w-4 h-4" />
-          <Link href="/artikel" className="hover:text-sky-600">
-            Artikel
-          </Link>
-          <ChevronRight className="w-4 h-4" />
-          <span className="text-slate-900 font-medium line-clamp-1">
-            {article.title}
-          </span>
-        </div>
+        <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
         <div className="grid lg:grid-cols-4 gap-8">
           {/* Main Content */}
@@ -218,24 +139,7 @@ export default function ArticleDetailPage() {
 
               {/* Author & Meta Info */}
               <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-12 h-12">
-                    <AvatarImage
-                      src={article.author.avatar || "/placeholder.svg"}
-                    />
-                    <AvatarFallback>
-                      {article.author.name.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-semibold text-slate-800">
-                      {article.author.name}
-                    </h3>
-                    <p className="text-sm text-slate-600">
-                      {article.author.bio}
-                    </p>
-                  </div>
-                </div>
+                <AuthorCard author={article.author} variant="compact" showFollowButton={false} />
 
                 <div className="flex items-center gap-4 text-slate-600 md:ml-auto">
                   {article.publishDate && (
@@ -252,33 +156,11 @@ export default function ArticleDetailPage() {
               </div>
 
               {/* Share Buttons */}
-              <div className="flex items-center gap-3 mb-8">
-                <span className="text-sm text-slate-600">Bagikan:</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => shareArticle("facebook")}
-                >
-                  <Facebook className="w-4 h-4 mr-2" />
-                  Facebook
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => shareArticle("twitter")}
-                >
-                  <Twitter className="w-4 h-4 mr-2" />
-                  Twitter
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => shareArticle("instagram")}
-                >
-                  <Instagram className="w-4 h-4 mr-2" />
-                  Instagram
-                </Button>
-              </div>
+              <ShareButtons 
+                title={article.title}
+                variant="inline"
+                showLabel={true}
+              />
             </div>
 
             {/* Article Content */}
@@ -383,33 +265,7 @@ export default function ArticleDetailPage() {
 
             {/* Author Full Bio */}
             {article.author.fullBio && (
-              <Card className="mb-8">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="w-16 h-16">
-                      <AvatarImage
-                        src={article.author.avatar || "/placeholder.svg"}
-                      />
-                      <AvatarFallback>
-                        {article.author.name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-lg mb-2">
-                        {article.author.name}
-                      </h3>
-                      <p className="text-slate-600 mb-4">
-                        {article.author.fullBio}
-                      </p>
-                      <div className="flex items-center gap-4 text-sm text-slate-500 mb-4">
-                        <span>{article.author.followers} followers</span>
-                        <span>{article.author.totalArticles} artikel</span>
-                      </div>
-                      <Button variant="outline">Follow</Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <AuthorCard author={article.author} variant="full" className="mb-8" />
             )}
 
             {/* Related Articles */}
@@ -418,31 +274,34 @@ export default function ArticleDetailPage() {
                 <h3 className="text-2xl font-bold mb-6">Baca Juga</h3>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {(relatedArticles as RelatedArticle[]).map((relatedArticle) => (
-                    <Card
-                      key={relatedArticle.id}
-                      className="overflow-hidden hover:shadow-lg transition-shadow"
-                    >
-                      <div className="relative h-48">
-                        <Image
-                          src={relatedArticle.image || "/placeholder.svg"}
-                          alt={relatedArticle.title}
-                          fill
-                          className="object-cover"
-                        />
-                        <Badge className="absolute top-3 left-3 bg-sky-500">
-                          {relatedArticle.category}
-                        </Badge>
-                      </div>
-                      <CardContent className="p-4">
-                        <h4 className="font-semibold mb-2 line-clamp-2">
-                          {relatedArticle.title}
-                        </h4>
-                        <div className="flex items-center text-sm text-slate-500">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {relatedArticle.readingTime}
+                    <Link key={relatedArticle.id} href={ROUTES.articleDetail(relatedArticle.slug)}>
+                      <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+                        <div className="relative h-48">
+                          <Image
+                            src={relatedArticle.image || DEFAULT_IMAGES.defaultArticle}
+                            alt={relatedArticle.title}
+                            fill
+                            className="object-cover"
+                          />
+                          {relatedArticle.category && (
+                            <Badge className="absolute top-3 left-3 bg-sky-500">
+                              {relatedArticle.category}
+                            </Badge>
+                          )}
                         </div>
-                      </CardContent>
-                    </Card>
+                        <CardContent className="p-4">
+                          <h4 className="font-semibold mb-2 line-clamp-2 hover:text-sky-600 transition-colors">
+                            {relatedArticle.title}
+                          </h4>
+                          {relatedArticle.readingTime && (
+                            <div className="flex items-center text-sm text-slate-500">
+                              <Clock className="w-3 h-3 mr-1" />
+                              {relatedArticle.readingTime}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -465,12 +324,12 @@ export default function ArticleDetailPage() {
                           Ingin berkomentar?
                         </p>
                         <p className="text-sm text-sky-600">
-                          <Link href="/masuk" className="underline">
-                            Login
+                          <Link href={ROUTES.login} className="underline">
+                            Masuk
                           </Link>{" "}
                           atau{" "}
-                          <Link href="/daftar" className="underline">
-                            daftar
+                          <Link href={ROUTES.register} className="underline">
+                            Daftar
                           </Link>{" "}
                           untuk bergabung dalam diskusi
                         </p>
@@ -527,7 +386,7 @@ export default function ArticleDetailPage() {
                       <div className="flex items-start gap-4">
                         <Avatar>
                           <AvatarImage
-                            src={comment.userAvatar || "/placeholder.svg"}
+                            src={comment.userAvatar || DEFAULT_IMAGES.defaultAvatar}
                           />
                           <AvatarFallback>
                             {comment.userName.charAt(0)}
@@ -573,9 +432,7 @@ export default function ArticleDetailPage() {
                                 >
                                   <Avatar className="w-8 h-8">
                                     <AvatarImage
-                                      src={
-                                        reply.userAvatar || "/placeholder.svg"
-                                      }
+                                      src={reply.userAvatar || DEFAULT_IMAGES.defaultAvatar}
                                     />
                                     <AvatarFallback className="text-xs">
                                       {reply.userName.charAt(0)}
@@ -650,64 +507,17 @@ export default function ArticleDetailPage() {
                     Bagikan Artikel
                   </h3>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => shareArticle("facebook")}
-                  >
-                    <Facebook className="w-4 h-4 mr-2" />
-                    Facebook
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => shareArticle("twitter")}
-                  >
-                    <Twitter className="w-4 h-4 mr-2" />
-                    Twitter
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => shareArticle("instagram")}
-                  >
-                    <Instagram className="w-4 h-4 mr-2" />
-                    Instagram
-                  </Button>
+                <CardContent>
+                  <ShareButtons 
+                    title={article.title}
+                    variant="vertical"
+                    showLabel={false}
+                  />
                 </CardContent>
               </Card>
 
               {/* Author Bio */}
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-center">
-                    <Avatar className="w-16 h-16 mx-auto mb-3">
-                      <AvatarImage
-                        src={article.author.avatar || "/placeholder.svg"}
-                      />
-                      <AvatarFallback>
-                        {article.author.name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <h4 className="font-semibold mb-2">
-                      {article.author.name}
-                    </h4>
-                    {article.author.bio && (
-                      <p className="text-sm text-slate-600 mb-3">
-                        {article.author.bio}
-                      </p>
-                    )}
-                    <div className="flex justify-center gap-4 text-xs text-slate-500 mb-3">
-                      <span>{article.author.followers} followers</span>
-                      <span>{article.author.totalArticles} artikel</span>
-                    </div>
-                    <Button size="sm" className="w-full">
-                      Follow
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <AuthorCardSidebar author={article.author} />
 
               {/* Newsletter */}
               <Card className="bg-gradient-to-br from-sky-500 to-emerald-500 text-white">

@@ -9,7 +9,7 @@ import { id } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ErrorState } from "@/components/shared/error-state";
+import { ErrorState } from "@/components/error-state";
 import {
   AlertDialog,
   AlertDialogAction,

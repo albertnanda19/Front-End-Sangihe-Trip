@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import Header from "@/app/_components/Header";
+import Header from "@/components/layout/header";
 import { useArticles } from "@/hooks/use-articles";
 
 // Map category IDs to readable names

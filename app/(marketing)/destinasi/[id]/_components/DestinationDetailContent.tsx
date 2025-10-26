@@ -28,8 +28,8 @@ import Link from "next/link";
 import { useDestinationDetail } from "@/hooks/use-destination-detail";
 import { useReviews } from "@/hooks/use-reviews";
 import { useAuthStatus } from "@/hooks/use-auth-status";
-import { ReviewForm } from "@/components/shared/review-form";
-import { ReviewList } from "@/components/shared/review-list";
+import { ReviewForm } from "@/components/review-form";
+import { ReviewList } from "@/components/review-list";
 
 const DestinationDetailContent = ({ id }: { id: string }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);

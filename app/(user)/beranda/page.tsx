@@ -39,9 +39,9 @@ import {
 import Image from "next/image";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { useUserDashboard } from "@/hooks/use-user-dashboard";
-import { DashboardSkeleton, SidebarSkeleton } from "@/components/shared/dashboard-skeleton";
-import { EmptyTrips, EmptyReviews, EmptyDestinations, EmptyArticles } from "@/components/shared/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { DashboardSkeleton, SidebarSkeleton } from "@/components/dashboard-skeleton";
+import { EmptyTrips, EmptyReviews, EmptyDestinations, EmptyArticles } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { apiUrl } from "@/lib/api";
 import { getCookie } from "@/lib/cookies";
 

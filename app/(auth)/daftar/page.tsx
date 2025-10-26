@@ -1,22 +1,7 @@
 import type React from "react";
 
-import {
-  Eye,
-  EyeOff,
-  Mail,
-  Lock,
-  User,
-  Loader2,
-  AlertCircle,
-  ArrowLeft,
-  Chrome,
-  Facebook,
-  CheckCircle,
-  RefreshCw,
-} from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
-import RegisterForm from "./_components/RegisterForm";
+import RegisterForm from "@/components/register-form";
 
 export default function RegisterPage() {
   return (

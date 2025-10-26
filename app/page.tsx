@@ -1,12 +1,14 @@
 "use client"
 
 import React from "react";
-import Header from "./_components/Header";
-import Footer from "./_components/Footer";
-import Articles from "./_components/Articles";
-import Destinations from "./_components/Destinations";
-import SearchDestination from "./_components/SearchDestination";
-import Hero from "./_components/Hero";
+import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer";
+import { 
+  HeroSection, 
+  ArticlesSection, 
+  DestinationsSection, 
+  SearchSection 
+} from "@/components/homepage";
 
 import { useLandingPage } from "@/hooks/use-landing-page";
 
@@ -34,16 +36,16 @@ export default function HomePage() {
       <Header />
 
       {/* Hero Section */}
-      {hero && <Hero hero={hero} />}
+      {hero && <HeroSection hero={hero} />}
 
       {/* Search Section */}
-      {filters.length > 0 && <SearchDestination filters={filters} />}
+      {filters.length > 0 && <SearchSection filters={filters} />}
 
       {/* Destinasi Unggulan */}
-      {destinations.length > 0 && <Destinations destinations={destinations} />}
+      {destinations.length > 0 && <DestinationsSection destinations={destinations} />}
 
       {/* Artikel Terbaru */}
-      {articles.length > 0 && <Articles articles={articles} />}
+      {articles.length > 0 && <ArticlesSection articles={articles} />}
 
       <Footer />
     </div>
