@@ -38,85 +38,13 @@ import {
   Users,
   Heart,
   Calendar,
-  Menu,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// Data is now fetched from the back-end API via custom hook `useDestinations`
-/*
-
-  {
-    id: 1,
-    name: "Pantai Mahoro",
-    category: "Pantai",
-    rating: 4.8,
-    reviews: 124,
-    location: "Kecamatan Tahuna",
-    price: 15000,
-    image: "/placeholder.svg?height=300&width=400",
-    facilities: ["parking", "toilet", "food"],
-    description: "Pantai dengan pasir putih dan air laut yang jernih",
-  },
-  {
-    id: 2,
-    name: "Pulau Siau",
-    category: "Alam",
-    rating: 4.9,
-    reviews: 89,
-    location: "Kecamatan Siau",
-    price: 25000,
-    image: "/placeholder.svg?height=300&width=400",
-    facilities: ["boat", "guide", "food"],
-    description: "Pulau vulkanik dengan pemandangan menakjubkan",
-  },
-  {
-    id: 3,
-    name: "Air Terjun Sahendaruman",
-    category: "Alam",
-    rating: 4.7,
-    reviews: 67,
-    location: "Kecamatan Tabukan Utara",
-    price: 10000,
-    image: "/placeholder.svg?height=300&width=400",
-    facilities: ["parking", "toilet", "guide"],
-    description: "Air terjun eksotis di tengah hutan tropis",
-  },
-  {
-    id: 4,
-    name: "Pasar Tradisional Tahuna",
-    category: "Budaya",
-    rating: 4.5,
-    reviews: 156,
-    location: "Kecamatan Tahuna",
-    price: 0,
-    image: "/placeholder.svg?height=300&width=400",
-    facilities: ["parking", "food", "wifi"],
-    description: "Pasar tradisional dengan kuliner dan kerajinan lokal",
-  },
-  {
-    id: 5,
-    name: "Gunung Api Karangetang",
-    category: "Alam",
-    rating: 4.6,
-    reviews: 43,
-    location: "Kecamatan Siau",
-    price: 50000,
-    image: "/placeholder.svg?height=300&width=400",
-    facilities: ["guide", "camping"],
-    description: "Gunung berapi aktif dengan trek pendakian menantang",
-  },
-  {
-    id: 6,
-    name: "Pantai Petta",
-    category: "Pantai",
-    rating: 4.4,
-    reviews: 78,
-*/
 const categories = ["Semua", "Pantai", "Budaya", "Kuliner", "Alam", "Sejarah"] as const;
 
-// Map UI labels to backend enum values
 const categoryMap: Record<(typeof categories)[number], string | undefined> = {
   "Semua": undefined,
   "Pantai": "beach",
@@ -157,7 +85,6 @@ const DestinationContent = () => {
   const router = useRouter();
   const [showFilters, setShowFilters] = useState(false);
 
-  // Build filter object for API query
   const { destinations, meta, loading, error } = useDestinations({
     search: searchQuery || undefined,
     category:
@@ -176,7 +103,6 @@ const DestinationContent = () => {
 
   const removeFilter = (filter: string) => {
     setActiveFilters((prev) => prev.filter((f) => f !== filter));
-    // Reset corresponding filter
     if (filter.includes("Kategori")) setSelectedCategory("Semua");
     if (filter.includes("Lokasi")) setSelectedLocation("Semua Lokasi");
   };

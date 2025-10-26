@@ -4,12 +4,6 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Search,
@@ -21,9 +15,9 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/layout/header";
+import { ArticleCard } from "@/components/article-card";
 import { useArticles } from "@/hooks/use-articles";
 
-// Map category IDs to readable names
 const categoryMap: Record<string, string> = {
   "1": "Panduan Wisata",
   "2": "Budaya Lokal",
@@ -31,7 +25,6 @@ const categoryMap: Record<string, string> = {
   "4": "Tips Perjalanan",
   "5": "Pantai & Alam",
   "6": "Umum",
-  // Add more mappings as needed
 };
 
 const categoryColors: Record<string, string> = {
@@ -49,7 +42,6 @@ export default function ArticlesPage() {
 
   const { featured, articles, loading, error } = useArticles();
 
-  // Get unique categories from articles
   const availableCategories = useMemo(() => {
     const categories = ["Semua"];
     if (articles.length > 0) {
@@ -61,7 +53,6 @@ export default function ArticlesPage() {
     return categories;
   }, [articles]);
 
-  // Filter articles based on search and category
   const filteredArticles = useMemo(() => {
     return articles.filter((article) => {
       const matchesSearch =
@@ -225,75 +216,18 @@ export default function ArticlesPage() {
           {filteredArticles.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {filteredArticles.map((article) => (
-                <Card
+                <ArticleCard
                   key={article.id}
-                  className="overflow-hidden hover:shadow-lg transition-shadow duration-300"
-                >
-                  <div className="relative h-48 overflow-hidden">
-                    <Image
-                      src={article.image || "/placeholder.svg"}
-                      alt={article.title}
-                      fill
-                      className="object-cover hover:scale-105 transition-transform duration-300"
-                    />
-                    <Badge
-                      className={`absolute top-3 left-3 ${
-                        categoryColors[categoryMap[article.category] || "Umum"]
-                      }`}
-                    >
-                      {categoryMap[article.category] || "Umum"}
-                    </Badge>
-                  </div>
-
-                  <CardHeader className="pb-3">
-                    <h3 className="font-bold text-lg text-slate-800 line-clamp-2 leading-tight">
-                      {article.title}
-                    </h3>
-                  </CardHeader>
-
-                  <CardContent className="pt-0">
-                    {article.excerpt && (
-                      <p className="text-slate-600 text-sm line-clamp-2 mb-4">
-                        {article.excerpt}
-                      </p>
-                    )}
-
-                    {article.author.name && (
-                      <div className="flex items-center gap-3 mb-4">
-                        <Avatar className="w-6 h-6">
-                          <AvatarImage src={article.author.avatar} />
-                          <AvatarFallback className="text-xs">
-                            {article.author.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm text-slate-600">
-                          {article.author.name}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between text-xs text-slate-500">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        <span>{article.publishDate}</span>
-                      </div>
-                      {article.readingTime && article.readingTime !== "null menit" && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          <span>{article.readingTime}</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-
-                  <CardFooter className="pt-0">
-                    <Link href={`/artikel/${article.slug}`} className="w-full">
-                      <Button variant="outline" className="w-full">
-                        Baca Selengkapnya
-                      </Button>
-                    </Link>
-                  </CardFooter>
-                </Card>
+                  id={article.id}
+                  slug={article.slug}
+                  title={article.title}
+                  excerpt={article.excerpt}
+                  image={article.image}
+                  category={categoryMap[article.category] || "Umum"}
+                  readingTime={article.readingTime && article.readingTime !== "null menit" ? article.readingTime : undefined}
+                  date={article.publishDate}
+                  author={article.author}
+                />
               ))}
             </div>
           ) : (
