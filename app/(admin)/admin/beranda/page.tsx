@@ -104,6 +104,7 @@ const kpiData = [
     icon: Star,
     color: "text-yellow-600",
   },
+  /*
   {
     title: "Monthly Active Users",
     value: "4,521",
@@ -120,6 +121,7 @@ const kpiData = [
     icon: DollarSign,
     color: "text-emerald-600",
   },
+  */
 ];
 
 const userRegistrationData = [
