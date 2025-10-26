@@ -37,7 +37,7 @@ const Footer = () => {
               <h3 className="font-bold text-lg mb-4">Quick Links</h3>
               <ul className="space-y-2">
                 {FOOTER_LINKS.quickLinks.map((link) => (
-                  <li key={link.href}>
+                  <li key={`${link.href}-${link.label}`}>
                     <Link href={link.href} className="text-slate-300 hover:text-white transition-colors">
                       {link.label}
                     </Link>
@@ -51,7 +51,7 @@ const Footer = () => {
               <h3 className="font-bold text-lg mb-4">Support</h3>
               <ul className="space-y-2">
                 {FOOTER_LINKS.support.map((link) => (
-                  <li key={link.href}>
+                  <li key={`${link.href}-${link.label}`}>
                     <Link href={link.href} className="text-slate-300 hover:text-white transition-colors">
                       {link.label}
                     </Link>
