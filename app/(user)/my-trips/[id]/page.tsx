@@ -18,6 +18,8 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,6 +86,7 @@ export default function DetailTripPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -173,21 +176,40 @@ export default function DetailTripPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Batal</AlertDialogCancel>
-                      <AlertDialogAction onClick={async () => {
-                        try {
-                          const token = getCookie("access_token");
-                          const res = await fetch(apiUrl(`/api/trip/${trip.id}`), {
-                            method: "DELETE",
-                            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-                          });
-                          if (!res.ok) throw new Error("Gagal menghapus perjalanan");
-                          router.push("/my-trips");
-                        } catch (err) {
-                          console.error(err);
-                          alert("Gagal menghapus perjalanan");
-                        }
-                      }}>
-                        Ya, hapus
+                      <AlertDialogAction
+                        disabled={isDeleting}
+                        onClick={async () => {
+                          setIsDeleting(true);
+                          try {
+                            const token = getCookie("access_token");
+                            const res = await fetch(apiUrl(`/api/users/me/trips/${trip.id}`), {
+                              method: "DELETE",
+                              headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                            });
+                            if (!res.ok) {
+                              const body = await res.json().catch(() => null);
+                              const msg = body?.message || "Gagal menghapus perjalanan";
+                              throw new Error(msg);
+                            }
+                            toast.success("Perjalanan berhasil dihapus");
+                            router.push("/my-trips");
+                          } catch (err: unknown) {
+                            const message = err instanceof Error ? err.message : "Gagal menghapus perjalanan";
+                            toast.error(message);
+                            console.error(err);
+                          } finally {
+                            setIsDeleting(false);
+                          }
+                        }}
+                      >
+                        {isDeleting ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Menghapus...
+                          </span>
+                        ) : (
+                          "Ya, hapus"
+                        )}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
