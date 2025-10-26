@@ -160,44 +160,46 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Stats Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                     <Card className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4 text-center">
-                        <div className="w-12 h-12 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <Map className="w-6 h-6 text-sky-600" />
+                      <CardContent className="p-3 text-center">
+                        <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                          <Map className="w-5 h-5 text-sky-600" />
                         </div>
-                        <p className="text-2xl font-bold text-slate-800">
+                        <p className="text-xl font-bold text-slate-800">
                           {stats?.tripPlans || 0}
                         </p>
-                        <p className="text-sm text-slate-600">Rencana Perjalanan</p>
+                        <p className="text-xs text-slate-600">Rencana Trip</p>
                       </CardContent>
                     </Card>
 
                     <Card className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4 text-center">
-                        <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <MapPin className="w-6 h-6 text-emerald-600" />
+                      <CardContent className="p-3 text-center">
+                        <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                          <MapPin className="w-5 h-5 text-emerald-600" />
                         </div>
-                        <p className="text-2xl font-bold text-slate-800">
+                        <p className="text-xl font-bold text-slate-800">
                           {stats?.visitedDestinations || 0}
                         </p>
-                        <p className="text-sm text-slate-600">
-                          Destinasi Dikunjungi
+                        <p className="text-xs text-slate-600">
+                          Destinasi
                         </p>
                       </CardContent>
                     </Card>
 
-                    <Card className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4 text-center">
-                        <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <Star className="w-6 h-6 text-orange-600" />
-                        </div>
-                        <p className="text-2xl font-bold text-slate-800">
-                          {stats?.reviewsWritten || 0}
-                        </p>
-                        <p className="text-sm text-slate-600">Review Ditulis</p>
-                      </CardContent>
-                    </Card>
+                    <div className="col-span-2 sm:col-span-1 flex justify-center sm:block">
+                      <Card className="hover:shadow-md transition-shadow w-[calc(50%-0.375rem)] sm:w-full">
+                        <CardContent className="p-3 text-center">
+                          <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <Star className="w-5 h-5 text-orange-600" />
+                          </div>
+                          <p className="text-xl font-bold text-slate-800">
+                            {stats?.reviewsWritten || 0}
+                          </p>
+                          <p className="text-xs text-slate-600">Review</p>
+                        </CardContent>
+                      </Card>
+                    </div>
                   </div>
                 </div>
 
@@ -211,27 +213,27 @@ export default function DashboardPage() {
                       Aktivitas Anda
                     </span>
                   </div>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     {/* Buat Trip Baru */}
                     <Link href="/create-trip">
                       <Card className="h-full hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-sky-300 relative">
-                        <CardContent className="p-4 text-center flex flex-col h-full">
+                        <CardContent className="p-3 sm:p-4 text-center flex flex-col h-full">
                           {/* Stats Badge */}
                           {stats && stats.tripPlans > 0 && (
                             <Badge className="absolute top-2 right-2 bg-sky-100 text-sky-700 text-[10px] px-1.5 py-0.5">
                               {stats.tripPlans}
                             </Badge>
                           )}
-                          <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                            <Plus className="w-6 h-6 text-white" />
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-lg">
+                            <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                           </div>
-                          <h3 className="font-semibold text-slate-900 mb-1.5 text-sm group-hover:text-sky-600 transition-colors">
-                            Buat Rencana Baru
+                          <h3 className="font-semibold text-slate-900 mb-1 sm:mb-1.5 text-xs sm:text-sm group-hover:text-sky-600 transition-colors">
+                            Buat Rencana
                           </h3>
-                          <p className="text-xs text-slate-600 mt-auto">
+                          <p className="text-[10px] sm:text-xs text-slate-600 mt-auto">
                             {stats && stats.tripPlans > 0 
-                              ? `${stats.tripPlans} trip aktif`
-                              : "Mulai merencanakan"}
+                              ? `${stats.tripPlans} aktif`
+                              : "Mulai rencana"}
                           </p>
                         </CardContent>
                       </Card>
@@ -240,23 +242,23 @@ export default function DashboardPage() {
                     {/* Jelajahi Destinasi */}
                     <Link href="/destinasi">
                       <Card className="h-full hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-emerald-300 relative">
-                        <CardContent className="p-4 text-center flex flex-col h-full">
+                        <CardContent className="p-3 sm:p-4 text-center flex flex-col h-full">
                           {/* Stats Badge */}
                           {stats && stats.visitedDestinations > 0 && (
                             <Badge className="absolute top-2 right-2 bg-emerald-100 text-emerald-700 text-[10px] px-1.5 py-0.5">
                               {stats.visitedDestinations}
                             </Badge>
                           )}
-                          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                            <Compass className="w-6 h-6 text-white" />
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-lg">
+                            <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                           </div>
-                          <h3 className="font-semibold text-slate-900 mb-1.5 text-sm group-hover:text-emerald-600 transition-colors">
-                            Jelajahi Destinasi
+                          <h3 className="font-semibold text-slate-900 mb-1 sm:mb-1.5 text-xs sm:text-sm group-hover:text-emerald-600 transition-colors">
+                            Jelajahi
                           </h3>
-                          <p className="text-xs text-slate-600 mt-auto">
+                          <p className="text-[10px] sm:text-xs text-slate-600 mt-auto">
                             {stats && stats.visitedDestinations > 0
                               ? `${stats.visitedDestinations} dikunjungi`
-                              : "Temukan tempat baru"}
+                              : "Temukan tempat"}
                           </p>
                         </CardContent>
                       </Card>
@@ -264,7 +266,7 @@ export default function DashboardPage() {
 
                     {/* Tulis Review */}
                     <Card className="h-full hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-orange-300 relative">
-                      <CardContent className="p-4 text-center flex flex-col h-full">
+                      <CardContent className="p-3 sm:p-4 text-center flex flex-col h-full">
                         {/* Stats Badge with Contextual Suggestion */}
                         {stats && stats.reviewsWritten > 0 ? (
                           <Badge className="absolute top-2 right-2 bg-orange-100 text-orange-700 text-[10px] px-1.5 py-0.5">
@@ -275,18 +277,16 @@ export default function DashboardPage() {
                             New!
                           </Badge>
                         )}
-                        <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                          <Edit className="w-6 h-6 text-white" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-lg">
+                          <Edit className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                         </div>
-                        <h3 className="font-semibold text-slate-900 mb-1.5 text-sm group-hover:text-orange-600 transition-colors">
+                        <h3 className="font-semibold text-slate-900 mb-1 sm:mb-1.5 text-xs sm:text-sm group-hover:text-orange-600 transition-colors">
                           Tulis Review
                         </h3>
-                        <p className="text-xs text-slate-600 mt-auto">
+                        <p className="text-[10px] sm:text-xs text-slate-600 mt-auto">
                           {stats && stats.reviewsWritten > 0 
                             ? `${stats.reviewsWritten} review`
-                            : stats && stats.visitedDestinations > 0
-                            ? "Bagikan pengalaman!"
-                            : "Bagikan pengalaman"}
+                            : "Bagikan cerita"}
                         </p>
                       </CardContent>
                     </Card>
@@ -294,23 +294,23 @@ export default function DashboardPage() {
                     {/* Lihat Artikel */}
                     <Link href="/artikel">
                       <Card className="h-full hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-purple-300 relative">
-                        <CardContent className="p-4 text-center flex flex-col h-full">
+                        <CardContent className="p-3 sm:p-4 text-center flex flex-col h-full">
                           {/* Suggestion Badge */}
                           {stats && stats.tripPlans === 0 && (
                             <Badge className="absolute top-2 right-2 bg-purple-100 text-purple-700 text-[10px] px-1.5 py-0.5">
                               Tips
                             </Badge>
                           )}
-                          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                            <BookOpen className="w-6 h-6 text-white" />
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-lg">
+                            <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                           </div>
-                          <h3 className="font-semibold text-slate-900 mb-1.5 text-sm group-hover:text-purple-600 transition-colors">
+                          <h3 className="font-semibold text-slate-900 mb-1 sm:mb-1.5 text-xs sm:text-sm group-hover:text-purple-600 transition-colors">
                             Lihat Artikel
                           </h3>
-                          <p className="text-xs text-slate-600 mt-auto">
+                          <p className="text-[10px] sm:text-xs text-slate-600 mt-auto">
                             {stats && stats.tripPlans === 0
                               ? "Tips wisata"
-                              : "Baca tips wisata"}
+                              : "Baca tips"}
                           </p>
                         </CardContent>
                       </Card>
@@ -324,7 +324,7 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-slate-800">
-                    Rencana Perjalanan Terbaru
+                    Rencana Terbaru
                   </h2>
                   <Link href="/my-trips">
                     <Button variant="ghost" size="sm">
@@ -345,8 +345,8 @@ export default function DashboardPage() {
                       key={trip.id}
                       className="hover:shadow-md transition-all hover:border-sky-300 cursor-pointer"
                     >
-                      <CardContent className="p-4">
-                        <div className="flex gap-4">
+                      <CardContent className="p-3">
+                        <div className="flex gap-3">
                           {/* Enhanced Image with overlay badges */}
                           <div className="relative w-24 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
                             <Image
@@ -491,9 +491,9 @@ export default function DashboardPage() {
                       key={review.id}
                       className="hover:shadow-lg transition-all hover:border-sky-200 group"
                     >
-                      <CardContent className="p-4">
+                      <CardContent className="p-3">
                         {/* Destination Name - Clickable */}
-                        <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-start justify-between mb-2">
                           <Link 
                             href={`/destinasi/${review.destinationId}`}
                             className="flex-1 group/link"
@@ -523,7 +523,7 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Review Excerpt */}
-                        <p className="text-sm text-slate-600 mb-3 line-clamp-2 leading-relaxed">
+                        <p className="text-sm text-slate-600 mb-2 line-clamp-2 leading-relaxed">
                           &ldquo;{review.excerpt}&rdquo;
                         </p>
 
@@ -603,8 +603,8 @@ export default function DashboardPage() {
                           {destination.category}
                         </Badge>
                       </div>
-                      <CardContent className="p-4">
-                        <h3 className="font-semibold text-slate-800 mb-2">
+                      <CardContent className="p-3">
+                        <h3 className="font-semibold text-slate-800 mb-1.5 text-sm">
                           {destination.name}
                         </h3>
                         <div className="flex items-center justify-between">
@@ -639,8 +639,8 @@ export default function DashboardPage() {
                       key={article.id}
                       className="hover:shadow-md transition-shadow"
                     >
-                      <CardContent className="p-4">
-                        <div className="flex gap-4">
+                      <CardContent className="p-3">
+                        <div className="flex gap-3">
                           <div className="relative w-20 h-16 rounded-lg overflow-hidden flex-shrink-0">
                             <Image
                               src={article.image || "/placeholder.svg"}
@@ -650,10 +650,10 @@ export default function DashboardPage() {
                             />
                           </div>
                           <div className="flex-1">
-                            <Badge variant="outline" className="mb-2 text-xs">
+                            <Badge variant="outline" className="mb-1.5 text-xs">
                               {article.category}
                             </Badge>
-                            <h3 className="font-semibold text-slate-800 mb-1 line-clamp-2">
+                            <h3 className="font-semibold text-slate-800 mb-0.5 line-clamp-2 text-sm">
                               {article.title}
                             </h3>
                             <p className="text-xs text-slate-500">
@@ -699,9 +699,6 @@ export default function DashboardPage() {
                         value={profile?.profileCompletion || 0}
                         className="mb-3"
                       />
-                      <p className="text-sm text-slate-600">
-                        Lengkapi profil untuk rekomendasi yang lebih baik
-                      </p>
                     </div>
                     <Link href="/profil">
                       <Button variant="outline" size="sm" className="w-full">
