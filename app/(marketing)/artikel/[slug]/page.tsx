@@ -29,6 +29,33 @@ import { useArticleDetail } from "@/hooks/use-article-detail";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 import { Textarea } from "@/components/ui/textarea";
 
+interface RelatedArticle {
+  id: string;
+  image?: string;
+  title: string;
+  category?: string;
+  readingTime?: string;
+  slug: string;
+}
+
+interface Comment {
+  id: string;
+  userName: string;
+  userAvatar?: string;
+  comment: string;
+  content: string;
+  date: string;
+  helpful: number;
+  likes: number;
+  replies?: Comment[];
+}
+
+interface TocItem {
+  id: string;
+  title: string;
+  level: number;
+}
+
 export default function ArticleDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const { article, tableOfContents, relatedArticles, comments, loading, error } = useArticleDetail(slug);
@@ -38,7 +65,6 @@ export default function ArticleDetailPage() {
 
   const handleSubmitComment = () => {
     if (!newComment.trim()) return;
-    // TODO: Integrasi API untuk mengirim komentar & rating
     console.log({ rating, comment: newComment });
     setNewComment("");
     setRating(0);
@@ -66,7 +92,6 @@ export default function ArticleDetailPage() {
     }
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -78,7 +103,6 @@ export default function ArticleDetailPage() {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -90,7 +114,6 @@ export default function ArticleDetailPage() {
     );
   }
 
-  // Article not found
   if (!article) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -295,7 +318,6 @@ export default function ArticleDetailPage() {
                       </div>
                     );
                   } else if (paragraph.includes("- **")) {
-                    // Handle bullet points with bold headers
                     const lines = paragraph.split("\n");
                     return (
                       <ul key={index} className="space-y-2 ml-4">
@@ -395,7 +417,7 @@ export default function ArticleDetailPage() {
               <div className="mb-8">
                 <h3 className="text-2xl font-bold mb-6">Baca Juga</h3>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {relatedArticles.map((relatedArticle: any) => (
+                  {(relatedArticles as RelatedArticle[]).map((relatedArticle) => (
                     <Card
                       key={relatedArticle.id}
                       className="overflow-hidden hover:shadow-lg transition-shadow"
@@ -497,7 +519,7 @@ export default function ArticleDetailPage() {
               {/* Comments List */}
               {comments && comments.length > 0 ? (
                 <div className="space-y-6">
-                  {comments.map((comment: any) => (
+                  {(comments as Comment[]).map((comment) => (
                     <div
                       key={comment.id}
                       className="border-b border-slate-200 pb-6 last:border-b-0"
@@ -505,16 +527,16 @@ export default function ArticleDetailPage() {
                       <div className="flex items-start gap-4">
                         <Avatar>
                           <AvatarImage
-                            src={comment.user.avatar || "/placeholder.svg"}
+                            src={comment.userAvatar || "/placeholder.svg"}
                           />
                           <AvatarFallback>
-                            {comment.user.name.charAt(0)}
+                            {comment.userName.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
 
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h5 className="font-semibold">{comment.user.name}</h5>
+                            <h5 className="font-semibold">{comment.userName}</h5>
                             <span className="text-sm text-slate-500">
                               {comment.date}
                             </span>
@@ -544,7 +566,7 @@ export default function ArticleDetailPage() {
                           {/* Nested Replies */}
                           {comment.replies && comment.replies.length > 0 && (
                             <div className="mt-4 ml-8 space-y-4">
-                              {comment.replies.map((reply: any) => (
+                              {comment.replies.map((reply) => (
                                 <div
                                   key={reply.id}
                                   className="flex items-start gap-3"
@@ -552,17 +574,17 @@ export default function ArticleDetailPage() {
                                   <Avatar className="w-8 h-8">
                                     <AvatarImage
                                       src={
-                                        reply.user.avatar || "/placeholder.svg"
+                                        reply.userAvatar || "/placeholder.svg"
                                       }
                                     />
                                     <AvatarFallback className="text-xs">
-                                      {reply.user.name.charAt(0)}
+                                      {reply.userName.charAt(0)}
                                     </AvatarFallback>
                                   </Avatar>
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                       <h6 className="font-medium text-sm">
-                                        {reply.user.name}
+                                        {reply.userName}
                                       </h6>
                                       <span className="text-xs text-slate-500">
                                         {reply.date}
@@ -608,7 +630,7 @@ export default function ArticleDetailPage() {
                     <h3 className="font-semibold">Daftar Isi</h3>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {tableOfContents.map((item: any) => (
+                    {(tableOfContents as TocItem[]).map((item) => (
                       <button
                         key={item.id}
                         className="block w-full text-left text-sm text-slate-600 hover:text-sky-600 py-1"

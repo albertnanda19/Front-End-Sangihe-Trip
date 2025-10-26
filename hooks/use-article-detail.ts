@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { get, ApiError } from "@/lib/api";
 
 export interface ArticleDetailAuthor {
   id: string;
@@ -26,9 +27,9 @@ export interface ArticleDetail {
 
 export interface ArticleDetailResponse {
   article: ArticleDetail | null;
-  tableOfContents: any[];
-  relatedArticles: any[];
-  comments: any[];
+  tableOfContents: unknown[];
+  relatedArticles: unknown[];
+  comments: unknown[];
 }
 
 /**
@@ -54,21 +55,20 @@ export function useArticleDetail(slug: string) {
       setLoading(true);
       setError(null);
       try {
-        const base = (process.env.NEXT_PUBLIC_API_HOST || "").replace(/\/$/, "");
-        const url = `${base}/api/article/${slug}`;
-        const res = await fetch(url, { signal: controller.signal });
-        if (!res.ok) throw new Error(`Failed to fetch article detail (status ${res.status})`);
-        const json = await res.json();
+        const result = await get<ArticleDetailResponse>(`/api/article/${slug}`, {
+          auth: false,
+          signal: controller.signal,
+        });
 
         setState({
-          article: json?.data?.article || null,
-          tableOfContents: json?.data?.tableOfContents || [],
-          relatedArticles: json?.data?.relatedArticles || [],
-          comments: json?.data?.comments || [],
+          article: result.data.article || null,
+          tableOfContents: result.data.tableOfContents || [],
+          relatedArticles: result.data.relatedArticles || [],
+          comments: result.data.comments || [],
         });
-      } catch (err: any) {
-        if (err.name !== "AbortError") {
-          setError(err);
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name !== "AbortError") {
+          setError(err instanceof ApiError ? err : (err instanceof Error ? err : new Error("Failed to fetch article detail")));
         }
       } finally {
         setLoading(false);
@@ -81,4 +81,4 @@ export function useArticleDetail(slug: string) {
   }, [slug]);
 
   return { ...state, loading, error } as const;
-} 
+}

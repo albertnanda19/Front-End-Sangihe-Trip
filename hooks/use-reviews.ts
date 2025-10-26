@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { apiUrl } from "@/lib/api";
-import { getCookie } from "@/lib/cookies";
+import { get, post, ApiError } from "@/lib/api";
 
 interface ReviewData {
   rating: number;
@@ -41,6 +40,12 @@ interface ReviewStats {
   ratingDistribution: RatingDistribution;
 }
 
+interface ReviewsApiResponse {
+  reviews: Review[];
+  total: number;
+  stats: ReviewStats;
+}
+
 interface UseReviewsOptions {
   page?: number;
   limit?: number;
@@ -76,32 +81,21 @@ export const useReviews = (
         sortBy,
       });
 
-      const token = getCookie("access_token");
-
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(
-        `${apiUrl(`/api/reviews/destination/${destinationId}`)}?${params}`,
-        { headers }
+      const result = await get<ReviewsApiResponse>(
+        `/api/reviews/destination/${destinationId}?${params}`,
+        { auth: "optional" }
       );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch reviews");
-      }
-
-      const result = await response.json();
 
       setReviews(result.data.reviews);
       setTotal(result.data.total);
       setStats(result.data.stats);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+    } catch (err: unknown) {
+      const message = err instanceof ApiError
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : "An error occurred";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -112,38 +106,27 @@ export const useReviews = (
     setError(null);
 
     try {
-      const token = getCookie("access_token");
-
-      if (!token) {
-        throw new Error("Authentication required");
-      }
-
-      const response = await fetch(apiUrl("/api/reviews"), {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const result = await post<{ review: Review }>(
+        "/api/reviews",
+        {
           destinationId,
           rating: data.rating,
           comment: data.comment,
           images: data.images || [],
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to submit review");
-      }
-
-      const result = await response.json();
+        },
+        { auth: "required" }
+      );
 
       await fetchReviews();
 
-      return result.data;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      return result.data.review;
+    } catch (err: unknown) {
+      const message = err instanceof ApiError
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : "An error occurred";
+      setError(message);
       throw err;
     } finally {
       setLoading(false);
@@ -152,24 +135,11 @@ export const useReviews = (
 
   const toggleLike = async (reviewId: string) => {
     try {
-      const token = getCookie("access_token");
-
-      if (!token) {
-        throw new Error("Authentication required");
-      }
-
-      const response = await fetch(apiUrl(`/api/reviews/${reviewId}/like`), {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to toggle like");
-      }
-
-      const result = await response.json();
+      const result = await post<{ isLiked: boolean; helpful: number }>(
+        `/api/reviews/${reviewId}/like`,
+        {},
+        { auth: "required" }
+      );
 
       if (result.data.isLiked) {
         setLikedReviews((prev) => new Set([...prev, reviewId]));
@@ -190,8 +160,13 @@ export const useReviews = (
       );
 
       return result.data;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+    } catch (err: unknown) {
+      const message = err instanceof ApiError
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : "An error occurred";
+      setError(message);
       throw err;
     }
   };

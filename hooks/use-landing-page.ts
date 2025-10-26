@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react";
+import { get, ApiError } from "@/lib/api";
 
 export interface HeroData {
   title: string;
@@ -60,22 +61,23 @@ export function useLandingPage() {
       setLoading(true);
       setError(null);
       try {
-        const base = (process.env.NEXT_PUBLIC_API_HOST || "").replace(/\/$/, "");
-        const url = `${base}/api/landing-page`;
-        const res = await fetch(url, { signal: controller.signal });
-        if (!res.ok) throw new Error(`Failed to fetch landing-page (status ${res.status})`);
-        const json = await res.json();
+        const result = await get<LandingPageData>("/api/landing-page", {
+          auth: false,
+          signal: controller.signal,
+        });
 
         const parsed: LandingPageData = {
-          hero: json?.data?.hero || null,
-          filters: json?.data?.filters || [],
-          destinations: json?.data?.destinations || [],
-          articles: json?.data?.articles || [],
+          hero: result.data.hero || null,
+          filters: result.data.filters || [],
+          destinations: result.data.destinations || [],
+          articles: result.data.articles || [],
         };
 
         setData(parsed);
-      } catch (err: any) {
-        if (err.name !== "AbortError") setError(err);
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name !== "AbortError") {
+          setError(err instanceof ApiError ? err : (err instanceof Error ? err : new Error("Failed to fetch landing-page")));
+        }
       } finally {
         setLoading(false);
       }
@@ -87,4 +89,4 @@ export function useLandingPage() {
   }, []);
 
   return { ...data, loading, error } as const;
-} 
+}

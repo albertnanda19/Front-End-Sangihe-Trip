@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { get, ApiError } from "@/lib/api";
 
 export interface DestinationFilters {
   search?: string;
@@ -18,7 +19,7 @@ export interface DestinationItem {
   category: string;
   rating: number;
   totalReviews: number;
-  reviews: number; // alias of totalReviews to keep backward-compatibility with UI
+  reviews: number;
   location: string;
   price: number | null;
   image: string;
@@ -27,14 +28,16 @@ export interface DestinationItem {
   description: string;
 }
 
+interface DestinationMeta {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}
+
 interface DestinationResponse {
   destinations: DestinationItem[];
-  meta: {
-    page: number;
-    pageSize: number;
-    totalItems: number;
-    totalPages: number;
-  } | null;
+  meta: DestinationMeta | null;
 }
 
 /**
@@ -50,7 +53,6 @@ export function useDestinations(filters: DestinationFilters) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Build query string once per filter change
   const query = useMemo(() => {
     const params = new URLSearchParams();
 
@@ -74,24 +76,24 @@ export function useDestinations(filters: DestinationFilters) {
       setLoading(true);
       setError(null);
       try {
-        const base = (process.env.NEXT_PUBLIC_API_HOST || "").replace(/\/$/, "");
-        const url = `${base}/api/destination${query ? `?${query}` : ""}`;
-        const res = await fetch(url, { signal: controller.signal });
-        if (!res.ok) throw new Error(`Failed to fetch destinations (status ${res.status})`);
-        const json = await res.json();
+        const path = `/api/destination${query ? `?${query}` : ""}`;
+        const result = await get<DestinationItem[], DestinationMeta>(path, {
+          auth: false,
+          signal: controller.signal,
+        });
 
-        const items: DestinationItem[] = (json?.data?.data || []).map((d: any) => ({
+        const items = result.data.map((d) => ({
           ...d,
-          reviews: d.totalReviews, // alias for UI compatibility
+          reviews: d.totalReviews,
         }));
 
         setState({
           destinations: items,
-          meta: json?.data?.meta || null,
+          meta: result.meta || null,
         });
-      } catch (err: any) {
-        if (err.name !== "AbortError") {
-          setError(err);
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name !== "AbortError") {
+          setError(err instanceof ApiError ? err : new Error(err.message));
         }
       } finally {
         setLoading(false);

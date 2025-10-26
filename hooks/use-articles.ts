@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { get, ApiError } from "@/lib/api";
 
 export interface Article {
   id: string;
@@ -39,19 +40,18 @@ export function useArticles() {
       setLoading(true);
       setError(null);
       try {
-        const base = (process.env.NEXT_PUBLIC_API_HOST || "").replace(/\/$/, "");
-        const url = `${base}/api/article`;
-        const res = await fetch(url, { signal: controller.signal });
-        if (!res.ok) throw new Error(`Failed to fetch articles (status ${res.status})`);
-        const json = await res.json();
+        const result = await get<ArticlesResponse>("/api/article", {
+          auth: false,
+          signal: controller.signal,
+        });
 
         setState({
-          featured: json?.data?.featured || null,
-          articles: json?.data?.articles || [],
+          featured: result.data.featured || null,
+          articles: result.data.articles || [],
         });
-      } catch (err: any) {
-        if (err.name !== "AbortError") {
-          setError(err);
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name !== "AbortError") {
+          setError(err instanceof ApiError ? err : (err instanceof Error ? err : new Error("Failed to fetch articles")));
         }
       } finally {
         setLoading(false);
@@ -64,4 +64,4 @@ export function useArticles() {
   }, []);
 
   return { ...state, loading, error } as const;
-} 
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { get, ApiError } from "@/lib/api";
 
 interface Location {
   address: string;
@@ -10,6 +11,21 @@ interface Facility {
   icon: string;
   name: string;
   available: boolean;
+}
+
+interface RawDestinationDetail {
+  id: string;
+  name: string;
+  category: string;
+  location: string | Location;
+  price: number | null;
+  openHours?: string;
+  description: string;
+  facilities?: Facility[];
+  tips?: string[];
+  images: string[];
+  rating: number;
+  totalReviews: number;
 }
 
 export interface DestinationDetail {
@@ -55,23 +71,23 @@ export function useDestinationDetail(id: string) {
     async function fetchDetail() {
       setState((s) => ({ ...s, loading: true, error: null }));
       try {
-        const base = (process.env.NEXT_PUBLIC_API_HOST || "").replace(/\/$/, "");
-        const res = await fetch(`${base}/api/destination/${id}`, {
+        const result = await get<RawDestinationDetail>(`/api/destination/${id}`, {
+          auth: false,
           signal: controller.signal,
         });
-        if (!res.ok) {
-          throw new Error(`Failed to fetch destination (status ${res.status})`);
-        }
-        const json = await res.json();
-        const apiData = json?.data;
 
-        // Shape the data so that the existing UI code does not break.
+        const apiData = result.data;
+
         const destination: DestinationDetail = {
           id: apiData.id,
           name: apiData.name,
           category: apiData.category,
-          location: apiData.location?.address || "",
-          locationObj: apiData.location,
+          location: typeof apiData.location === "object"
+            ? apiData.location.address
+            : apiData.location || "",
+          locationObj: typeof apiData.location === "object"
+            ? apiData.location
+            : undefined,
           price: apiData.price ?? null,
           openHours: apiData.openHours ?? "",
           description: apiData.description ?? "",
@@ -86,9 +102,13 @@ export function useDestinationDetail(id: string) {
         };
 
         setState({ destination, loading: false, error: null });
-      } catch (err: any) {
-        if (err.name === "AbortError") return;
-        setState({ destination: null, loading: false, error: err });
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === "AbortError") return;
+        setState({
+          destination: null,
+          loading: false,
+          error: err instanceof ApiError ? err : (err instanceof Error ? err : new Error("Failed to fetch destination")),
+        });
       }
     }
 
