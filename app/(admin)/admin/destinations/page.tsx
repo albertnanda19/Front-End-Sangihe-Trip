@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Eye, Edit, Trash2 } from "lucide-react";
 
 interface DestinationItem {
   id: string;
@@ -124,12 +125,11 @@ export default function AdminDestinationsList() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="hidden sm:table-cell">Slug</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="hidden md:table-cell">Published</TableHead>
-                  <TableHead className="hidden lg:table-cell">Rating</TableHead>
-                  <TableHead className="hidden xl:table-cell">Created</TableHead>
+                  <TableHead>Nama</TableHead>
+                  <TableHead>Kategori</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="hidden md:table-cell">Created/Updated At</TableHead>
+                  <TableHead className="hidden lg:table-cell">Avg Rating</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -139,34 +139,35 @@ export default function AdminDestinationsList() {
                     <TableCell>
                       <div className="font-medium text-sm">{d.name}</div>
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell text-xs text-gray-600">
-                      {d.slug ?? "-"}
-                    </TableCell>
                     <TableCell>{d.category ?? "-"}</TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {d.published ? (
-                        <Badge variant="default">Yes</Badge>
-                      ) : (
-                        <Badge variant="secondary">No</Badge>
-                      )}
+                    <TableCell>
+                      <Badge variant={d.status === "active" ? "default" : "secondary"}>
+                        {d.status ?? "unknown"}
+                      </Badge>
                     </TableCell>
-                    <TableCell className="hidden lg:table-cell">{d.rating ?? "-"}</TableCell>
-                    <TableCell className="hidden xl:table-cell">
+                    <TableCell className="hidden md:table-cell text-sm text-gray-600">
                       {d.createdAt ? new Date(d.createdAt).toLocaleString() : "-"}
                     </TableCell>
+                    <TableCell className="hidden lg:table-cell">{d.rating ?? "-"}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         <Link href={`/admin/destinations/${d.id}`}>
-                          <Button variant="ghost" size="sm">
-                            View / Edit
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Link href={`/admin/destinations/${d.id}/edit`}>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Edit className="h-4 w-4" />
                           </Button>
                         </Link>
                         <Button
-                          variant="destructive"
+                          variant="ghost"
                           size="sm"
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
                           onClick={() => deleteItem(d.id)}
                         >
-                          Hapus
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>

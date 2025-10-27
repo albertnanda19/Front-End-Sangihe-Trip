@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { get, del, ApiError } from "@/lib/api";
 
 export interface ListMeta {
@@ -46,9 +46,19 @@ export function useAdminList<T = any>({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filters, setFiltersState] = useState<Record<string, string | number | boolean | undefined>>({});
   const [page, setPage] = useState(1);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -57,8 +67,8 @@ export function useAdminList<T = any>({
     try {
       const params = new URLSearchParams();
 
-      if (search && searchFields.length > 0) {
-        params.append("search", search);
+      if (debouncedSearch && searchFields.length > 0) {
+        params.append("search", debouncedSearch);
       }
 
       Object.entries(filters).forEach(([key, value]) => {
@@ -90,7 +100,7 @@ export function useAdminList<T = any>({
     } finally {
       setLoading(false);
     }
-  }, [endpoint, search, filters, page, pageSize, defaultParams, searchFields]);
+  }, [endpoint, debouncedSearch, filters, page, pageSize, defaultParams, searchFields]);
 
   useEffect(() => {
     fetchList();
@@ -108,6 +118,7 @@ export function useAdminList<T = any>({
 
   const resetFilters = useCallback(() => {
     setSearch("");
+    setDebouncedSearch("");
     setFiltersState({});
     setPage(1);
   }, []);
