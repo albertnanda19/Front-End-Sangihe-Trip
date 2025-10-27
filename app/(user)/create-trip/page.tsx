@@ -20,7 +20,7 @@ export interface Destination {
   name: string
   category?: string
   location?: string
-  price?: number
+  price?: number | null
   rating?: number
   imageUrl?: string
 }

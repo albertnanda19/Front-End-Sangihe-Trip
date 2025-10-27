@@ -25,7 +25,7 @@ interface Destination {
   category: string
   rating: number
   price: number | null
-  image: string
+  imageUrl: string
   location: string
   description: string
 }
@@ -55,7 +55,7 @@ export function DestinationStep({ data, updateData, onNext, onPrev }: Destinatio
           category: d.category,
           rating: d.rating,
           price: d.price ?? 0,
-          image: d.image || "/placeholder.svg",
+          imageUrl: d.image || "/placeholder.svg",
           location: d.location,
           description: d.description,
         }))
@@ -191,7 +191,7 @@ export function DestinationStep({ data, updateData, onNext, onPrev }: Destinatio
                 <div className="relative">
                   <div className="relative h-32 overflow-hidden rounded-t-lg">
                     <Image
-                      src={destination.image || "/placeholder.svg"}
+                      src={destination.imageUrl || "/placeholder.svg"}
                       alt={destination.name}
                       fill
                       className="object-cover"
@@ -256,7 +256,7 @@ export function DestinationStep({ data, updateData, onNext, onPrev }: Destinatio
                     </div>
                     <div className="relative w-16 h-12 rounded overflow-hidden">
                       <Image
-                        src={destination.image || "/placeholder.svg"}
+                        src={destination.imageUrl || "/placeholder.svg"}
                         alt={destination.name}
                         fill
                         className="object-cover"

@@ -130,6 +130,12 @@ export async function patch<TData = unknown, TMeta = unknown>(path: string, body
   return request<TData, TMeta>(path, init);
 }
 
+export async function put<TData = unknown, TMeta = unknown>(path: string, body?: unknown, options: RequestOptions = {}) {
+  const init: RequestOptions = { ...options, method: "PUT" };
+  if (body !== undefined) init.body = typeof body === "string" ? body : JSON.stringify(body);
+  return request<TData, TMeta>(path, init);
+}
+
 export async function del<TData = unknown, TMeta = unknown>(path: string, options: RequestOptions = {}) {
   return request<TData, TMeta>(path, { ...options, method: "DELETE" });
 }
