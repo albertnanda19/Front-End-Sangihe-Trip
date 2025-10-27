@@ -46,6 +46,8 @@ export default function AdminDestinationsList() {
     endpoint: "/api/admin/destinations",
     searchFields: ["name", "slug", "description"],
     pageSize: 20,
+    enableClientSideFiltering: true,
+    cacheTimeout: 10 * 60 * 1000,
   });
 
   return (
