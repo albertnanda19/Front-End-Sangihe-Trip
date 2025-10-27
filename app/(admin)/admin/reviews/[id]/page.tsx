@@ -107,7 +107,7 @@ export default function AdminReviewDetail() {
 
       if (response.ok) {
         alert("Review berhasil disetujui!");
-        fetchReview(); // Refresh data
+        fetchReview();
       } else {
         const error = await response.json();
         alert(`Gagal menyetujui review: ${error.message}`);
@@ -136,7 +136,7 @@ export default function AdminReviewDetail() {
 
       if (response.ok) {
         alert("Review berhasil ditolak!");
-        fetchReview(); // Refresh data
+        fetchReview();
       } else {
         const error = await response.json();
         alert(`Gagal menolak review: ${error.message}`);
