@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { get, del, ApiError } from "@/lib/api";
+import { get, ApiError } from "@/lib/api";
 
 export interface ListMeta {
   page: number;
@@ -12,10 +12,8 @@ export interface UseAdminListOptions {
   endpoint: string;
   defaultParams?: Record<string, string | number | boolean>;
   searchFields?: string[];
-  filterFields?: string[];
   pageSize?: number;
   enableClientSideFiltering?: boolean;
-  cacheTimeout?: number;
 }
 
 export interface UseAdminListReturn<T> {
@@ -40,33 +38,34 @@ export function useAdminList<T>({
   endpoint,
   defaultParams = {},
   searchFields = [],
-  filterFields = [],
   pageSize = 20,
   enableClientSideFiltering = false,
-  cacheTimeout = 5 * 60 * 1000,
 }: UseAdminListOptions): UseAdminListReturn<T> {
+  const [allItems, setAllItems] = useState<T[]>([]);
   const [items, setItems] = useState<T[]>([]);
   const [meta, setMeta] = useState<ListMeta | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filters, setFiltersState] = useState<Record<string, string | number | boolean | undefined>>({});
   const [page, setPage] = useState(1);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [hasFetched, setHasFetched] = useState(false);
 
-  const [cachedItems, setCachedItems] = useState<T[]>([]);
-  const [cachedMeta, setCachedMeta] = useState<ListMeta | null>(null);
-  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
-  const [hasInitialFetch, setHasInitialFetch] = useState(false);
+  const searchFieldsKey = searchFields ? searchFields.join(",") : "";
+  const defaultParamsKey = JSON.stringify(defaultParams ?? {});
 
-  const applyClientSideFiltering = useCallback(() => {
-    let filteredItems = [...cachedItems];
+  const filteredData = useMemo(() => {
+    const sf = searchFieldsKey ? searchFieldsKey.split(",").filter(Boolean) : [];
+    if (!enableClientSideFiltering || allItems.length === 0) {
+      return { items: allItems, meta: null };
+    }
 
-    if (debouncedSearch && searchFields.length > 0) {
-      const searchLower = debouncedSearch.toLowerCase();
+    let filteredItems = [...allItems];
+
+    if (search && sf.length > 0) {
+      const searchLower = search.toLowerCase();
       filteredItems = filteredItems.filter((item) => {
-        return searchFields.some((field) => {
+        return sf.some((field) => {
           const value = (item as Record<string, unknown>)[field];
           return value && String(value).toLowerCase().includes(searchLower);
         });
@@ -88,49 +87,37 @@ export function useAdminList<T>({
     const endIndex = startIndex + pageSize;
     const paginatedItems = filteredItems.slice(startIndex, endIndex);
 
-    setItems(paginatedItems);
-    setMeta({
-      page,
-      limit: pageSize,
-      totalItems,
-      totalPages,
-    });
-  }, [cachedItems, debouncedSearch, searchFields, filters, page, pageSize]);
+    return {
+      items: paginatedItems,
+      meta: {
+        page,
+        limit: pageSize,
+        totalItems,
+        totalPages,
+      }
+    };
+  }, [allItems, search, searchFieldsKey, filters, page, pageSize, enableClientSideFiltering]);
 
-  const fetchList = useCallback(async (forceFetch = false) => {
-    const now = Date.now();
-    const isCacheValid = now - lastFetchTime < cacheTimeout && cachedItems.length > 0;
-
-    if (!forceFetch && enableClientSideFiltering && isCacheValid && hasInitialFetch) {
-      applyClientSideFiltering();
-      return;
+  useEffect(() => {
+    if (enableClientSideFiltering && hasFetched) {
+      setItems(filteredData.items);
+      setMeta(filteredData.meta);
     }
+  }, [filteredData, enableClientSideFiltering, hasFetched]);
+
+  const fetchInitialData = useCallback(async () => {
+    const dp = defaultParamsKey ? JSON.parse(defaultParamsKey) : {};
+    if (hasFetched) return;
 
     setLoading(true);
     setError(null);
 
     try {
       const params = new URLSearchParams();
+      params.append("page", "1");
+      params.append("limit", "1000");
 
-      if (enableClientSideFiltering) {
-        params.append("page", "1");
-        params.append("limit", "1000");
-      } else {
-        if (debouncedSearch && searchFields.length > 0) {
-          params.append("search", debouncedSearch);
-        }
-
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== "") {
-            params.append(key, String(value));
-          }
-        });
-
-        params.append("page", String(page));
-        params.append("limit", String(pageSize));
-      }
-
-      Object.entries(defaultParams).forEach(([key, value]) => {
+        Object.entries(dp).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           params.append(key, String(value));
         }
@@ -140,17 +127,25 @@ export function useAdminList<T>({
       const res = await get<T[], ListMeta>(path, { auth: "required" });
 
       const fetchedItems = res.data ?? [];
-      const fetchedMeta = res.meta ?? null;
+      setAllItems(fetchedItems);
+      setHasFetched(true);
 
       if (enableClientSideFiltering) {
-        setCachedItems(fetchedItems);
-        setCachedMeta(fetchedMeta);
-        setLastFetchTime(now);
-        setHasInitialFetch(true);
-        applyClientSideFiltering();
+        const filteredItems = [...fetchedItems];
+        const totalItems = filteredItems.length;
+        const totalPages = Math.ceil(totalItems / pageSize);
+        const paginatedItems = filteredItems.slice(0, pageSize);
+
+        setItems(paginatedItems);
+        setMeta({
+          page: 1,
+          limit: pageSize,
+          totalItems,
+          totalPages,
+        });
       } else {
         setItems(fetchedItems);
-        setMeta(fetchedMeta);
+        setMeta(res.meta ?? null);
       }
     } catch (err: unknown) {
       if (err instanceof ApiError) {
@@ -161,26 +156,56 @@ export function useAdminList<T>({
     } finally {
       setLoading(false);
     }
-  }, [endpoint, debouncedSearch, filters, page, pageSize, defaultParams, searchFields, enableClientSideFiltering, cacheTimeout, lastFetchTime, cachedItems.length, hasInitialFetch, applyClientSideFiltering]);
+  }, [endpoint, defaultParamsKey, hasFetched, enableClientSideFiltering, pageSize]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1);
-    }, 500);
+  const refresh = useCallback(async () => {
+    const dp = defaultParamsKey ? JSON.parse(defaultParamsKey) : {};
+    setLoading(true);
+    setError(null);
 
-    return () => clearTimeout(timer);
-  }, [search]);
+    try {
+      const params = new URLSearchParams();
+      params.append("page", "1");
+      params.append("limit", "1000");
 
-  useEffect(() => {
-    if (enableClientSideFiltering && hasInitialFetch) {
-      applyClientSideFiltering();
+        Object.entries(dp).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          params.append(key, String(value));
+        }
+      });
+
+      const path = `${endpoint}?${params.toString()}`;
+      const res = await get<T[], ListMeta>(path, { auth: "required" });
+
+      const fetchedItems = res.data ?? [];
+      setAllItems(fetchedItems);
+
+      if (enableClientSideFiltering) {
+        setItems(fetchedItems.slice(0, pageSize));
+        setMeta({
+          page: 1,
+          limit: pageSize,
+          totalItems: fetchedItems.length,
+          totalPages: Math.ceil(fetchedItems.length / pageSize),
+        });
+      } else {
+        setItems(fetchedItems);
+        setMeta(res.meta ?? null);
+      }
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError((err as Error)?.message ?? "Failed to load data");
+      }
+    } finally {
+      setLoading(false);
     }
-  }, [debouncedSearch, filters, page, pageSize, enableClientSideFiltering, hasInitialFetch, applyClientSideFiltering]);
+  }, [endpoint, defaultParamsKey, enableClientSideFiltering, pageSize]);
 
   useEffect(() => {
-    fetchList();
-  }, [fetchList, refreshKey]);
+    fetchInitialData();
+  }, [fetchInitialData]);
 
   const setFilter = useCallback((key: string, value: string | number | boolean | undefined) => {
     setFiltersState(prev => ({ ...prev, [key]: value }));
@@ -194,26 +219,20 @@ export function useAdminList<T>({
 
   const resetFilters = useCallback(() => {
     setSearch("");
-    setDebouncedSearch("");
     setFiltersState({});
     setPage(1);
-  }, []);
-
-  const refresh = useCallback(() => {
-    setRefreshKey(prev => prev + 1);
   }, []);
 
   const deleteItem = useCallback(async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus item ini?")) return;
 
     try {
-      await del(`${endpoint}/${id}`, { auth: "required" });
-      refresh();
+      setAllItems(prev => prev.filter(item => (item as Record<string, unknown>).id !== id));
     } catch (err: unknown) {
       alert((err as Error)?.message ?? "Gagal menghapus item");
       throw err;
     }
-  }, [endpoint, refresh]);
+  }, []);
 
   return {
     items,

@@ -12,22 +12,38 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Edit, Trash2, RefreshCw } from "lucide-react";
 
 interface DestinationItem {
   id: string;
   name: string;
-  slug?: string;
   category?: string;
   status?: string;
-  rating?: number;
-  viewCount?: number;
-  createdAt?: string;
-  published?: boolean;
+  avg_rating?: number;
+  updated_at?: string;
 }
+
+const getCategoryDisplayName = (category?: string): string => {
+  switch (category) {
+    case "beach": return "Pantai";
+    case "culinary": return "Kuliner";
+    case "nature": return "Alam";
+    case "cultural": return "Budaya";
+    default: return category ?? "-";
+  }
+};
+
+const getStatusDisplayName = (status?: string): string => {
+  switch (status) {
+    case "active": return "Aktif";
+    case "inactive": return "Tidak Aktif";
+    case "pending": return "Menunggu";
+    default: return status ?? "unknown";
+  }
+};
 
 export default function AdminDestinationsList() {
   const {
@@ -41,23 +57,27 @@ export default function AdminDestinationsList() {
     setFilter,
     setPage,
     resetFilters,
+    refresh,
     deleteItem,
   } = useAdminList<DestinationItem>({
     endpoint: "/api/admin/destinations",
-    searchFields: ["name", "slug", "description"],
-    pageSize: 20,
+    searchFields: ["name"],
+    pageSize: 10,
     enableClientSideFiltering: true,
-    cacheTimeout: 10 * 60 * 1000,
   });
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Manage Destinations</h1>
-          <p className="text-sm text-gray-600">List, search and manage destinations.</p>
+          <h1 className="text-2xl font-bold">Kelola Destinasi</h1>
+          <p className="text-sm text-gray-600">Daftar, cari dan kelola destinasi.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={refresh} disabled={loading}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
           <Link href="/admin/destinations/new">
             <Button>Tambah Destinasi</Button>
           </Link>
@@ -68,45 +88,55 @@ export default function AdminDestinationsList() {
 
       <Card className="mb-4">
         <CardHeader>
-          <CardTitle>Search & Filters</CardTitle>
-          <CardDescription>Filter by name, status or category.</CardDescription>
+          <CardTitle>Pencarian & Filter</CardTitle>
+          <CardDescription>Filter berdasarkan nama, status atau kategori.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col lg:flex-row gap-3">
-            <Input
-              placeholder="Cari nama / slug / deskripsi..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1"
-            />
-            <Select
-              onValueChange={(v) => setFilter("status", v === "all" ? undefined : v)}
-            >
-              <SelectTrigger className="w-full lg:w-48">
+          <div className="flex flex-col lg:flex-row gap-3 items-end">
+            <div className="flex-1">
+              <Input
+                placeholder="Cari nama destinasi..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <Select onValueChange={(v) => setFilter("category", v === "all" ? undefined : v)}>
+              <SelectTrigger className="w-full lg:w-40">
+                <SelectValue placeholder="Kategori" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua</SelectItem>
+                <SelectItem value="beach">Pantai</SelectItem>
+                <SelectItem value="nature">Alam</SelectItem>
+                <SelectItem value="cultural">Budaya</SelectItem>
+                <SelectItem value="culinary">Kuliner</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select onValueChange={(v) => setFilter("status", v === "all" ? undefined : v)}>
+              <SelectTrigger className="w-full lg:w-40">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="all">Semua</SelectItem>
+                <SelectItem value="active">Aktif</SelectItem>
+                <SelectItem value="inactive">Tidak Aktif</SelectItem>
+                <SelectItem value="pending">Menunggu</SelectItem>
               </SelectContent>
             </Select>
-            <Select
-              onValueChange={(v) => setFilter("category", v === "all" ? undefined : v)}
-            >
-              <SelectTrigger className="w-full lg:w-48">
-                <SelectValue placeholder="Category" />
+            <Select onValueChange={(v) => setFilter("avg_rating", v === "all" ? undefined : parseInt(v))}>
+              <SelectTrigger className="w-full lg:w-40">
+                <SelectValue placeholder="Rating" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="beach">Beach</SelectItem>
-                <SelectItem value="mountain">Mountain</SelectItem>
-                <SelectItem value="cultural">Cultural</SelectItem>
+                <SelectItem value="all">Semua</SelectItem>
+                <SelectItem value="5">5 Bintang</SelectItem>
+                <SelectItem value="4">4 Bintang</SelectItem>
+                <SelectItem value="3">3 Bintang</SelectItem>
+                <SelectItem value="2">2 Bintang</SelectItem>
+                <SelectItem value="1">1 Bintang</SelectItem>
               </SelectContent>
             </Select>
-            <div className="flex-1 lg:flex-none lg:w-auto">
+            <div className="lg:w-auto">
               <Button variant="outline" onClick={resetFilters} className="w-full lg:w-auto">
                 Reset
               </Button>
@@ -117,9 +147,9 @@ export default function AdminDestinationsList() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Destinations</CardTitle>
+          <CardTitle>Destinasi</CardTitle>
           <CardDescription>
-            {loading ? "Loading..." : `${meta ? meta.totalItems : items.length} items`}
+            {loading ? "Memuat..." : `${meta ? meta.totalItems : items.length} item`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -127,12 +157,12 @@ export default function AdminDestinationsList() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nama</TableHead>
-                  <TableHead>Kategori</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="hidden md:table-cell">Created/Updated At</TableHead>
-                  <TableHead className="hidden lg:table-cell">Avg Rating</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="text-center">Nama</TableHead>
+                  <TableHead className="text-center">Kategori</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-center hidden lg:table-cell">Rating Rata-rata</TableHead>
+                  <TableHead className="text-center hidden md:table-cell">Terakhir Diupdate</TableHead>
+                  <TableHead className="text-center">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -141,24 +171,21 @@ export default function AdminDestinationsList() {
                     <TableCell>
                       <div className="font-medium text-sm">{d.name}</div>
                     </TableCell>
-                    <TableCell>{d.category ?? "-"}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">{getCategoryDisplayName(d.category)}</TableCell>
+                    <TableCell className="text-center">
                       <Badge variant={d.status === "active" ? "default" : "secondary"}>
-                        {d.status ?? "unknown"}
+                        {getStatusDisplayName(d.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-gray-600">
-                      {d.createdAt ? new Date(d.createdAt).toLocaleString() : "-"}
+                    <TableCell className="text-center hidden lg:table-cell">
+                      {d.avg_rating ? `${d.avg_rating} bintang` : "-"}
                     </TableCell>
-                    <TableCell className="hidden lg:table-cell">{d.rating ?? "-"}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
+                    <TableCell className="text-center hidden md:table-cell text-sm text-gray-600">
+                      {d.updated_at ? new Date(d.updated_at).toLocaleString() : "-"}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1">
                         <Link href={`/admin/destinations/${d.id}`}>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        <Link href={`/admin/destinations/${d.id}/edit`}>
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -182,7 +209,7 @@ export default function AdminDestinationsList() {
           {/* Pagination controls */}
           <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-gray-600 text-center sm:text-left">
-              {meta ? `Showing page ${meta.page} of ${meta.totalPages}` : ""}
+              {meta ? `Menampilkan halaman ${meta.page} dari ${meta.totalPages}` : ""}
             </div>
             <div className="flex items-center gap-2 flex-wrap justify-center">
               <Button
@@ -191,17 +218,23 @@ export default function AdminDestinationsList() {
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={loading || (meta ? meta.page <= 1 : page <= 1)}
               >
-                Prev
+                Sebelumnya
               </Button>
 
-              {/* Page numbers - responsive */}
-              {meta && (
+              {/* Page numbers */}
+              {meta && meta.totalPages > 1 && (
                 <div className="hidden sm:flex items-center gap-1">
-                  {Array.from({ length: Math.min(meta.totalPages, 5) }).map((_, i) => {
-                    const pnum = Math.min(
-                      Math.max(1, meta.page - 2 + i),
-                      meta.totalPages
-                    );
+                  {Array.from({ length: Math.min(meta.totalPages, 5) }, (_, i) => {
+                    let pnum;
+                    if (meta.totalPages <= 5) {
+                      pnum = i + 1;
+                    } else {
+                      const half = Math.floor(5 / 2);
+                      const start = Math.max(1, meta.page - half);
+                      const end = Math.min(meta.totalPages, start + 4);
+                      pnum = start + i;
+                      if (pnum > end) return null;
+                    }
                     return (
                       <Button
                         key={i}
@@ -212,7 +245,7 @@ export default function AdminDestinationsList() {
                         {pnum}
                       </Button>
                     );
-                  })}
+                  }).filter(Boolean)}
                 </div>
               )}
 
@@ -222,7 +255,7 @@ export default function AdminDestinationsList() {
                 onClick={() => setPage(page + 1)}
                 disabled={loading || (meta ? meta.page >= meta.totalPages : false)}
               >
-                Next
+                Selanjutnya
               </Button>
             </div>
           </div>

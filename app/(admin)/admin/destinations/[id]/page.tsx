@@ -115,7 +115,7 @@ export default function DestinationDetailPage({ params }: { params: Promise<{ id
         entry_fee: entryFee ? Number(entryFee) : undefined,
         categories: [categoryMap[category] || category],
         facilities,
-        images: images.map((i) => ({ image_url: i.url, alt: i.alt })),
+        images: images.map((i) => ({ url: i.url })),
         published: Boolean(published),
       };
 
@@ -195,7 +195,7 @@ export default function DestinationDetailPage({ params }: { params: Promise<{ id
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Phone</label>
+                  <label className="block text-sm font-medium mb-1">Telepon</label>
                   <Input value={phone} onChange={(e) => setPhone((e.target as HTMLInputElement).value)} />
                 </div>
                 <div>
@@ -208,15 +208,15 @@ export default function DestinationDetailPage({ params }: { params: Promise<{ id
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Opening Hours</label>
+                <label className="block text-sm font-medium mb-1">Waktu Buka</label>
                 <Input value={openingHours} onChange={(e) => setOpeningHours((e.target as HTMLInputElement).value)} placeholder="08:00-18:00" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Entry Fee</label>
+                <label className="block text-sm font-medium mb-1">Biaya Masuk</label>
                 <Input value={entryFee} onChange={(e) => setEntryFee((e.target as HTMLInputElement).value)} type="number" placeholder="10000" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Facilities</label>
+                <label className="block text-sm font-medium mb-1">Fasilitas</label>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <input
@@ -241,9 +241,9 @@ export default function DestinationDetailPage({ params }: { params: Promise<{ id
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Images</label>
+                <label className="block text-sm font-medium mb-1">Gambar</label>
                 <ImageUploader
-                  onUploaded={(img: ImageDto) => setImages((prev) => [...prev, { url: img.url, alt: img.alt }])}
+                  onUploaded={(img: ImageDto) => setImages((prev) => [...prev, { url: img.url }])}
                   multiple={true}
                   existingImages={images}
                   onRemoveExisting={(index) => setImages((prev) => prev.filter((_, i) => i !== index))}

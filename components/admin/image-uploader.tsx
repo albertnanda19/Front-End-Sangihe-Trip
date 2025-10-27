@@ -12,9 +12,6 @@ import Image from "next/image";
 
 export type ImageDto = {
   url: string;
-  alt?: string;
-  caption?: string;
-  isFeatured?: boolean;
 };
 
 interface ImagePreview {
@@ -84,7 +81,7 @@ export default function ImageUploader({
             async () => {
               try {
                 const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-                const imageDto: ImageDto = { url: downloadUrl, alt: "", caption: "", isFeatured: false };
+                const imageDto: ImageDto = { url: downloadUrl };
                 setPreviews(prev => prev.map(p => p.id === id ? { ...p, progress: 100, uploaded: imageDto } : p));
                 onUploaded(imageDto);
                 resolve();
