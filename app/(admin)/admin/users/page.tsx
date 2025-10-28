@@ -108,7 +108,7 @@ export default function AdminUsersManagement() {
           <CardDescription>Filter pengguna berdasarkan nama, email, status atau role.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-end">
+          <div className="flex flex-col lg:flex-row gap-3 items-end">
             <div className="flex-1 min-w-0 w-full">
               <Input
                 placeholder="Cari nama atau email..."
@@ -121,34 +121,32 @@ export default function AdminUsersManagement() {
                 }}
               />
             </div>
-            <div className="flex flex-wrap gap-3 lg:flex-shrink-0">
-              <Select onValueChange={(v) => setFilter("status", v === "all" ? undefined : v)}>
-                <SelectTrigger className="w-full sm:w-32 lg:w-32">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua</SelectItem>
-                  <SelectItem value="active">Aktif</SelectItem>
-                  <SelectItem value="inactive">Tidak Aktif</SelectItem>
-                  <SelectItem value="suspended">Ditangguhkan</SelectItem>
-                  <SelectItem value="banned">Diblokir</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select onValueChange={(v) => setFilter("role", v === "all" ? undefined : v)}>
-                <SelectTrigger className="w-full sm:w-32 lg:w-32">
-                  <SelectValue placeholder="Role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua</SelectItem>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="moderator">Moderator</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" onClick={resetFilters} className="w-full sm:w-auto lg:w-auto">
-                Reset
-              </Button>
-            </div>
+            <Select onValueChange={(v) => setFilter("status", v === "all" ? undefined : v)}>
+              <SelectTrigger className="w-full lg:w-40">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua</SelectItem>
+                <SelectItem value="active">Aktif</SelectItem>
+                <SelectItem value="inactive">Tidak Aktif</SelectItem>
+                <SelectItem value="suspended">Ditangguhkan</SelectItem>
+                <SelectItem value="banned">Diblokir</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select onValueChange={(v) => setFilter("role", v === "all" ? undefined : v)}>
+              <SelectTrigger className="w-full lg:w-40">
+                <SelectValue placeholder="Role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua</SelectItem>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="moderator">Moderator</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" onClick={resetFilters} className="w-full sm:w-auto lg:w-auto">
+              Reset
+            </Button>
           </div>
         </CardContent>
       </Card>
