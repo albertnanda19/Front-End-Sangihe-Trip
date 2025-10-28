@@ -1,6 +1,7 @@
 "use client";
 
 import { useAdminList } from "@/hooks/admin/use-admin-list";
+import { put } from "@/lib/api";
 import Link from "next/link";
 import {
   Table,
@@ -81,20 +82,9 @@ export default function AdminReviewsModeration() {
     if (!confirm("Apakah Anda yakin ingin menyetujui review ini?")) return;
 
     try {
-      const response = await fetch(`/api/admin/reviews/${reviewId}/approve`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        alert("Review berhasil disetujui!");
-        refresh();
-      } else {
-        const error = await response.json();
-        alert(`Gagal menyetujui review: ${error.message}`);
-      }
+      await put(`/api/admin/reviews/${reviewId}/approve`, {}, { auth: "required" });
+      alert("Review berhasil disetujui!");
+      refresh();
     } catch (error) {
       console.error("Error approving review:", error);
       alert("Terjadi kesalahan saat menyetujui review");
@@ -106,21 +96,9 @@ export default function AdminReviewsModeration() {
     if (!reason) return;
 
     try {
-      const response = await fetch(`/api/admin/reviews/${reviewId}/reject`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ reason }),
-      });
-
-      if (response.ok) {
-        alert("Review berhasil ditolak!");
-        refresh();
-      } else {
-        const error = await response.json();
-        alert(`Gagal menolak review: ${error.message}`);
-      }
+      await put(`/api/admin/reviews/${reviewId}/reject`, { reason }, { auth: "required" });
+      alert("Review berhasil ditolak!");
+      refresh();
     } catch (error) {
       console.error("Error rejecting review:", error);
       alert("Terjadi kesalahan saat menolak review");

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, CheckCircle, XCircle, User, MapPin, Calendar, Star } from "lucide-react";
 import Link from "next/link";
+import { get, put } from "@/lib/api";
 
 interface ReviewDetail {
   id: string;
@@ -73,14 +74,8 @@ export default function AdminReviewDetail() {
   const fetchReview = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/admin/reviews/${reviewId}`);
-
-      if (response.ok) {
-        const data = await response.json();
-        setReview(data);
-      } else {
-        setError("Gagal memuat detail review");
-      }
+      const result = await get<ReviewDetail>(`/api/admin/reviews/${reviewId}`, { auth: "required" });
+      setReview(result.data);
     } catch (error) {
       console.error("Error fetching review:", error);
       setError("Terjadi kesalahan saat memuat review");
@@ -98,20 +93,9 @@ export default function AdminReviewDetail() {
 
     try {
       setActionLoading(true);
-      const response = await fetch(`/api/admin/reviews/${reviewId}/approve`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        alert("Review berhasil disetujui!");
-        fetchReview();
-      } else {
-        const error = await response.json();
-        alert(`Gagal menyetujui review: ${error.message}`);
-      }
+      await put(`/api/admin/reviews/${reviewId}/approve`, undefined, { auth: "required" });
+      alert("Review berhasil disetujui!");
+      fetchReview();
     } catch (error) {
       console.error("Error approving review:", error);
       alert("Terjadi kesalahan saat menyetujui review");
@@ -126,21 +110,9 @@ export default function AdminReviewDetail() {
 
     try {
       setActionLoading(true);
-      const response = await fetch(`/api/admin/reviews/${reviewId}/reject`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ reason }),
-      });
-
-      if (response.ok) {
-        alert("Review berhasil ditolak!");
-        fetchReview();
-      } else {
-        const error = await response.json();
-        alert(`Gagal menolak review: ${error.message}`);
-      }
+      await put(`/api/admin/reviews/${reviewId}/reject`, { reason }, { auth: "required" });
+      alert("Review berhasil ditolak!");
+      fetchReview();
     } catch (error) {
       console.error("Error rejecting review:", error);
       alert("Terjadi kesalahan saat menolak review");

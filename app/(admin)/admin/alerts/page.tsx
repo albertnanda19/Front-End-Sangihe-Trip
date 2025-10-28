@@ -1,6 +1,7 @@
 "use client";
 
 import { useAdminList } from "@/hooks/admin/use-admin-list";
+import { put } from "@/lib/api";
 import Link from "next/link";
 import {
   Table,
@@ -150,20 +151,9 @@ export default function AdminAlertsPage() {
 
   const handleAcknowledge = async (alertId: string) => {
     try {
-      const response = await fetch(`/api/admin/alerts/${alertId}/acknowledge`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        alert("Alert berhasil diakui!");
-        refresh();
-      } else {
-        const error = await response.json();
-        alert(`Gagal mengakui alert: ${error.message}`);
-      }
+      await put(`/api/admin/alerts/${alertId}/acknowledge`, undefined, { auth: "required" });
+      alert("Alert berhasil diakui!");
+      refresh();
     } catch (error) {
       console.error("Error acknowledging alert:", error);
       alert("Terjadi kesalahan saat mengakui alert");
@@ -172,20 +162,9 @@ export default function AdminAlertsPage() {
 
   const handleResolve = async (alertId: string) => {
     try {
-      const response = await fetch(`/api/admin/alerts/${alertId}/resolve`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        alert("Alert berhasil diselesaikan!");
-        refresh();
-      } else {
-        const error = await response.json();
-        alert(`Gagal menyelesaikan alert: ${error.message}`);
-      }
+      await put(`/api/admin/alerts/${alertId}/resolve`, undefined, { auth: "required" });
+      alert("Alert berhasil diselesaikan!");
+      refresh();
     } catch (error) {
       console.error("Error resolving alert:", error);
       alert("Terjadi kesalahan saat menyelesaikan alert");

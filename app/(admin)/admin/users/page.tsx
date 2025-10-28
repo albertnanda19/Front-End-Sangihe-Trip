@@ -15,28 +15,17 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Eye, Trash2, RefreshCw, UserCheck, UserX, Shield, ShieldCheck } from "lucide-react";
+import { Eye, RefreshCw } from "lucide-react";
 
 interface UserItem {
   id: string;
   first_name: string;
   last_name: string;
   email: string;
-  role: "user" | "admin" | "moderator";
+  role: "user" | "admin";
   status: "active" | "inactive" | "suspended" | "banned";
   created_at: string;
-  updated_at: string;
+  last_login_at: string | null;
 }
 
 const getRoleDisplayName = (role: string): string => {
@@ -96,78 +85,6 @@ export default function AdminUsersManagement() {
     pageSize: 10,
   });
 
-  const handleStatusUpdate = async (userId: string, newStatus: string) => {
-    try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (response.ok) {
-        alert("Status pengguna berhasil diperbarui!");
-        refresh();
-      } else {
-        const error = await response.json();
-        alert(`Gagal memperbarui status: ${error.message}`);
-      }
-    } catch (error) {
-      console.error("Error updating user status:", error);
-      alert("Terjadi kesalahan saat memperbarui status pengguna");
-    }
-  };
-
-  const handleRoleUpdate = async (userId: string, newRole: string) => {
-    try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ role: newRole }),
-      });
-
-      if (response.ok) {
-        alert("Role pengguna berhasil diperbarui!");
-        refresh();
-      } else {
-        const error = await response.json();
-        alert(`Gagal memperbarui role: ${error.message}`);
-      }
-    } catch (error) {
-      console.error("Error updating user role:", error);
-      alert("Terjadi kesalahan saat memperbarui role pengguna");
-    }
-  };
-
-  const handleDelete = async (userId: string, hardDelete: boolean = false) => {
-    const confirmMessage = hardDelete
-      ? "PERINGATAN: Ini akan menghapus pengguna secara permanen. Tindakan ini tidak dapat dibatalkan. Apakah Anda yakin?"
-      : "Apakah Anda yakin ingin menonaktifkan pengguna ini?";
-
-    if (!confirm(confirmMessage)) return;
-
-    try {
-      const url = `/api/admin/users/${userId}${hardDelete ? "?hard=true" : ""}`;
-      const response = await fetch(url, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        alert(hardDelete ? "Pengguna berhasil dihapus permanen!" : "Pengguna berhasil dinonaktifkan!");
-        refresh();
-      } else {
-        const error = await response.json();
-        alert(`Gagal menghapus pengguna: ${error.message}`);
-      }
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      alert("Terjadi kesalahan saat menghapus pengguna");
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
@@ -191,8 +108,8 @@ export default function AdminUsersManagement() {
           <CardDescription>Filter pengguna berdasarkan nama, email, status atau role.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col lg:flex-row gap-3 items-end">
-            <div className="w-full lg:w-80">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-end">
+            <div className="flex-1 min-w-0 w-full">
               <Input
                 placeholder="Cari nama atau email..."
                 value={search}
@@ -204,31 +121,31 @@ export default function AdminUsersManagement() {
                 }}
               />
             </div>
-            <Select onValueChange={(v) => setFilter("status", v === "all" ? undefined : v)}>
-              <SelectTrigger className="w-full lg:w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua</SelectItem>
-                <SelectItem value="active">Aktif</SelectItem>
-                <SelectItem value="inactive">Tidak Aktif</SelectItem>
-                <SelectItem value="suspended">Ditangguhkan</SelectItem>
-                <SelectItem value="banned">Diblokir</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select onValueChange={(v) => setFilter("role", v === "all" ? undefined : v)}>
-              <SelectTrigger className="w-full lg:w-40">
-                <SelectValue placeholder="Role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua</SelectItem>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="moderator">Moderator</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="lg:w-auto">
-              <Button variant="outline" onClick={resetFilters} className="w-full lg:w-auto">
+            <div className="flex flex-wrap gap-3 lg:flex-shrink-0">
+              <Select onValueChange={(v) => setFilter("status", v === "all" ? undefined : v)}>
+                <SelectTrigger className="w-full sm:w-32 lg:w-32">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua</SelectItem>
+                  <SelectItem value="active">Aktif</SelectItem>
+                  <SelectItem value="inactive">Tidak Aktif</SelectItem>
+                  <SelectItem value="suspended">Ditangguhkan</SelectItem>
+                  <SelectItem value="banned">Diblokir</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select onValueChange={(v) => setFilter("role", v === "all" ? undefined : v)}>
+                <SelectTrigger className="w-full sm:w-32 lg:w-32">
+                  <SelectValue placeholder="Role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua</SelectItem>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="moderator">Moderator</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" onClick={resetFilters} className="w-full sm:w-auto lg:w-auto">
                 Reset
               </Button>
             </div>
@@ -252,6 +169,8 @@ export default function AdminUsersManagement() {
                   <TableHead className="text-center">Email</TableHead>
                   <TableHead className="text-center">Role</TableHead>
                   <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-center hidden md:table-cell">Bergabung</TableHead>
+                  <TableHead className="text-center hidden lg:table-cell">Login Terakhir</TableHead>
                   <TableHead className="text-center">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
@@ -274,113 +193,30 @@ export default function AdminUsersManagement() {
                         {getStatusDisplayName(user.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <Link href={`/admin/users/${user.id}`}>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
-
-                        {/* Status Actions */}
-                        <div className="flex gap-1">
-                          {user.status !== "active" && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
-                              onClick={() => handleStatusUpdate(user.id, "active")}
-                              title="Aktifkan"
-                            >
-                              <UserCheck className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {user.status !== "suspended" && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-orange-600 hover:text-orange-700"
-                              onClick={() => handleStatusUpdate(user.id, "suspended")}
-                              title="Tangguhkan"
-                            >
-                              <UserX className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {user.status !== "banned" && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                              onClick={() => handleStatusUpdate(user.id, "banned")}
-                              title="Blokir"
-                            >
-                              <UserX className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-
-                        {/* Role Actions */}
-                        <div className="flex gap-1">
-                          {user.role !== "moderator" && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
-                              onClick={() => handleRoleUpdate(user.id, "moderator")}
-                              title="Jadikan Moderator"
-                            >
-                              <Shield className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {user.role !== "admin" && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-purple-600 hover:text-purple-700"
-                              onClick={() => handleRoleUpdate(user.id, "admin")}
-                              title="Jadikan Admin"
-                            >
-                              <ShieldCheck className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-
-                        {/* Delete Actions */}
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Hapus Pengguna</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Pilih jenis penghapusan untuk pengguna {`${user.first_name} ${user.last_name}`}.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Batal</AlertDialogCancel>
-                              <Button
-                                variant="outline"
-                                onClick={() => handleDelete(user.id, false)}
-                              >
-                                Nonaktifkan
-                              </Button>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(user.id, true)}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                Hapus Permanen
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                    <TableCell className="text-center hidden md:table-cell">
+                      <div className="text-sm text-gray-600">
+                        {new Date(user.created_at).toLocaleDateString('id-ID')}
                       </div>
+                    </TableCell>
+                    <TableCell className="text-center hidden lg:table-cell">
+                      <div className="text-sm text-gray-600">
+                        {user.last_login_at
+                          ? new Date(user.last_login_at).toLocaleDateString('id-ID')
+                          : 'Belum pernah login'
+                        }
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Link href={`/admin/users/${user.id}`}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          title="Lihat Detail"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))}
