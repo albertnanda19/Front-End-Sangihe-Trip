@@ -18,17 +18,25 @@ const MapComponent = dynamic(() => import("@/components/admin/map-component"), {
 });
 
 const categoryMap: Record<string, string> = {
-  "Pantai": "beach",
-  "Kuliner": "culinary",
   "Alam": "nature",
   "Budaya": "cultural",
+  "Petualangan": "adventure",
+  "Religi": "religious",
+  "Sejarah": "historical",
+  "Kuliner": "culinary",
+  "Pantai": "beach",
+  "Gunung": "mountain",
 };
 
 const reverseCategoryMap: Record<string, string> = {
-  "beach": "Pantai",
-  "culinary": "Kuliner",
   "nature": "Alam",
   "cultural": "Budaya",
+  "adventure": "Petualangan",
+  "religious": "Religi",
+  "historical": "Sejarah",
+  "culinary": "Kuliner",
+  "beach": "Pantai",
+  "mountain": "Gunung",
 };
 
 export default function DestinationDetailPage({ params }: { params: Promise<{ id: string }> }) {

@@ -17,10 +17,14 @@ const MapComponent = dynamic(() => import("@/components/admin/map-component"), {
 });
 
 const categoryMap: Record<string, string> = {
-  "Pantai": "beach",
-  "Kuliner": "culinary",
   "Alam": "nature",
   "Budaya": "cultural",
+  "Petualangan": "adventure",
+  "Religi": "religious",
+  "Sejarah": "historical",
+  "Kuliner": "culinary",
+  "Pantai": "beach",
+  "Gunung": "mountain",
 };
 
 export default function NewDestinationPage() {
@@ -186,7 +190,7 @@ export default function NewDestinationPage() {
               <div>
                 <label className="block text-sm font-medium mb-1">Images</label>
                 <ImageUploader
-                  onUploaded={(img: ImageDto) => setImages((prev) => [...prev, { url: img.url, alt: img.alt }])}
+                  onUploaded={(img: ImageDto) => setImages((prev) => [...prev, { url: img.url }])}
                   multiple={true}
                   existingImages={images}
                   onRemoveExisting={(index) => setImages((prev) => prev.filter((_, i) => i !== index))}

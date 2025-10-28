@@ -28,10 +28,14 @@ interface DestinationItem {
 
 const getCategoryDisplayName = (category?: string): string => {
   switch (category) {
-    case "beach": return "Pantai";
-    case "culinary": return "Kuliner";
     case "nature": return "Alam";
     case "cultural": return "Budaya";
+    case "adventure": return "Petualangan";
+    case "religious": return "Religi";
+    case "historical": return "Sejarah";
+    case "culinary": return "Kuliner";
+    case "beach": return "Pantai";
+    case "mountain": return "Gunung";
     default: return category ?? "-";
   }
 };
@@ -106,10 +110,14 @@ export default function AdminDestinationsList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua</SelectItem>
-                <SelectItem value="beach">Pantai</SelectItem>
                 <SelectItem value="nature">Alam</SelectItem>
                 <SelectItem value="cultural">Budaya</SelectItem>
+                <SelectItem value="adventure">Petualangan</SelectItem>
+                <SelectItem value="religious">Religi</SelectItem>
+                <SelectItem value="historical">Sejarah</SelectItem>
                 <SelectItem value="culinary">Kuliner</SelectItem>
+                <SelectItem value="beach">Pantai</SelectItem>
+                <SelectItem value="mountain">Gunung</SelectItem>
               </SelectContent>
             </Select>
             <Select onValueChange={(v) => setFilter("status", v === "all" ? undefined : v)}>

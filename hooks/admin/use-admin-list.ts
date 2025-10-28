@@ -115,7 +115,7 @@ export function useAdminList<T>({
     try {
       const params = new URLSearchParams();
       params.append("page", "1");
-      params.append("limit", "1000");
+      params.append("limit", "100");
 
         Object.entries(dp).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
@@ -166,7 +166,7 @@ export function useAdminList<T>({
     try {
       const params = new URLSearchParams();
       params.append("page", "1");
-      params.append("limit", "1000");
+      params.append("limit", "100");
 
         Object.entries(dp).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
