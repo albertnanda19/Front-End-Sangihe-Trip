@@ -79,6 +79,12 @@ function handleUnauthorized(options?: RequestOptions) {
   }
 }
 
+function handleForbidden() {
+  if (typeof window !== "undefined") {
+    window.location.href = "/unauthorized";
+  }
+}
+
 export async function request<TData = unknown, TMeta = unknown>(path: string, options: RequestOptions = {}): Promise<ApiResult<TData, TMeta>> {
   const url = apiUrl(path);
   const headers = buildHeaders(options);
@@ -96,6 +102,9 @@ export async function request<TData = unknown, TMeta = unknown>(path: string, op
   if (!res.ok) {
     if (res.status === 401) {
       handleUnauthorized(options);
+    }
+    if (res.status === 403) {
+      handleForbidden();
     }
     const fallback = `Request failed (status ${res.status})`;
     const message = extractMessage(json, fallback);

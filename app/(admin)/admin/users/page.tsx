@@ -30,15 +30,13 @@ import { Eye, Trash2, RefreshCw, UserCheck, UserX, Shield, ShieldCheck } from "l
 
 interface UserItem {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   role: "user" | "admin" | "moderator";
   status: "active" | "inactive" | "suspended" | "banned";
   created_at: string;
   updated_at: string;
-  last_login?: string;
-  trip_count: number;
-  review_count: number;
 }
 
 const getRoleDisplayName = (role: string): string => {
@@ -87,16 +85,15 @@ export default function AdminUsersManagement() {
     error,
     search,
     page,
-    setSearch,
+    setSearchAndFetch,
     setFilter,
     setPage,
     resetFilters,
     refresh,
   } = useAdminList<UserItem>({
     endpoint: "/api/admin/users",
-    searchFields: ["name", "email"],
-    pageSize: 20,
-    enableClientSideFiltering: false,
+    searchFields: ["first_name", "last_name", "email"],
+    pageSize: 10,
   });
 
   const handleStatusUpdate = async (userId: string, newStatus: string) => {
@@ -195,11 +192,16 @@ export default function AdminUsersManagement() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col lg:flex-row gap-3 items-end">
-            <div className="flex-1">
+            <div className="w-full lg:w-80">
               <Input
                 placeholder="Cari nama atau email..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setSearchAndFetch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setSearchAndFetch(search);
+                  }
+                }}
               />
             </div>
             <Select onValueChange={(v) => setFilter("status", v === "all" ? undefined : v)}>
@@ -238,7 +240,7 @@ export default function AdminUsersManagement() {
         <CardHeader>
           <CardTitle>Pengguna</CardTitle>
           <CardDescription>
-            {loading ? "Memuat..." : `${meta ? meta.totalItems : items.length} pengguna`}
+            {loading ? "Memuat..." : `${meta ? meta.total : items.length} pengguna`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -250,9 +252,6 @@ export default function AdminUsersManagement() {
                   <TableHead className="text-center">Email</TableHead>
                   <TableHead className="text-center">Role</TableHead>
                   <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-center hidden md:table-cell">Trips</TableHead>
-                  <TableHead className="text-center hidden md:table-cell">Reviews</TableHead>
-                  <TableHead className="text-center hidden lg:table-cell">Terakhir Login</TableHead>
                   <TableHead className="text-center">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
@@ -260,7 +259,7 @@ export default function AdminUsersManagement() {
                 {items.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="text-center">
-                      <div className="font-medium">{user.name}</div>
+                      <div className="font-medium">{`${user.first_name} ${user.last_name}`}</div>
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="text-sm">{user.email}</div>
@@ -274,15 +273,6 @@ export default function AdminUsersManagement() {
                       <Badge variant={getStatusColor(user.status)}>
                         {getStatusDisplayName(user.status)}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-center hidden md:table-cell">
-                      {user.trip_count}
-                    </TableCell>
-                    <TableCell className="text-center hidden md:table-cell">
-                      {user.review_count}
-                    </TableCell>
-                    <TableCell className="text-center hidden lg:table-cell text-sm text-gray-600">
-                      {user.last_login ? new Date(user.last_login).toLocaleDateString('id-ID') : "-"}
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">
@@ -370,7 +360,7 @@ export default function AdminUsersManagement() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Hapus Pengguna</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Pilih jenis penghapusan untuk pengguna {user.name}.
+                                Pilih jenis penghapusan untuk pengguna {`${user.first_name} ${user.last_name}`}.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

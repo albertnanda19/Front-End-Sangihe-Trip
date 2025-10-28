@@ -86,7 +86,7 @@ export default function AdminArticlesList() {
     error,
     search,
     page,
-    setSearch,
+    setSearchAndFetch,
     setFilter,
     setPage,
     resetFilters,
@@ -95,7 +95,6 @@ export default function AdminArticlesList() {
     endpoint: "/api/admin/articles",
     searchFields: ["title", "excerpt"],
     pageSize: 20,
-    enableClientSideFiltering: false,
   });
 
   const handleDelete = async (articleId: string, permanent: boolean = false) => {
@@ -167,11 +166,16 @@ export default function AdminArticlesList() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col lg:flex-row gap-3 items-end">
-            <div className="flex-1">
+            <div className="w-full lg:w-80">
               <Input
                 placeholder="Cari judul atau excerpt artikel..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setSearchAndFetch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setSearchAndFetch(search);
+                  }
+                }}
               />
             </div>
             <Select onValueChange={(v) => setFilter("status", v === "all" ? undefined : v)}>
@@ -224,7 +228,7 @@ export default function AdminArticlesList() {
         <CardHeader>
           <CardTitle>Artikel</CardTitle>
           <CardDescription>
-            {loading ? "Memuat..." : `${meta ? meta.totalItems : items.length} artikel`}
+            {loading ? "Memuat..." : `${meta ? meta.total : items.length} artikel`}
           </CardDescription>
         </CardHeader>
         <CardContent>

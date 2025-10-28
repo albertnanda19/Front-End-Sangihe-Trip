@@ -86,7 +86,6 @@ const formatActivityDescription = (activity: ActivityItem): string => {
     description += ` - ${activity.action}`;
   }
 
-  // Add metadata details if available
   if (activity.metadata) {
     const metaKeys = Object.keys(activity.metadata);
     if (metaKeys.length > 0) {
@@ -106,7 +105,7 @@ export default function AdminActivitiesPage() {
     error,
     search,
     page,
-    setSearch,
+    setSearchAndFetch,
     setFilter,
     setPage,
     resetFilters,
@@ -115,7 +114,6 @@ export default function AdminActivitiesPage() {
     endpoint: "/api/admin/activities",
     searchFields: ["userName", "action"],
     pageSize: 50,
-    enableClientSideFiltering: false,
   });
 
   return (
@@ -142,11 +140,16 @@ export default function AdminActivitiesPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col lg:flex-row gap-3 items-end">
-            <div className="flex-1">
+            <div className="w-full lg:w-80">
               <Input
                 placeholder="Cari nama pengguna atau aksi..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setSearchAndFetch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setSearchAndFetch(search);
+                  }
+                }}
               />
             </div>
             <Select onValueChange={(v) => setFilter("type", v === "all" ? undefined : v)}>
@@ -177,7 +180,7 @@ export default function AdminActivitiesPage() {
         <CardHeader>
           <CardTitle>Log Aktivitas</CardTitle>
           <CardDescription>
-            {loading ? "Memuat..." : `${meta ? meta.totalItems : items.length} aktivitas`}
+            {loading ? "Memuat..." : `${meta ? meta.total : items.length} aktivitas`}
           </CardDescription>
         </CardHeader>
         <CardContent>

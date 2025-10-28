@@ -137,7 +137,7 @@ export default function AdminAlertsPage() {
     error,
     search,
     page,
-    setSearch,
+    setSearchAndFetch,
     setFilter,
     setPage,
     resetFilters,
@@ -146,7 +146,6 @@ export default function AdminAlertsPage() {
     endpoint: "/api/admin/alerts",
     searchFields: ["title", "description", "entityTitle"],
     pageSize: 20,
-    enableClientSideFiltering: false,
   });
 
   const handleAcknowledge = async (alertId: string) => {
@@ -230,11 +229,16 @@ export default function AdminAlertsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col lg:flex-row gap-3 items-end">
-            <div className="flex-1">
+            <div className="w-full lg:w-80">
               <Input
                 placeholder="Cari judul, deskripsi atau nama entitas..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setSearchAndFetch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setSearchAndFetch(search);
+                  }
+                }}
               />
             </div>
             <Select onValueChange={(v) => setFilter("status", v === "all" ? undefined : v)}>
@@ -284,7 +288,7 @@ export default function AdminAlertsPage() {
         <CardHeader>
           <CardTitle>Alert Sistem</CardTitle>
           <CardDescription>
-            {loading ? "Memuat..." : `${meta ? meta.totalItems : items.length} alert`}
+            {loading ? "Memuat..." : `${meta ? meta.total : items.length} alert`}
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -66,7 +66,7 @@ export default function AdminReviewsModeration() {
     error,
     search,
     page,
-    setSearch,
+    setSearchAndFetch,
     setFilter,
     setPage,
     resetFilters,
@@ -75,7 +75,6 @@ export default function AdminReviewsModeration() {
     endpoint: "/api/admin/reviews",
     searchFields: ["title", "content"],
     pageSize: 10,
-    enableClientSideFiltering: false,
   });
 
   const handleApprove = async (reviewId: string) => {
@@ -152,11 +151,16 @@ export default function AdminReviewsModeration() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col lg:flex-row gap-3 items-end">
-            <div className="flex-1">
+            <div className="w-full lg:w-80">
               <Input
                 placeholder="Cari judul atau konten review..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setSearchAndFetch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setSearchAndFetch(search);
+                  }
+                }}
               />
             </div>
             <Select onValueChange={(v) => setFilter("status", v === "all" ? undefined : v)}>
@@ -184,7 +188,7 @@ export default function AdminReviewsModeration() {
         <CardHeader>
           <CardTitle>Review untuk Moderasi</CardTitle>
           <CardDescription>
-            {loading ? "Memuat..." : `${meta ? meta.totalItems : items.length} review`}
+            {loading ? "Memuat..." : `${meta ? meta.total : items.length} review`}
           </CardDescription>
         </CardHeader>
         <CardContent>

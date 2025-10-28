@@ -59,7 +59,12 @@ export function useAuth(): UseAuthReturn {
       window.dispatchEvent(new Event("auth-change"));
 
       // Decode token to determine role-based destination
-      type Payload = { role?: string };
+      type Payload = { 
+        id: string;
+        email: string;
+        name: string;
+        role?: string;
+      };
       const payload = decodeJwt<Payload>(access_token);
       const role = payload?.role ?? "user";
 

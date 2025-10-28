@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { get, ApiError } from "@/lib/api";
 
 export interface ListMeta {
   page: number;
   limit: number;
-  totalItems: number;
+  total: number;
   totalPages: number;
 }
 
@@ -13,7 +13,6 @@ export interface UseAdminListOptions {
   defaultParams?: Record<string, string | number | boolean>;
   searchFields?: string[];
   pageSize?: number;
-  enableClientSideFiltering?: boolean;
 }
 
 export interface UseAdminListReturn<T> {
@@ -26,6 +25,7 @@ export interface UseAdminListReturn<T> {
   page: number;
   pageSize: number;
   setSearch: (search: string) => void;
+  setSearchAndFetch: (search: string) => void;
   setFilter: (key: string, value: string | number | boolean | undefined) => void;
   setFilters: (filters: Record<string, string | number | boolean | undefined>) => void;
   setPage: (page: number) => void;
@@ -39,9 +39,7 @@ export function useAdminList<T>({
   defaultParams = {},
   searchFields = [],
   pageSize = 20,
-  enableClientSideFiltering = false,
 }: UseAdminListOptions): UseAdminListReturn<T> {
-  const [allItems, setAllItems] = useState<T[]>([]);
   const [items, setItems] = useState<T[]>([]);
   const [meta, setMeta] = useState<ListMeta | null>(null);
   const [loading, setLoading] = useState(false);
@@ -49,75 +47,31 @@ export function useAdminList<T>({
   const [search, setSearch] = useState("");
   const [filters, setFiltersState] = useState<Record<string, string | number | boolean | undefined>>({});
   const [page, setPage] = useState(1);
-  const [hasFetched, setHasFetched] = useState(false);
 
-  const searchFieldsKey = searchFields ? searchFields.join(",") : "";
   const defaultParamsKey = JSON.stringify(defaultParams ?? {});
 
-  const filteredData = useMemo(() => {
-    const sf = searchFieldsKey ? searchFieldsKey.split(",").filter(Boolean) : [];
-    if (!enableClientSideFiltering || allItems.length === 0) {
-      return { items: allItems, meta: null };
-    }
-
-    let filteredItems = [...allItems];
-
-    if (search && sf.length > 0) {
-      const searchLower = search.toLowerCase();
-      filteredItems = filteredItems.filter((item) => {
-        return sf.some((field) => {
-          const value = (item as Record<string, unknown>)[field];
-          return value && String(value).toLowerCase().includes(searchLower);
-        });
-      });
-    }
-
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        filteredItems = filteredItems.filter((item) => {
-          const itemValue = (item as Record<string, unknown>)[key];
-          return itemValue !== undefined && String(itemValue) === String(value);
-        });
-      }
-    });
-
-    const totalItems = filteredItems.length;
-    const totalPages = Math.ceil(totalItems / pageSize);
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const paginatedItems = filteredItems.slice(startIndex, endIndex);
-
-    return {
-      items: paginatedItems,
-      meta: {
-        page,
-        limit: pageSize,
-        totalItems,
-        totalPages,
-      }
-    };
-  }, [allItems, search, searchFieldsKey, filters, page, pageSize, enableClientSideFiltering]);
-
-  useEffect(() => {
-    if (enableClientSideFiltering && hasFetched) {
-      setItems(filteredData.items);
-      setMeta(filteredData.meta);
-    }
-  }, [filteredData, enableClientSideFiltering, hasFetched]);
-
-  const fetchInitialData = useCallback(async () => {
-    const dp = defaultParamsKey ? JSON.parse(defaultParamsKey) : {};
-    if (hasFetched) return;
-
+  const fetchData = useCallback(async (currentPage: number = 1, currentSearch: string = search, currentFilters: Record<string, string | number | boolean | undefined> = filters) => {
     setLoading(true);
     setError(null);
 
     try {
       const params = new URLSearchParams();
-      params.append("page", "1");
-      params.append("limit", "100");
+      params.append("page", String(currentPage));
+      params.append("limit", String(pageSize));
 
-        Object.entries(dp).forEach(([key, value]) => {
+      if (currentSearch && searchFields.length > 0) {
+        params.append("search", currentSearch);
+        params.append("search_fields", searchFields.join(","));
+      }
+
+      Object.entries(currentFilters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          params.append(key, String(value));
+        }
+      });
+
+      const dp = defaultParamsKey ? JSON.parse(defaultParamsKey) : {};
+      Object.entries(dp).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           params.append(key, String(value));
         }
@@ -127,25 +81,17 @@ export function useAdminList<T>({
       const res = await get<T[], ListMeta>(path, { auth: "required" });
 
       const fetchedItems = res.data ?? [];
-      setAllItems(fetchedItems);
-      setHasFetched(true);
+      setItems(fetchedItems);
 
-      if (enableClientSideFiltering) {
-        const filteredItems = [...fetchedItems];
-        const totalItems = filteredItems.length;
-        const totalPages = Math.ceil(totalItems / pageSize);
-        const paginatedItems = filteredItems.slice(0, pageSize);
-
-        setItems(paginatedItems);
+      const serverMeta = res.meta;
+      if (serverMeta) {
+        const totalPages = Math.ceil(serverMeta.total / serverMeta.limit);
         setMeta({
-          page: 1,
-          limit: pageSize,
-          totalItems,
+          ...serverMeta,
           totalPages,
         });
       } else {
-        setItems(fetchedItems);
-        setMeta(res.meta ?? null);
+        setMeta(null);
       }
     } catch (err: unknown) {
       if (err instanceof ApiError) {
@@ -156,78 +102,53 @@ export function useAdminList<T>({
     } finally {
       setLoading(false);
     }
-  }, [endpoint, defaultParamsKey, hasFetched, enableClientSideFiltering, pageSize]);
-
-  const refresh = useCallback(async () => {
-    const dp = defaultParamsKey ? JSON.parse(defaultParamsKey) : {};
-    setLoading(true);
-    setError(null);
-
-    try {
-      const params = new URLSearchParams();
-      params.append("page", "1");
-      params.append("limit", "100");
-
-        Object.entries(dp).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          params.append(key, String(value));
-        }
-      });
-
-      const path = `${endpoint}?${params.toString()}`;
-      const res = await get<T[], ListMeta>(path, { auth: "required" });
-
-      const fetchedItems = res.data ?? [];
-      setAllItems(fetchedItems);
-
-      if (enableClientSideFiltering) {
-        setItems(fetchedItems.slice(0, pageSize));
-        setMeta({
-          page: 1,
-          limit: pageSize,
-          totalItems: fetchedItems.length,
-          totalPages: Math.ceil(fetchedItems.length / pageSize),
-        });
-      } else {
-        setItems(fetchedItems);
-        setMeta(res.meta ?? null);
-      }
-    } catch (err: unknown) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError((err as Error)?.message ?? "Failed to load data");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [endpoint, defaultParamsKey, enableClientSideFiltering, pageSize]);
+  }, [endpoint, defaultParamsKey, searchFields, pageSize]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    fetchInitialData();
-  }, [fetchInitialData]);
+    fetchData(1);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const refresh = useCallback(async () => {
+    fetchData(1, search, filters);
+    setPage(1);
+  }, [fetchData, search, filters]);
 
   const setFilter = useCallback((key: string, value: string | number | boolean | undefined) => {
-    setFiltersState(prev => ({ ...prev, [key]: value }));
+    const newFilters = { ...filters, [key]: value };
+    setFiltersState(newFilters);
+    fetchData(1, search, newFilters);
     setPage(1);
-  }, []);
+  }, [fetchData, search, filters]);
 
   const setFilters = useCallback((newFilters: Record<string, string | number | boolean | undefined>) => {
     setFiltersState(newFilters);
+    fetchData(1, search, newFilters);
     setPage(1);
-  }, []);
+  }, [fetchData, search]);
 
   const resetFilters = useCallback(() => {
     setSearch("");
     setFiltersState({});
+    fetchData(1, "", {});
     setPage(1);
-  }, []);
+  }, [fetchData]);
+
+  const setSearchAndFetch = useCallback((newSearch: string) => {
+    setSearch(newSearch);
+    fetchData(1, newSearch, filters);
+    setPage(1);
+  }, [fetchData, filters]);
+
+  const setPageAndFetch = useCallback((newPage: number) => {
+    setPage(newPage);
+    fetchData(newPage, search, filters);
+  }, [fetchData, search, filters]);
 
   const deleteItem = useCallback(async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus item ini?")) return;
 
     try {
-      setAllItems(prev => prev.filter(item => (item as Record<string, unknown>).id !== id));
+      setItems(prev => prev.filter(item => (item as Record<string, unknown>).id !== id));
     } catch (err: unknown) {
       alert((err as Error)?.message ?? "Gagal menghapus item");
       throw err;
@@ -244,9 +165,10 @@ export function useAdminList<T>({
     page,
     pageSize,
     setSearch,
+    setSearchAndFetch,
     setFilter,
     setFilters,
-    setPage,
+    setPage: setPageAndFetch,
     resetFilters,
     refresh,
     deleteItem,

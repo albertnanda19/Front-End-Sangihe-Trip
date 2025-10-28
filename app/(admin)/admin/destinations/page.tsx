@@ -57,7 +57,7 @@ export default function AdminDestinationsList() {
     error,
     search,
     page,
-    setSearch,
+    setSearchAndFetch,
     setFilter,
     setPage,
     resetFilters,
@@ -67,7 +67,6 @@ export default function AdminDestinationsList() {
     endpoint: "/api/admin/destinations",
     searchFields: ["name"],
     pageSize: 10,
-    enableClientSideFiltering: true,
   });
 
   return (
@@ -97,11 +96,16 @@ export default function AdminDestinationsList() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col lg:flex-row gap-3 items-end">
-            <div className="flex-1">
+            <div className="w-full lg:w-80">
               <Input
                 placeholder="Cari nama destinasi..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setSearchAndFetch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setSearchAndFetch(search);
+                  }
+                }}
               />
             </div>
             <Select onValueChange={(v) => setFilter("category", v === "all" ? undefined : v)}>
@@ -157,7 +161,7 @@ export default function AdminDestinationsList() {
         <CardHeader>
           <CardTitle>Destinasi</CardTitle>
           <CardDescription>
-            {loading ? "Memuat..." : `${meta ? meta.totalItems : items.length} item`}
+            {loading ? "Memuat..." : `${meta ? meta.total : items.length} item`}
           </CardDescription>
         </CardHeader>
         <CardContent>
