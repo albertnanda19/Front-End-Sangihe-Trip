@@ -4,11 +4,13 @@ import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { post } from "@/lib/api";
 import ImageUploader, { ImageDto } from "@/components/admin/image-uploader";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 
 const MapComponent = dynamic(() => import("@/components/admin/map-component"), {
@@ -87,19 +89,26 @@ export default function NewDestinationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 mt-16">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold mb-3">Tambah Destinasi Baru</h1>
+    <div className="min-h-screen bg-gray-50 px-6">
+      <div className="flex items-center gap-4 mb-6">
+        <Link href="/admin/destinations">
+          <Button variant="outline" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Kembali
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-2xl font-bold">Destinasi Baru</h1>
+          <p className="text-sm text-gray-600">Buat Destinasi baru.</p>
+        </div>
+      </div>
+      <div>
         <Card>
-          <CardHeader>
-            <CardTitle>Destination</CardTitle>
-            <CardDescription>Isi data destinasi dasar.</CardDescription>
-          </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-1">Nama</label>
-                <Input value={name} onChange={(e) => setName((e.target as HTMLInputElement).value)} required />
+                <label className="block text-sm font-medium mb-1">Nama Destinasi</label>
+                <Input value={name} onChange={(e) => setName((e.target as HTMLInputElement).value)} required placeholder="Masukkan nama destinasi" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Kategori</label>
@@ -121,7 +130,7 @@ export default function NewDestinationPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Deskripsi</label>
-                <Textarea value={description} onChange={(e) => setDescription((e.target as HTMLTextAreaElement).value)} rows={6} />
+                <Textarea value={description} onChange={(e) => setDescription((e.target as HTMLTextAreaElement).value)} rows={6} placeholder="Tulis deskripsi destinasi disini..." />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Lokasi</label>
@@ -146,28 +155,28 @@ export default function NewDestinationPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Phone</label>
-                  <Input value={phone} onChange={(e) => setPhone((e.target as HTMLInputElement).value)} />
+                  <label className="block text-sm font-medium mb-1">Telepon</label>
+                  <Input value={phone} onChange={(e) => setPhone((e.target as HTMLInputElement).value)} placeholder="Nomor Telepon" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Email</label>
-                  <Input value={email} onChange={(e) => setEmail((e.target as HTMLInputElement).value)} type="email" />
+                  <Input value={email} onChange={(e) => setEmail((e.target as HTMLInputElement).value)} type="email" placeholder="Email" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Website</label>
-                  <Input value={website} onChange={(e) => setWebsite((e.target as HTMLInputElement).value)} />
+                  <Input value={website} onChange={(e) => setWebsite((e.target as HTMLInputElement).value)} placeholder="Website" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Opening Hours</label>
+                <label className="block text-sm font-medium mb-1">Waktu Buka</label>
                 <Input value={openingHours} onChange={(e) => setOpeningHours((e.target as HTMLInputElement).value)} placeholder="08:00-18:00" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Entry Fee</label>
+                <label className="block text-sm font-medium mb-1">Biaya Masuk</label>
                 <Input value={entryFee} onChange={(e) => setEntryFee((e.target as HTMLInputElement).value)} type="number" placeholder="10000" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Facilities</label>
+                <label className="block text-sm font-medium mb-1">Fasilitas</label>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <input
@@ -192,7 +201,7 @@ export default function NewDestinationPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Images</label>
+                <label className="block text-sm font-medium mb-1">Gambar Destinasi</label>
                 <ImageUploader
                   onUploaded={(img: ImageDto) => setImages((prev) => [...prev, { url: img.url }])}
                   multiple={true}

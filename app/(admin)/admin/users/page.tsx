@@ -86,7 +86,7 @@ export default function AdminUsersManagement() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 px-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold">Kelola Pengguna</h1>
@@ -193,13 +193,13 @@ export default function AdminUsersManagement() {
                     </TableCell>
                     <TableCell className="text-center hidden md:table-cell">
                       <div className="text-sm text-gray-600">
-                        {new Date(user.created_at).toLocaleDateString('id-ID')}
+                        {new Date(user.created_at).toLocaleString('id-ID')}
                       </div>
                     </TableCell>
                     <TableCell className="text-center hidden lg:table-cell">
                       <div className="text-sm text-gray-600">
                         {user.last_login_at
-                          ? new Date(user.last_login_at).toLocaleDateString('id-ID')
+                          ? new Date(user.last_login_at).toLocaleString('id-ID')
                           : 'Belum pernah login'
                         }
                       </div>

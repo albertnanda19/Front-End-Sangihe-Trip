@@ -7,27 +7,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit2, FileText, EyeOff } from "lucide-react";
+import { ArrowLeft, Edit2, FileText, EyeOff, Check, X } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ArticleDetail {
   id: string;
   title: string;
-  slug: string;
-  excerpt: string;
+  excerpt: string | null;
   content: string;
   category: string;
   status: "draft" | "published" | "archived";
-  featured_image?: string;
-  tags: string[];
-  view_count: number;
-  published_at?: string;
-  created_at: string;
-  updated_at: string;
+  featuredImage?: string;
+  viewCount: number;
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
   author: {
-    id: string;
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
+    avatarUrl?: string;
   };
 }
 
@@ -67,6 +70,16 @@ export default function ArticleViewPage() {
 
   const [loading, setLoading] = useState(true);
   const [article, setArticle] = useState<ArticleDetail | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [formData, setFormData] = useState({
+    title: "",
+    excerpt: "",
+    content: "",
+    category: "",
+    featuredImage: "",
+  });
 
   const fetchArticle = useCallback(async () => {
     try {
@@ -83,6 +96,50 @@ export default function ArticleViewPage() {
   useEffect(() => {
     fetchArticle();
   }, [fetchArticle]);
+
+  useEffect(() => {
+    if (article) {
+      setFormData({
+        title: article.title,
+        excerpt: article.excerpt || "",
+        content: article.content,
+        category: article.category,
+        featuredImage: article.featuredImage || "",
+      });
+    }
+  }, [article]);
+
+  const handleSave = async () => {
+    const errors: {[key: string]: string} = {};
+    if (formData.content.length < 50) {
+      errors.content = "Konten artikel harus minimal 50 karakter";
+    }
+    if (formData.title.trim().length === 0) {
+      errors.title = "Judul artikel wajib diisi";
+    }
+    if (formData.excerpt.trim().length === 0) {
+      errors.excerpt = "Excerpt wajib diisi";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    setFormErrors({});
+    setSaving(true);
+    try {
+      await put(`/api/admin/articles/${articleId}`, formData, { auth: "required" });
+      alert("Artikel berhasil diperbarui!");
+      setIsEditing(false);
+      fetchArticle();
+    } catch (error) {
+      console.error("Error updating article:", error);
+      alert("Terjadi kesalahan saat memperbarui artikel");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handlePublish = async () => {
     try {
@@ -133,7 +190,7 @@ export default function ArticleViewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 px-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <Link href="/admin/articles">
@@ -151,19 +208,30 @@ export default function ArticleViewPage() {
           <Badge variant={getStatusColor(article.status)}>
             {getStatusDisplayName(article.status)}
           </Badge>
-          <Link href={`/admin/articles/${articleId}/edit`}>
-            <Button variant="default">
+          {isEditing ? (
+            <>
+              <Button onClick={handleSave} disabled={saving}>
+                <Check className="h-4 w-4 mr-2" />
+                {saving ? "Menyimpan..." : "Simpan"}
+              </Button>
+              <Button variant="outline" onClick={() => setIsEditing(false)}>
+                <X className="h-4 w-4 mr-2" />
+                Batal
+              </Button>
+            </>
+          ) : (
+            <Button onClick={() => setIsEditing(true)}>
               <Edit2 className="h-4 w-4 mr-2" />
               Edit
             </Button>
-          </Link>
-          {article.status === "draft" && (
+          )}
+          {article.status === "draft" && !isEditing && (
             <Button onClick={handlePublish} variant="outline">
               <FileText className="h-4 w-4 mr-2" />
               Publikasikan
             </Button>
           )}
-          {article.status === "published" && (
+          {article.status === "published" && !isEditing && (
             <Button onClick={handleUnpublish} variant="outline">
               <EyeOff className="h-4 w-4 mr-2" />
               Tidak Publikasikan
@@ -181,7 +249,7 @@ export default function ArticleViewPage() {
             <CardContent className="space-y-3">
               <div>
                 <Label className="text-sm font-medium">Penulis</Label>
-                <p className="text-sm text-gray-600">{article.author.name}</p>
+                <p className="text-sm text-gray-600">{`${article.author.firstName} ${article.author.lastName}`.trim() || 'Unknown'}</p>
               </div>
               <div>
                 <Label className="text-sm font-medium">Kategori</Label>
@@ -189,39 +257,45 @@ export default function ArticleViewPage() {
               </div>
               <div>
                 <Label className="text-sm font-medium">Jumlah View</Label>
-                <p className="text-sm text-gray-600">{(article.view_count || 0).toLocaleString()}</p>
+                <p className="text-sm text-gray-600">{(article.viewCount || 0).toLocaleString()}</p>
               </div>
               <div>
                 <Label className="text-sm font-medium">Dibuat</Label>
                 <p className="text-sm text-gray-600">
-                  {article.created_at ? new Date(article.created_at).toLocaleDateString("id-ID", {
+                  {article.createdAt ? new Date(article.createdAt).toLocaleString("id-ID", {
                     weekday: "long",
                     year: "numeric",
                     month: "long",
-                    day: "numeric"
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
                   }) : "-"}
                 </p>
               </div>
               <div>
                 <Label className="text-sm font-medium">Terakhir Diupdate</Label>
                 <p className="text-sm text-gray-600">
-                  {article.updated_at ? new Date(article.updated_at).toLocaleDateString("id-ID", {
+                  {article.updatedAt ? new Date(article.updatedAt).toLocaleString("id-ID", {
                     weekday: "long",
                     year: "numeric",
                     month: "long",
-                    day: "numeric"
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
                   }) : "-"}
                 </p>
               </div>
-              {article.published_at && (
+              {article.publishedAt && (
                 <div>
                   <Label className="text-sm font-medium">Dipublikasikan</Label>
                   <p className="text-sm text-gray-600">
-                    {new Date(article.published_at).toLocaleDateString("id-ID", {
+                    {new Date(article.publishedAt).toLocaleString("id-ID", {
                       weekday: "long",
                       year: "numeric",
                       month: "long",
-                      day: "numeric"
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit"
                     })}
                   </p>
                 </div>
@@ -229,15 +303,17 @@ export default function ArticleViewPage() {
             </CardContent>
           </Card>
 
-          {article.featured_image && (
+          {article.featuredImage && (
             <Card>
               <CardHeader>
                 <CardTitle>Gambar Featured</CardTitle>
               </CardHeader>
               <CardContent>
-                <img
-                  src={article.featured_image}
+                <Image
+                  src={article.featuredImage}
                   alt={article.title}
+                  width={400}
+                  height={200}
                   className="w-full h-48 object-cover rounded-lg"
                 />
               </CardContent>
@@ -251,26 +327,113 @@ export default function ArticleViewPage() {
               <CardTitle>Konten Artikel</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium text-gray-500">Judul</Label>
-                <h2 className="text-2xl font-bold mt-1">{article.title}</h2>
-              </div>
+              {isEditing ? (
+                <>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Judul</Label>
+                    <Input
+                      value={formData.title}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, title: e.target.value }));
+                        if (formErrors.title) setFormErrors(prev => ({ ...prev, title: "" }));
+                      }}
+                      className="mt-1"
+                    />
+                    {formErrors.title && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.title}</p>
+                    )}
+                  </div>
 
-              <div>
-                <Label className="text-sm font-medium text-gray-500">Excerpt</Label>
-                <p className="text-gray-700 mt-1 leading-relaxed">{article.excerpt}</p>
-              </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Kategori</Label>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="travel_tips">Tips Perjalanan</SelectItem>
+                        <SelectItem value="destination_guide">Panduan Destinasi</SelectItem>
+                        <SelectItem value="culture">Budaya</SelectItem>
+                        <SelectItem value="food">Makanan</SelectItem>
+                        <SelectItem value="adventure">Petualangan</SelectItem>
+                        <SelectItem value="news">Berita</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div className="pt-4 border-t">
-                <Label className="text-sm font-medium text-gray-500">Konten Artikel</Label>
-                <div className="mt-3 p-6 bg-white rounded-lg border border-gray-200">
-                  <div className="prose prose-sm md:prose max-w-none">
-                    <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
-                      {article.content}
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Excerpt</Label>
+                    <Textarea
+                      value={formData.excerpt}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, excerpt: e.target.value }));
+                        if (formErrors.excerpt) setFormErrors(prev => ({ ...prev, excerpt: "" }));
+                      }}
+                      rows={3}
+                      className="mt-1"
+                    />
+                    {formErrors.excerpt && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.excerpt}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Konten Artikel</Label>
+                    <Textarea
+                      value={formData.content}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, content: e.target.value }));
+                        if (formErrors.content) setFormErrors(prev => ({ ...prev, content: "" }));
+                      }}
+                      rows={20}
+                      className="mt-1"
+                    />
+                    {formErrors.content && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.content}</p>
+                    )}
+                    <div className="text-sm text-gray-500 mt-1">
+                      Minimal 50 karakter. Saat ini: {formData.content.length} karakter.
                     </div>
                   </div>
-                </div>
-              </div>
+
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Gambar Featured (URL)</Label>
+                    <Input
+                      type="url"
+                      value={formData.featuredImage}
+                      onChange={(e) => setFormData(prev => ({ ...prev, featuredImage: e.target.value }))}
+                      className="mt-1"
+                      placeholder="https://example.com/image.jpg"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Judul</Label>
+                    <h2 className="text-2xl font-bold mt-1">{article.title}</h2>
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Excerpt</Label>
+                    <p className="text-gray-700 mt-1 leading-relaxed">{article.excerpt || ""}</p>
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <Label className="text-sm font-medium text-gray-500">Konten Artikel</Label>
+                    <div className="mt-3 p-6 bg-white rounded-lg border border-gray-200">
+                      <div className="prose prose-sm md:prose max-w-none">
+                        <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
+                          {article.content}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>

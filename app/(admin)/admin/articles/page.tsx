@@ -1,7 +1,7 @@
 "use client";
 
 import { useAdminList } from "@/hooks/admin/use-admin-list";
-import { del, put } from "@/lib/api";
+import { del } from "@/lib/api";
 import Link from "next/link";
 import {
   Table,
@@ -27,23 +27,21 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Eye, Edit, Trash2, RefreshCw, Plus, FileText, EyeOff } from "lucide-react";
+import { Eye, Trash2, RefreshCw, Plus } from "lucide-react";
 
 interface ArticleItem {
   id: string;
   title: string;
-  slug: string;
   excerpt?: string;
   category: string;
   status: "draft" | "published" | "archived";
-  featured_image?: string;
-  view_count: number;
-  published_at?: string;
-  created_at: string;
-  updated_at: string;
-  author: {
-    id: string;
-    name: string;
+  viewCount: number;
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  author?: {
+    firstName: string;
+    lastName: string;
     email: string;
   };
 }
@@ -114,30 +112,8 @@ export default function AdminArticlesList() {
     }
   };
 
-  const handlePublish = async (articleId: string) => {
-    try {
-      await put(`/api/admin/articles/${articleId}/publish`, {}, { auth: "required" });
-      alert("Artikel berhasil dipublikasikan!");
-      refresh();
-    } catch (error) {
-      console.error("Error publishing article:", error);
-      alert("Terjadi kesalahan saat mempublikasikan artikel");
-    }
-  };
-
-  const handleUnpublish = async (articleId: string) => {
-    try {
-      await put(`/api/admin/articles/${articleId}/unpublish`, {}, { auth: "required" });
-      alert("Artikel berhasil tidak dipublikasikan!");
-      refresh();
-    } catch (error) {
-      console.error("Error unpublishing article:", error);
-      alert("Terjadi kesalahan saat tidak mempublikasikan artikel");
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 px-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold">Kelola Artikel</h1>
@@ -166,7 +142,7 @@ export default function AdminArticlesList() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col lg:flex-row gap-3 items-end">
-            <div className="w-full lg:w-80">
+            <div className="w-full flex-1 min-w-0">
               <Input
                 placeholder="Cari judul atau excerpt artikel..."
                 value={search}
@@ -242,6 +218,8 @@ export default function AdminArticlesList() {
                   <TableHead className="text-center hidden md:table-cell">Penulis</TableHead>
                   <TableHead className="text-center hidden md:table-cell">Views</TableHead>
                   <TableHead className="text-center hidden lg:table-cell">Dibuat</TableHead>
+                  <TableHead className="text-center hidden lg:table-cell">Diupdate</TableHead>
+                  <TableHead className="text-center hidden lg:table-cell">Dipublikasikan</TableHead>
                   <TableHead className="text-center">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
@@ -272,16 +250,22 @@ export default function AdminArticlesList() {
                     </TableCell>
                     <TableCell className="text-center hidden md:table-cell">
                       <div className="text-sm">
-                        {article.author.name}
+                        {article.author ? `${article.author.firstName} ${article.author.lastName}`.trim() : 'Unknown'}
                       </div>
                     </TableCell>
                     <TableCell className="text-center hidden md:table-cell">
                       <div className="text-sm font-medium">
-                        {(article.view_count || 0).toLocaleString()}
+                        {(article.viewCount || 0).toLocaleString()}
                       </div>
                     </TableCell>
                     <TableCell className="text-center hidden lg:table-cell text-sm text-gray-600">
-                      {article.created_at ? new Date(article.created_at).toLocaleDateString('id-ID') : '-'}
+                      {article.createdAt ? new Date(article.createdAt).toLocaleString('id-ID') : '-'}
+                    </TableCell>
+                    <TableCell className="text-center hidden lg:table-cell text-sm text-gray-600">
+                      {article.updatedAt ? new Date(article.updatedAt).toLocaleString('id-ID') : '-'}
+                    </TableCell>
+                    <TableCell className="text-center hidden lg:table-cell text-sm text-gray-600">
+                      {article.publishedAt ? new Date(article.publishedAt).toLocaleString('id-ID') : '-'}
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">
@@ -290,35 +274,6 @@ export default function AdminArticlesList() {
                             <Eye className="h-4 w-4" />
                           </Button>
                         </Link>
-                        <Link href={`/admin/articles/${article.id}`}>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </Link>
-
-                        {/* Publish/Unpublish Actions */}
-                        {article.status === "draft" && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
-                            onClick={() => handlePublish(article.id)}
-                            title="Publikasikan"
-                          >
-                            <FileText className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {article.status === "published" && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-orange-600 hover:text-orange-700"
-                            onClick={() => handleUnpublish(article.id)}
-                            title="Tidak Publikasikan"
-                          >
-                            <EyeOff className="h-4 w-4" />
-                          </Button>
-                        )}
 
                         {/* Delete Action */}
                         <AlertDialog>

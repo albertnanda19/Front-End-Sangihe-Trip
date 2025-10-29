@@ -15,14 +15,18 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Edit, Trash2, RefreshCw } from "lucide-react";
+import { Eye, Trash2, RefreshCw } from "lucide-react";
 
 interface DestinationItem {
   id: string;
   name: string;
   category?: string;
   status?: string;
-  avg_rating?: number;
+  avg_rating: number;
+  created_by?: {
+    firstName: string;
+    lastName: string;
+  };
   updated_at?: string;
 }
 
@@ -70,7 +74,7 @@ export default function AdminDestinationsList() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 px-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold">Kelola Destinasi</h1>
@@ -173,6 +177,7 @@ export default function AdminDestinationsList() {
                   <TableHead className="text-center">Kategori</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-center hidden lg:table-cell">Rating Rata-rata</TableHead>
+                  <TableHead className="text-center hidden md:table-cell">Pembuat</TableHead>
                   <TableHead className="text-center hidden md:table-cell">Terakhir Diupdate</TableHead>
                   <TableHead className="text-center">Aksi</TableHead>
                 </TableRow>
@@ -192,14 +197,19 @@ export default function AdminDestinationsList() {
                     <TableCell className="text-center hidden lg:table-cell">
                       {d.avg_rating ? `${d.avg_rating} bintang` : "-"}
                     </TableCell>
+                    <TableCell className="text-center hidden md:table-cell">
+                      <div className="text-sm">
+                        {d.created_by ? `${d.created_by.firstName} ${d.created_by.lastName}`.trim() : 'Unknown'}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-center hidden md:table-cell text-sm text-gray-600">
-                      {d.updated_at ? new Date(d.updated_at).toLocaleString() : "-"}
+                      {d.updated_at ? new Date(d.updated_at).toLocaleString('id-ID') : "-"}
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">
                         <Link href={`/admin/destinations/${d.id}`}>
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <Edit className="h-4 w-4" />
+                            <Eye className="h-4 w-4" />
                           </Button>
                         </Link>
                         <Button

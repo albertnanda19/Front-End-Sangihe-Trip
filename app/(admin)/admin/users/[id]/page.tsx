@@ -171,7 +171,7 @@ export default function AdminUserDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto">
         {/* Back Button */}
         <div className="mb-6">
@@ -227,7 +227,7 @@ export default function AdminUserDetail() {
               <Select onValueChange={handleStatusUpdate} disabled={actionLoading}>
                 <SelectTrigger className="w-36 h-9">
                   <Edit className="h-3 w-3 mr-2" />
-                  <SelectValue placeholder="Ubah Status" />
+                  <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active" disabled={user.status === 'active'}>

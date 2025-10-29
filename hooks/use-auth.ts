@@ -68,7 +68,7 @@ export function useAuth(): UseAuthReturn {
       const payload = decodeJwt<Payload>(access_token);
       const role = payload?.role ?? "user";
 
-      const destination = role === "admin" ? "/admin/beranda" : "/beranda";
+      const destination = role === "admin" ? "/masuk" : "/homepage";
       router.push(destination);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Terjadi kesalahan saat login";
