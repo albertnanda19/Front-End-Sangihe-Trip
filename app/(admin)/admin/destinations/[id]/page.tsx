@@ -78,8 +78,8 @@ export default function DestinationDetailPage({ params }: { params: Promise<{ id
         setName((data?.name as string) ?? "");
         setDescription((data?.description as string) ?? "");
         setAddress((data?.address as string) ?? "");
-        setLat(typeof data?.latitude === 'number' ? data.latitude : null);
-        setLng(typeof data?.longitude === 'number' ? data.longitude : null);
+        setLat(typeof data?.latitude === 'number' ? data.latitude : (typeof data?.latitude === 'string' ? parseFloat(data.latitude) : null));
+        setLng(typeof data?.longitude === 'number' ? data.longitude : (typeof data?.longitude === 'string' ? parseFloat(data.longitude) : null));
         setPhone((data?.phone as string) ?? "");
         setEmail((data?.email as string) ?? "");
         setWebsite((data?.website as string) ?? "");
@@ -147,7 +147,7 @@ export default function DestinationDetailPage({ params }: { params: Promise<{ id
   if (loading) return <div className="p-6 text-center">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-6 mt-16">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-2xl font-bold mb-3">Edit Destinasi</h1>
         {error && <div className="text-red-600 mb-3">{error}</div>}
@@ -169,10 +169,14 @@ export default function DestinationDetailPage({ params }: { params: Promise<{ id
                     <SelectValue placeholder="Pilih kategori" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Pantai">Pantai</SelectItem>
-                    <SelectItem value="Kuliner">Kuliner</SelectItem>
                     <SelectItem value="Alam">Alam</SelectItem>
                     <SelectItem value="Budaya">Budaya</SelectItem>
+                    <SelectItem value="Petualangan">Petualangan</SelectItem>
+                    <SelectItem value="Religi">Religi</SelectItem>
+                    <SelectItem value="Sejarah">Sejarah</SelectItem>
+                    <SelectItem value="Kuliner">Kuliner</SelectItem>
+                    <SelectItem value="Pantai">Pantai</SelectItem>
+                    <SelectItem value="Gunung">Gunung</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

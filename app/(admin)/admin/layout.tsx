@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { SITE_CONFIG } from "@/lib/constants/site";
 import { useAdminNavigation } from "@/hooks/admin/use-admin-navigation";
+import { isAuthenticated, isAdmin } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,7 +26,34 @@ import { Shield, Menu } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
   const { navItems, isActive } = useAdminNavigation();
+
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      router.push("/masuk");
+      return;
+    }
+
+    if (!isAdmin()) {
+      router.push("/beranda");
+      return;
+    }
+
+    setIsLoading(false);
+  }, [router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Memverifikasi akses...</p>
+        </div>
+      </div>
+    );
+  }
 
   const NavItems = ({ mobile = false }: { mobile?: boolean }) => (
     <>

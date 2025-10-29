@@ -21,7 +21,8 @@ export function useAuthStatus(): boolean {
           const payload = decodeJwt<{ exp?: number }>(token);
           const exp = payload?.exp;
           if (typeof exp === "number" && exp * 1000 < Date.now()) {
-            logout("/beranda");
+            const isAdminArea = typeof window !== "undefined" && window.location.pathname.startsWith("/admin");
+            logout(isAdminArea ? "/masuk" : "/beranda");
             setIsAuthenticated(false);
             return;
           }
@@ -35,13 +36,21 @@ export function useAuthStatus(): boolean {
 
     checkAuth();
 
-    const interval = setInterval(checkAuth, 500);
+    const interval = setInterval(checkAuth, 30000);
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkAuth();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     const handleAuthChange = () => checkAuth();
     window.addEventListener("auth-change", handleAuthChange);
 
     return () => {
       clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("auth-change", handleAuthChange);
     };
   }, []);

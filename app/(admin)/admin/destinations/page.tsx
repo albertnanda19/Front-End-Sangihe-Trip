@@ -96,7 +96,7 @@ export default function AdminDestinationsList() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col lg:flex-row gap-3 items-end">
-            <div className="w-full lg:w-80">
+            <div className="w-full flex-1 min-w-0">
               <Input
                 placeholder="Cari nama destinasi..."
                 value={search}

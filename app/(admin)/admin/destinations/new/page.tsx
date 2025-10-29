@@ -87,7 +87,7 @@ export default function NewDestinationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-6 mt-16">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-3">Tambah Destinasi Baru</h1>
         <Card>
@@ -108,10 +108,14 @@ export default function NewDestinationPage() {
                     <SelectValue placeholder="Pilih kategori" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Pantai">Pantai</SelectItem>
-                    <SelectItem value="Kuliner">Kuliner</SelectItem>
                     <SelectItem value="Alam">Alam</SelectItem>
                     <SelectItem value="Budaya">Budaya</SelectItem>
+                    <SelectItem value="Petualangan">Petualangan</SelectItem>
+                    <SelectItem value="Religi">Religi</SelectItem>
+                    <SelectItem value="Sejarah">Sejarah</SelectItem>
+                    <SelectItem value="Kuliner">Kuliner</SelectItem>
+                    <SelectItem value="Pantai">Pantai</SelectItem>
+                    <SelectItem value="Gunung">Gunung</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

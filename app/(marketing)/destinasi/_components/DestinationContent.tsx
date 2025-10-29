@@ -43,15 +43,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-const categories = ["Semua", "Pantai", "Budaya", "Kuliner", "Alam", "Sejarah"] as const;
+const categories = ["Semua", "Pantai", "Kuliner", "Alam", "Budaya", "Sejarah", "Petualangan", "Religi", "Gunung"] as const;
 
 const categoryMap: Record<(typeof categories)[number], string | undefined> = {
   "Semua": undefined,
   "Pantai": "beach",
-  "Budaya": "cultural",
   "Kuliner": "culinary",
   "Alam": "nature",
+  "Budaya": "cultural",
   "Sejarah": "historical",
+  "Petualangan": "adventure",
+  "Religi": "religious",
+  "Gunung": "mountain",
 };
 const locations = [
   "Semua Lokasi",

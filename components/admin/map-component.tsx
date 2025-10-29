@@ -22,6 +22,7 @@ export default function MapComponent({ lat, lng, setLat, setLng, setAddress }: {
   const leafletMapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [isMapReady, setIsMapReady] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -32,7 +33,9 @@ export default function MapComponent({ lat, lng, setLat, setLng, setAddress }: {
       return;
     }
 
-    const map = L.map(mapRef.current).setView([-1.5, 125], 8);
+    const map = L.map(mapRef.current).setView([3.5, 125.5], 10);
+    map.getContainer().style.zIndex = '1';
+    setIsMapReady(true);
     leafletMapRef.current = map;
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -68,18 +71,19 @@ export default function MapComponent({ lat, lng, setLat, setLng, setAddress }: {
   }, [isClient, setLat, setLng, setAddress]);
 
   useEffect(() => {
-    if (leafletMapRef.current && lat !== null && lng !== null) {
+    if (isMapReady && lat !== null && lng !== null) {
+      console.log('Setting marker at', lat, lng);
       const newLatLng: [number, number] = [lat, lng];
 
       if (markerRef.current) {
         markerRef.current.setLatLng(newLatLng);
       } else {
-        markerRef.current = L.marker(newLatLng).addTo(leafletMapRef.current);
+        markerRef.current = L.marker(newLatLng).addTo(leafletMapRef.current!);
       }
 
-      leafletMapRef.current.setView(newLatLng, leafletMapRef.current.getZoom());
+      leafletMapRef.current!.setView(newLatLng, leafletMapRef.current!.getZoom());
     }
-  }, [lat, lng]);
+  }, [isMapReady, lat, lng]);
 
   if (!isClient) {
     return <div style={{ height: "100%", width: "100%", backgroundColor: "#f3f4f6" }} />;
