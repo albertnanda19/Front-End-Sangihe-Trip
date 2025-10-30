@@ -7,6 +7,7 @@ import Link from "next/link";
 import MobileMenu from "./mobile-menu";
 import { useRouter } from "next/navigation";
 import { useAuthStatus } from "@/hooks/use-auth-status";
+import { useUserRole } from "@/hooks/use-user-role";
 import { deleteCookie } from "@/lib/cookies";
 import { SiteLogo } from "@/components/site-logo";
 import { NAV_ITEMS } from "@/lib/constants/site";
@@ -16,6 +17,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
   const isAuthenticated = useAuthStatus();
+  const userRole = useUserRole();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -54,7 +56,7 @@ const Header = () => {
                   <Button
                     variant="ghost"
                     className="text-sky-600 hover:bg-sky-50"
-                    onClick={() => router.push(ROUTES.dashboard)}
+                    onClick={() => router.push(userRole === "admin" ? ROUTES.adminDashboard : ROUTES.dashboard)}
                   >
                     <User className="w-4 h-4 mr-2" />
                     Dashboard

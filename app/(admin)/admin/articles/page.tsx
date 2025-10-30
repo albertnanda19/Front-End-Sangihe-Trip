@@ -231,11 +231,6 @@ export default function AdminArticlesList() {
                         <div className="font-medium text-sm truncate" title={article.title}>
                           {article.title}
                         </div>
-                        {article.excerpt && (
-                          <div className="text-xs text-gray-500 truncate mt-1" title={article.excerpt}>
-                            {article.excerpt}
-                          </div>
-                        )}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">

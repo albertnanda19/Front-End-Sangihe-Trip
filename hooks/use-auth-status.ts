@@ -21,8 +21,7 @@ export function useAuthStatus(): boolean {
           const payload = decodeJwt<{ exp?: number }>(token);
           const exp = payload?.exp;
           if (typeof exp === "number" && exp * 1000 < Date.now()) {
-            const isAdminArea = typeof window !== "undefined" && window.location.pathname.startsWith("/admin");
-            logout(isAdminArea ? "/masuk" : "/beranda");
+            logout("/masuk");
             setIsAuthenticated(false);
             return;
           }

@@ -2,40 +2,48 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
+import { get, put } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, CheckCircle, XCircle, User, MapPin, Calendar, Star } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, User, MapPin, Star, ThumbsUp, Flag } from "lucide-react";
 import Link from "next/link";
-import { get, put } from "@/lib/api";
+import Image from "next/image";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ReviewDetail {
   id: string;
-  title: string;
-  content: string;
   rating: number;
-  status: "pending" | "active" | "hidden" | "rejected";
+  content: string;
+  visit_date: string | null;
+  status: string;
+  helpful_count: number;
+  report_count: number;
+  moderation_notes: string | null;
+  moderated_at: string | null;
   created_at: string;
   updated_at: string;
-  moderator_notes?: string;
-  rejection_reason?: string;
-  user: {
-    id: string;
-    name: string;
+  deleted_at: string | null;
+  users: {
     email: string;
+    last_name: string;
+    first_name: string;
+    avatar_url: string | null;
   };
-  destination: {
+  destinations: {
     id: string;
     name: string;
-    category?: string;
   };
+  review_images: {
+    url: string;
+  }[];
 }
 
 const getStatusDisplayName = (status: string): string => {
   switch (status) {
-    case "pending": return "Menunggu";
     case "active": return "Aktif";
+    case "pending": return "Menunggu";
     case "hidden": return "Tersembunyi";
     case "rejected": return "Ditolak";
     default: return status;
@@ -52,33 +60,21 @@ const getStatusColor = (status: string): "default" | "secondary" | "destructive"
   }
 };
 
-const getCategoryDisplayName = (category?: string): string => {
-  switch (category) {
-    case "beach": return "Pantai";
-    case "culinary": return "Kuliner";
-    case "nature": return "Alam";
-    case "cultural": return "Budaya";
-    default: return category ?? "-";
-  }
-};
-
-export default function AdminReviewDetail() {
+export default function ReviewViewPage() {
   const params = useParams();
   const reviewId = params.id as string;
 
-  const [review, setReview] = useState<ReviewDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [review, setReview] = useState<ReviewDetail | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
   const fetchReview = useCallback(async () => {
     try {
-      setLoading(true);
-      const result = await get<ReviewDetail>(`/api/admin/reviews/${reviewId}`, { auth: "required" });
-      setReview(result.data);
+      const response = await get<ReviewDetail>(`/api/admin/reviews/${reviewId}`, { auth: "required" });
+      setReview(response.data);
     } catch (error) {
       console.error("Error fetching review:", error);
-      setError("Terjadi kesalahan saat memuat review");
+      alert("Terjadi kesalahan saat memuat review");
     } finally {
       setLoading(false);
     }
@@ -93,7 +89,7 @@ export default function AdminReviewDetail() {
 
     try {
       setActionLoading(true);
-      await put(`/api/admin/reviews/${reviewId}/approve`, undefined, { auth: "required" });
+      await put(`/api/admin/reviews/${reviewId}/approve`, {}, { auth: "required" });
       alert("Review berhasil disetujui!");
       fetchReview();
     } catch (error) {
@@ -126,25 +122,21 @@ export default function AdminReviewDetail() {
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p>Memuat detail review...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Memuat review...</p>
           </div>
         </div>
       </div>
     );
   }
 
-  if (error || !review) {
+  if (!review) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
-          <p className="text-gray-600 mb-4">{error || "Review tidak ditemukan"}</p>
+          <p className="text-gray-600">Review tidak ditemukan.</p>
           <Link href="/admin/reviews">
-            <Button>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Kembali ke Moderasi Review
-            </Button>
+            <Button className="mt-4">Kembali ke Moderasi Review</Button>
           </Link>
         </div>
       </div>
@@ -152,9 +144,9 @@ export default function AdminReviewDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-6">
+    <div className="min-h-screen bg-gray-50 px-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
           <Link href="/admin/reviews">
             <Button variant="outline" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -163,27 +155,38 @@ export default function AdminReviewDetail() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold">Detail Review</h1>
-            <p className="text-sm text-gray-600">Moderasi review pengguna</p>
+            <p className="text-sm text-gray-600">Lihat detail review pengguna.</p>
           </div>
         </div>
+        <div className="flex items-center gap-2">
+          <Badge variant={getStatusColor(review.status)}>
+            {getStatusDisplayName(review.status)}
+          </Badge>
+          {review.status === "pending" && (
+            <>
+              <Button onClick={handleApprove} disabled={actionLoading}>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                {actionLoading ? "Memproses..." : "Setujui"}
+              </Button>
+              <Button onClick={handleReject} disabled={actionLoading} variant="destructive">
+                <XCircle className="h-4 w-4 mr-2" />
+                Tolak
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
-          {/* Review Content */}
-          <div className="md:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Star className="h-5 w-5 text-yellow-500" />
-                    {review.title}
-                  </CardTitle>
-                  <Badge variant={getStatusColor(review.status)}>
-                    {getStatusDisplayName(review.status)}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>Informasi Review</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <Label className="text-sm font-medium">Rating</Label>
+                <div className="flex items-center gap-2 mt-1">
                   <div className="flex items-center gap-1">
                     {Array.from({ length: 5 }, (_, i) => (
                       <Star
@@ -196,44 +199,55 @@ export default function AdminReviewDetail() {
                   </div>
                   <span className="text-sm text-gray-600">({review.rating}/5)</span>
                 </div>
-
-                <div className="prose prose-sm max-w-none">
-                  <p className="whitespace-pre-wrap">{review.content}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Statistik</Label>
+                <div className="flex items-center gap-4 mt-1">
+                  <div className="flex items-center gap-1 text-green-600">
+                    <ThumbsUp className="h-4 w-4" />
+                    <span className="text-sm">{review.helpful_count}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-red-600">
+                    <Flag className="h-4 w-4" />
+                    <span className="text-sm">{review.report_count}</span>
+                  </div>
                 </div>
-
-                <Separator />
-
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar className="h-4 w-4" />
-                  Dibuat pada {new Date(review.created_at).toLocaleString('id-ID')}
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Dibuat</Label>
+                <p className="text-sm text-gray-600">
+                  {new Date(review.created_at).toLocaleString("id-ID", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  })}
+                </p>
+              </div>
+              {review.visit_date && (
+                <div>
+                  <Label className="text-sm font-medium">Tanggal Kunjungan</Label>
+                  <p className="text-sm text-gray-600">
+                    {new Date(review.visit_date).toLocaleDateString("id-ID")}
+                  </p>
                 </div>
+              )}
+              {review.moderated_at && (
+                <div>
+                  <Label className="text-sm font-medium">Dimoderasi Pada</Label>
+                  <p className="text-sm text-gray-600">
+                    {new Date(review.moderated_at).toLocaleString("id-ID")}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-                {review.updated_at !== review.created_at && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Calendar className="h-4 w-4" />
-                    Diupdate pada {new Date(review.updated_at).toLocaleString('id-ID')}
-                  </div>
-                )}
-
-                {review.moderator_notes && (
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <h4 className="font-medium text-blue-900 mb-1">Catatan Moderator</h4>
-                    <p className="text-sm text-blue-800">{review.moderator_notes}</p>
-                  </div>
-                )}
-
-                {review.rejection_reason && (
-                  <div className="bg-red-50 p-3 rounded-lg">
-                    <h4 className="font-medium text-red-900 mb-1">Alasan Penolakan</h4>
-                    <p className="text-sm text-red-800">{review.rejection_reason}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* User & Destination Info */}
-          <div className="space-y-6">
+        <div className="lg:col-span-3 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -242,9 +256,19 @@ export default function AdminReviewDetail() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div>
-                  <p className="font-medium">{review.user.name}</p>
-                  <p className="text-sm text-gray-600">{review.user.email}</p>
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src={review.users.avatar_url || undefined} />
+                    <AvatarFallback>
+                      {review.users.first_name[0]}{review.users.last_name[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">
+                      {review.users.first_name} {review.users.last_name}
+                    </p>
+                    <p className="text-sm text-gray-600">{review.users.email}</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -253,17 +277,14 @@ export default function AdminReviewDetail() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
-                  Informasi Destinasi
+                  Destinasi
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <p className="font-medium">{review.destination.name}</p>
-                  <p className="text-sm text-gray-600">
-                    Kategori: {getCategoryDisplayName(review.destination.category)}
-                  </p>
+                  <p className="font-medium">{review.destinations.name}</p>
                 </div>
-                <Link href={`/admin/destinations/${review.destination.id}`}>
+                <Link href={`/admin/destinations/${review.destinations.id}`}>
                   <Button variant="outline" size="sm" className="w-full">
                     Lihat Destinasi
                   </Button>
@@ -271,35 +292,78 @@ export default function AdminReviewDetail() {
               </CardContent>
             </Card>
 
-            {/* Moderation Actions */}
-            {review.status === "pending" && (
+            {review.moderation_notes ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>Aksi Moderasi</CardTitle>
+                  <CardTitle>Catatan Moderasi</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button
-                    onClick={handleApprove}
-                    disabled={actionLoading}
-                    className="w-full"
-                    variant="default"
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Setujui Review
-                  </Button>
-                  <Button
-                    onClick={handleReject}
-                    disabled={actionLoading}
-                    className="w-full"
-                    variant="destructive"
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Tolak Review
-                  </Button>
+                <CardContent>
+                  <p className="text-sm text-gray-700">{review.moderation_notes}</p>
                 </CardContent>
               </Card>
+            ) : (
+              <div className="md:col-span-1"></div>
             )}
           </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Konten Review</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium text-gray-500">Isi Review</Label>
+                <div className="mt-3 p-6 bg-white rounded-lg border border-gray-200">
+                  <div className="prose prose-sm md:prose max-w-none">
+                    <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
+                      {review.content}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* {review.pros_cons && Object.keys(review.pros_cons).length > 0 && (
+                <div className="pt-4 border-t">
+                  <Label className="text-sm font-medium text-gray-500">Kelebihan & Kekurangan</Label>
+                  <div className="mt-3 space-y-3">
+                    {Object.entries(review.pros_cons).map(([key, values]) => (
+                      <div key={key} className="flex gap-3">
+                        <span className="text-sm font-medium min-w-[100px] capitalize">
+                          {key}:
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {values.map((value, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {value}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )} */}
+
+              {review.review_images && review.review_images.length > 0 && (
+                <div className="pt-4 border-t">
+                  <Label className="text-sm font-medium text-gray-500">Gambar Review</Label>
+                  <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {review.review_images.map((image, index) => (
+                      <div key={index} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                        <Image
+                          src={image.url}
+                          alt={`Review image ${index + 1}`}
+                          width={200}
+                          height={200}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

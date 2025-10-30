@@ -20,30 +20,31 @@ import { CheckCircle, XCircle, Eye, RefreshCw } from "lucide-react";
 
 interface ReviewItem {
   id: string;
-  title: string;
-  content: string;
   rating: number;
-  status: "pending" | "active" | "hidden" | "rejected";
+  content: string;
+  visit_date: string | null;
+  status: string;
+  helpful_count: number;
+  report_count: number;
+  moderated_by: string | null;
+  moderation_notes: string | null;
+  moderated_at: string | null;
   created_at: string;
   updated_at: string;
-  moderator_notes?: string;
-  rejection_reason?: string;
-  user: {
-    id: string;
-    name: string;
+  users: {
     email: string;
+    last_name: string;
+    first_name: string;
   };
-  destination: {
-    id: string;
+  destinations: {
     name: string;
   };
 }
 
 const getStatusDisplayName = (status: string): string => {
   switch (status) {
-    case "pending": return "Menunggu";
     case "active": return "Aktif";
-    case "hidden": return "Tersembunyi";
+    case "pending": return "Menunggu";
     case "rejected": return "Ditolak";
     default: return status;
   }
@@ -53,7 +54,6 @@ const getStatusColor = (status: string): "default" | "secondary" | "destructive"
   switch (status) {
     case "active": return "default";
     case "pending": return "outline";
-    case "hidden": return "secondary";
     case "rejected": return "destructive";
     default: return "secondary";
   }
@@ -74,7 +74,7 @@ export default function AdminReviewsModeration() {
     refresh,
   } = useAdminList<ReviewItem>({
     endpoint: "/api/admin/reviews",
-    searchFields: ["title", "content"],
+    searchFields: ["content", "users.first_name", "users.last_name", "users.email", "destinations.name"],
     pageSize: 10,
   });
 
@@ -106,7 +106,7 @@ export default function AdminReviewsModeration() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 px-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold">Moderasi Review</h1>
@@ -125,13 +125,13 @@ export default function AdminReviewsModeration() {
       <Card className="mb-4">
         <CardHeader>
           <CardTitle>Pencarian & Filter</CardTitle>
-          <CardDescription>Filter review berdasarkan status, destinasi atau konten.</CardDescription>
+          <CardDescription>Filter review berdasarkan status, rating, pengguna, destinasi atau konten.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col lg:flex-row gap-3 items-end">
-            <div className="w-full lg:w-80">
+            <div className="w-full flex-1 min-w-0">
               <Input
-                placeholder="Cari judul atau konten review..."
+                placeholder="Cari nama pengguna, email, destinasi, atau konten review..."
                 value={search}
                 onChange={(e) => setSearchAndFetch(e.target.value)}
                 onKeyDown={(e) => {
@@ -147,10 +147,22 @@ export default function AdminReviewsModeration() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua</SelectItem>
-                <SelectItem value="pending">Menunggu</SelectItem>
                 <SelectItem value="active">Aktif</SelectItem>
-                <SelectItem value="hidden">Tersembunyi</SelectItem>
+                <SelectItem value="pending">Menunggu</SelectItem>
                 <SelectItem value="rejected">Ditolak</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select onValueChange={(v) => setFilter("rating", v === "all" ? undefined : parseInt(v))}>
+              <SelectTrigger className="w-full lg:w-32">
+                <SelectValue placeholder="Rating" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua</SelectItem>
+                <SelectItem value="5">5 Bintang</SelectItem>
+                <SelectItem value="4">4 Bintang</SelectItem>
+                <SelectItem value="3">3 Bintang</SelectItem>
+                <SelectItem value="2">2 Bintang</SelectItem>
+                <SelectItem value="1">1 Bintang</SelectItem>
               </SelectContent>
             </Select>
             <div className="lg:w-auto">
@@ -174,12 +186,13 @@ export default function AdminReviewsModeration() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-center">Judul</TableHead>
+                  <TableHead className="text-center">Konten</TableHead>
                   <TableHead className="text-center">Pengguna</TableHead>
                   <TableHead className="text-center">Destinasi</TableHead>
                   <TableHead className="text-center">Rating</TableHead>
                   <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-center hidden md:table-cell">Tanggal</TableHead>
+                  <TableHead className="text-center hidden md:table-cell">Statistik</TableHead>
+                  <TableHead className="text-center hidden lg:table-cell">Tanggal</TableHead>
                   <TableHead className="text-center">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
@@ -187,19 +200,18 @@ export default function AdminReviewsModeration() {
                 {items.map((review) => (
                   <TableRow key={review.id}>
                     <TableCell className="max-w-xs">
-                      <div className="font-medium text-sm truncate" title={review.title}>
-                        {review.title}
-                      </div>
-                      <div className="text-xs text-gray-500 truncate" title={review.content}>
+                      <div className="text-sm truncate" title={review.content}>
                         {review.content}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="text-sm font-medium">{review.user.name}</div>
-                      <div className="text-xs text-gray-500">{review.user.email}</div>
+                      <div className="text-sm font-medium">
+                        {review.users.first_name} {review.users.last_name}
+                      </div>
+                      <div className="text-xs text-gray-500">{review.users.email}</div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="text-sm">{review.destination.name}</div>
+                      <div className="text-sm">{review.destinations.name}</div>
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">
@@ -211,9 +223,31 @@ export default function AdminReviewsModeration() {
                       <Badge variant={getStatusColor(review.status)}>
                         {getStatusDisplayName(review.status)}
                       </Badge>
+                      {review.moderated_at && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Dimoderasi
+                        </div>
+                      )}
                     </TableCell>
-                    <TableCell className="text-center hidden md:table-cell text-sm text-gray-600">
-                      {new Date(review.created_at).toLocaleDateString('id-ID')}
+                    <TableCell className="text-center hidden md:table-cell">
+                      <div className="text-xs space-y-1">
+                        <div className="flex items-center justify-center gap-1">
+                          <span className="text-green-600">👍</span>
+                          <span>{review.helpful_count}</span>
+                        </div>
+                        <div className="flex items-center justify-center gap-1">
+                          <span className="text-red-600">🚩</span>
+                          <span>{review.report_count}</span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center hidden lg:table-cell text-sm text-gray-600">
+                      <div>{new Date(review.created_at).toLocaleDateString('id-ID')}</div>
+                      {review.visit_date && (
+                        <div className="text-xs text-gray-500">
+                          Kunjungan: {new Date(review.visit_date).toLocaleDateString('id-ID')}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">

@@ -1,18 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-
-function decodeJwtPayload(token: string): { role?: string } | null {
-  try {
-    const payloadPart = token.split(".")[1];
-    if (!payloadPart) return null;
-    
-    const base64 = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
-    const json = Buffer.from(base64, "base64").toString("utf-8");
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-}
+import { decodeJwt } from "@/lib/jwt";
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -26,7 +14,7 @@ export function middleware(req: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    const payload = decodeJwtPayload(token);
+    const payload = decodeJwt<{ role?: string }>(token);
     const role = payload?.role;
 
     if (role !== "admin") {
@@ -40,7 +28,7 @@ export function middleware(req: NextRequest) {
     const token = req.cookies.get("access_token")?.value;
     
     if (token) {
-      const payload = decodeJwtPayload(token);
+      const payload = decodeJwt<{ role?: string }>(token);
       const role = payload?.role;
       
       const destination = role === "admin" ? "/admin/beranda" : "/beranda";

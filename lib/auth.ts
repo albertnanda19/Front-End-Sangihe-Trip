@@ -27,16 +27,6 @@ export function isAdmin(): boolean {
 }
 
 /**
- * Check if the current user is logged in (has a valid token)
- * @returns boolean
- */
-export function isAuthenticated(): boolean {
-  if (typeof window === "undefined") return false;
-  const token = getCookie("access_token");
-  return !!token;
-}
-
-/**
  * Get the current user information from JWT token
  * @returns DecodedToken | null
  */

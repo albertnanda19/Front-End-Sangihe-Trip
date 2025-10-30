@@ -1,6 +1,3 @@
-// Minimal utility to decode a JWT payload in browser only (no verification)
-// NOTE: This does NOT validate signature – meant solely for extracting non-sensitive
-// data such as user role on the client side.
 
 export interface DecodedToken {
   id: string;
@@ -19,9 +16,15 @@ export function decodeJwt<T = unknown>(token: string): T | null {
     const payloadPart = token.split(".")[1];
     if (!payloadPart) return null;
 
-    // Convert base64url → base64
     const base64 = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
-    const json = atob(base64);
+
+    let json: string;
+    if (typeof window !== "undefined") {
+      json = atob(base64);
+    } else {
+      json = Buffer.from(base64, "base64").toString("utf-8");
+    }
+
     return JSON.parse(json) as T;
   } catch {
     return null;
