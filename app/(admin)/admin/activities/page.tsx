@@ -15,86 +15,57 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  CheckCircle,
-  XCircle,
-  Edit,
-  User,
-  MessageSquare,
   RefreshCw,
-  Clock,
-  Shield
+  Eye
 } from "lucide-react";
+import Link from "next/link";
 
 interface ActivityItem {
   id: string;
-  type: "user_registration" | "review" | "system" | "backup" | "login" | "failed_login" | "admin_action";
-  userId?: string;
-  userName?: string;
-  action?: string;
-  metadata?: Record<string, string | number | boolean>;
-  createdAt: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  entityName: string;
+  adminId: string;
+  userName: string;
+  userType: string;
+  details: string;
+  timestamp: string;
 }
 
-const getTypeDisplayName = (type: string): string => {
-  switch (type) {
-    case "user_registration": return "Pendaftaran Pengguna";
-    case "review": return "Review";
-    case "system": return "Sistem";
-    case "backup": return "Backup";
+const getActionDisplayName = (action: string): string => {
+  const baseAction = action.split('_')[0];
+
+  switch (baseAction) {
+    case "create": return "Create";
+    case "update": return "Update";
+    case "delete": return "Delete";
+    case "approve": return "Approve";
+    case "reject": return "Reject";
     case "login": return "Login";
-    case "failed_login": return "Login Gagal";
-    case "admin_action": return "Aksi Admin";
-    default: return type;
+    case "logout": return "Logout";
+    default: return baseAction;
   }
 };
 
-const getTypeColor = (type: string): "default" | "secondary" | "destructive" | "outline" => {
-  switch (type) {
-    case "user_registration": return "secondary";
-    case "review": return "default";
-    case "system": return "outline";
-    case "backup": return "secondary";
-    case "login": return "default";
-    case "failed_login": return "destructive";
-    case "admin_action": return "outline";
-    default: return "outline";
+const getUserTypeDisplayName = (userType: string): string => {
+  switch (userType) {
+    case "admin": return "Admin";
+    case "user": return "User";
+    default: return userType;
   }
 };
 
-const getTypeIcon = (type: string) => {
-  switch (type) {
-    case "user_registration": return <User className="h-4 w-4" />;
-    case "review": return <MessageSquare className="h-4 w-4" />;
-    case "system": return <Shield className="h-4 w-4" />;
-    case "backup": return <RefreshCw className="h-4 w-4" />;
-    case "login": return <CheckCircle className="h-4 w-4" />;
-    case "failed_login": return <XCircle className="h-4 w-4" />;
-    case "admin_action": return <Edit className="h-4 w-4" />;
-    default: return <Clock className="h-4 w-4" />;
+const getTypeDisplayName = (entityType: string): string => {
+  switch (entityType) {
+    case "destination": return "Destinasi";
+    case "article": return "Artikel";
+    case "review": return "Review";
+    case "user": return "Pengguna";
+    case "trip": return "Trip";
+    case "admin": return "Admin";
+    default: return entityType;
   }
-};
-
-const formatActivityDescription = (activity: ActivityItem): string => {
-  const type = getTypeDisplayName(activity.type);
-  let description = type;
-
-  if (activity.userName) {
-    description += ` oleh ${activity.userName}`;
-  }
-
-  if (activity.action) {
-    description += ` - ${activity.action}`;
-  }
-
-  if (activity.metadata) {
-    const metaKeys = Object.keys(activity.metadata);
-    if (metaKeys.length > 0) {
-      const metaStr = metaKeys.map(key => `${key}: ${activity.metadata![key]}`).join(', ');
-      description += ` (${metaStr})`;
-    }
-  }
-
-  return description;
 };
 
 export default function AdminActivitiesPage() {
@@ -112,16 +83,16 @@ export default function AdminActivitiesPage() {
     refresh,
   } = useAdminList<ActivityItem>({
     endpoint: "/api/admin/activities",
-    searchFields: ["userName", "action"],
-    pageSize: 50,
+    searchFields: ["action", "entityName", "details"],
+    pageSize: 10,
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 px-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold">Aktivitas Admin</h1>
-          <p className="text-sm text-gray-600">Log aktivitas dan perubahan yang dilakukan admin.</p>
+          <p className="text-sm text-gray-600">Log aktivitas dan perubahan yang dilakukan admin dan user.</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={refresh} disabled={loading}>
@@ -136,13 +107,13 @@ export default function AdminActivitiesPage() {
       <Card className="mb-4">
         <CardHeader>
           <CardTitle>Pencarian & Filter</CardTitle>
-          <CardDescription>Filter aktivitas berdasarkan tipe aktivitas.</CardDescription>
+          <CardDescription>Filter aktivitas berdasarkan aksi, tipe entitas, dan role pengguna.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col lg:flex-row gap-3 items-end">
-            <div className="w-full lg:w-80">
+            <div className="w-full flex-1 min-w-0">
               <Input
-                placeholder="Cari nama pengguna atau aksi..."
+                placeholder="Cari aksi, nama entitas atau detail..."
                 value={search}
                 onChange={(e) => setSearchAndFetch(e.target.value)}
                 onKeyDown={(e) => {
@@ -152,23 +123,45 @@ export default function AdminActivitiesPage() {
                 }}
               />
             </div>
-            <Select onValueChange={(v) => setFilter("type", v === "all" ? undefined : v)}>
-              <SelectTrigger className="w-full lg:w-48">
-                <SelectValue placeholder="Tipe Aktivitas" />
+            <Select onValueChange={(v) => setFilter("action", v === "all" ? undefined : v)}>
+              <SelectTrigger className="w-full lg:w-40">
+                <SelectValue placeholder="Aksi" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Semua</SelectItem>
-                <SelectItem value="user_registration">Pendaftaran Pengguna</SelectItem>
-                <SelectItem value="review">Review</SelectItem>
-                <SelectItem value="system">Sistem</SelectItem>
-                <SelectItem value="backup">Backup</SelectItem>
+                <SelectItem value="all">Semua Aksi</SelectItem>
+                <SelectItem value="create">Buat</SelectItem>
+                <SelectItem value="update">Update</SelectItem>
+                <SelectItem value="delete">Hapus</SelectItem>
                 <SelectItem value="login">Login</SelectItem>
-                <SelectItem value="failed_login">Login Gagal</SelectItem>
-                <SelectItem value="admin_action">Aksi Admin</SelectItem>
+                <SelectItem value="logout">Logout</SelectItem>
               </SelectContent>
             </Select>
-            <div className="lg:w-auto">
-              <Button variant="outline" onClick={resetFilters} className="w-full lg:w-auto">
+            <Select onValueChange={(v) => setFilter("entityType", v === "all" ? undefined : v)}>
+              <SelectTrigger className="w-full lg:w-40">
+                <SelectValue placeholder="Tipe Entitas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Tipe</SelectItem>
+                <SelectItem value="destination">Destinasi</SelectItem>
+                <SelectItem value="article">Artikel</SelectItem>
+                <SelectItem value="review">Review</SelectItem>
+                <SelectItem value="user">Pengguna</SelectItem>
+                <SelectItem value="trip">Trip</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select onValueChange={(v) => setFilter("userType", v === "all" ? undefined : v)}>
+              <SelectTrigger className="w-full lg:w-40">
+                <SelectValue placeholder="Role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Role</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="user">User</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="md:col-span-2 lg:col-span-4 flex justify-end">
+              <Button variant="outline" onClick={resetFilters}>
                 Reset
               </Button>
             </div>
@@ -188,37 +181,56 @@ export default function AdminActivitiesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-center">Tipe</TableHead>
-                  <TableHead>Deskripsi</TableHead>
-                  <TableHead className="text-center hidden md:table-cell">Pengguna</TableHead>
-                  <TableHead className="text-center hidden lg:table-cell">Waktu</TableHead>
+                  <TableHead className="">Aktivitas</TableHead>
+                  <TableHead>Nama</TableHead>
+                  <TableHead className="hidden md:table-cell">Detail</TableHead>
+                  <TableHead className="text-center hidden md:table-cell">User/Admin</TableHead>
+                  <TableHead className="text-center hidden lg:table-cell">Role</TableHead>
+                  <TableHead className="text-center hidden xl:table-cell">Waktu</TableHead>
+                  <TableHead>Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {items.map((activity) => (
                   <TableRow key={activity.id}>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        {getTypeIcon(activity.type)}
-                        <Badge variant={getTypeColor(activity.type)}>
-                          {getTypeDisplayName(activity.type)}
+                    <TableCell className="justify-center">
+                      <div className="flex gap-1">
+                        <Badge variant="outline" className="text-xs">
+                          {getActionDisplayName(activity.action)}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {getTypeDisplayName(activity.entityType)}
                         </Badge>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="max-w-md">
-                        <p className="text-sm font-medium">
-                          {formatActivityDescription(activity)}
-                        </p>
+                      {activity.entityName}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <div className="text-sm truncate">
+                        {activity.details}
                       </div>
                     </TableCell>
                     <TableCell className="text-center hidden md:table-cell">
                       <div className="text-sm">
-                        {activity.userName || "System"}
+                        {activity.userName || "—"}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center hidden lg:table-cell text-sm text-gray-600">
-                      {new Date(activity.createdAt).toLocaleString('id-ID')}
+                    <TableCell className="text-center hidden lg:table-cell">
+                      <Badge variant="outline" className="text-xs">
+                        {getUserTypeDisplayName(activity.userType)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center hidden xl:table-cell text-sm text-gray-600">
+                      {new Date(activity.timestamp).toLocaleString('id-ID')}
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/admin/${activity.entityType}s/${activity.entityId}`}>
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))}

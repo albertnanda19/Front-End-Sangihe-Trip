@@ -242,10 +242,10 @@ export default function AdminReviewsModeration() {
                       </div>
                     </TableCell>
                     <TableCell className="text-center hidden lg:table-cell text-sm text-gray-600">
-                      <div>{new Date(review.created_at).toLocaleDateString('id-ID')}</div>
+                      <div>{new Date(review.created_at).toLocaleString('id-ID')}</div>
                       {review.visit_date && (
                         <div className="text-xs text-gray-500">
-                          Kunjungan: {new Date(review.visit_date).toLocaleDateString('id-ID')}
+                          Kunjungan: {new Date(review.visit_date).toLocaleString('id-ID')}
                         </div>
                       )}
                     </TableCell>

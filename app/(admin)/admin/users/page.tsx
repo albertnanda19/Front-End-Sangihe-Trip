@@ -164,7 +164,6 @@ export default function AdminUsersManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-center">Nama</TableHead>
-                  <TableHead className="text-center">Email</TableHead>
                   <TableHead className="text-center">Role</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-center hidden md:table-cell">Bergabung</TableHead>
@@ -176,10 +175,10 @@ export default function AdminUsersManagement() {
                 {items.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="text-center">
-                      <div className="font-medium">{`${user.first_name} ${user.last_name}`}</div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="text-sm">{user.email}</div>
+                      <div className="text-sm font-medium">
+                        {`${user.first_name} ${user.last_name}`}
+                      </div>
+                      <div className="text-xs text-gray-500">{user.email}</div>
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant={getRoleColor(user.role)}>

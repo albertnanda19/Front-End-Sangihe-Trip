@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { get, ApiResult } from "@/lib/api";
+import { useAdminList } from "@/hooks/admin/use-admin-list";
 import {
   Card,
   CardContent,
@@ -46,8 +47,14 @@ import {
   UserCheck,
   MessageSquare,
   Search,
-  UserPlus,
   Plus,
+  RefreshCw,
+  ArrowRightCircle,
+  Edit,
+  Trash2,
+  FileText,
+  Shield,
+  Activity as ActivityIcon,
 } from "lucide-react";
 import {
   LineChart,
@@ -99,6 +106,17 @@ interface SummaryResponse {
   reviewGrowth: string;
 }
 
+interface ActivityItem {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  entityName: string;
+  adminId: string;
+  details: string;
+  timestamp: string;
+}
+
 export default function AdminDashboard() {
   const [kpiData, setKpiData] = useState<{
     title: string;
@@ -137,23 +155,23 @@ export default function AdminDashboard() {
 
   const hasData = (arr: unknown[] | undefined) => Array.isArray(arr) && arr.length > 0;
 
-  useEffect(() => {
-    async function fetchDashboardData() {
-      try {
-        setLoading(true);
-        const [
-          summaryRes,
-          registrationsRes,
-          popularDestinationsRes,
-          tripPlansRes,
-          reviewDistributionRes,
-        ] = await Promise.all([
-          get<SummaryResponse>("/api/admin/metrics/summary", { auth: "required" }),
-          get<RegistrationData[]>("/api/admin/metrics/registrations?range=6mo", { auth: "required" }),
-          get<DestinationData[]>("/api/admin/metrics/popular-destinations?limit=10&period=30d", { auth: "required" }),
-          get<TripPlanData[]>("/api/admin/metrics/trip-plans?range=6mo", { auth: "required" }),
-          get<ReviewRatingData[]>("/api/admin/metrics/review-distribution?period=30d", { auth: "required" }),
-        ]);
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [
+        summaryRes,
+        registrationsRes,
+        popularDestinationsRes,
+        tripPlansRes,
+        reviewDistributionRes,
+      ] = await Promise.all([
+        get<SummaryResponse>("/api/admin/metrics/summary", { auth: "required" }),
+        get<RegistrationData[]>("/api/admin/metrics/registrations?range=6mo", { auth: "required" }),
+        get<DestinationData[]>("/api/admin/metrics/popular-destinations?limit=10&period=30d", { auth: "required" }),
+        get<TripPlanData[]>("/api/admin/metrics/trip-plans?range=6mo", { auth: "required" }),
+        get<ReviewRatingData[]>("/api/admin/metrics/review-distribution?period=30d", { auth: "required" }),
+      ]);
 
   const summary = (summaryRes as ApiResult<SummaryResponse>)?.data as SummaryResponse | undefined;
         const registrationsRaw = (registrationsRes as ApiResult<unknown>)?.data as unknown[] | undefined;
@@ -199,7 +217,7 @@ export default function AdminDashboard() {
 
         setKpiData([
           {
-            title: "Total Users",
+            title: "Total Pengguna",
             value: summary?.totalUsers ?? 0,
             growth: summary?.userGrowth ?? "0%",
             trend: "up",
@@ -207,7 +225,7 @@ export default function AdminDashboard() {
             color: "text-blue-600",
           },
           {
-            title: "Total Destinations",
+            title: "Total Destinasi",
             value: summary?.totalDestinations ?? 0,
             growth: summary?.destinationGrowth ?? "0%",
             trend: "up",
@@ -215,7 +233,7 @@ export default function AdminDashboard() {
             color: "text-green-600",
           },
           {
-            title: "Total Trip Plans",
+            title: "Total Rencana Perjalanan",
             value: summary?.totalTripPlans ?? 0,
             growth: summary?.tripGrowth ?? "0%",
             trend: "up",
@@ -223,7 +241,7 @@ export default function AdminDashboard() {
             color: "text-purple-600",
           },
           {
-            title: "Total Reviews",
+            title: "Total Review",
             value: summary?.totalReviews ?? 0,
             growth: summary?.reviewGrowth ?? "0%",
             trend: "up",
@@ -241,8 +259,80 @@ export default function AdminDashboard() {
       } finally {
         setLoading(false);
       }
-    }
+    };
 
+  const refresh = async () => {
+    await fetchDashboardData();
+  };
+
+  const {
+    items: activities,
+    loading: activitiesLoading,
+    error: activitiesError,
+  } = useAdminList<ActivityItem>({
+    endpoint: "/api/admin/activities",
+    pageSize: 2,
+  });
+
+  const getActivityIcon = (entityType: string, action: string) => {
+    if (action === "delete") return Trash2;
+    if (action === "update") return Edit;
+    if (action === "create") return Plus;
+
+    switch (entityType) {
+      case "destination":
+        return MapPin;
+      case "article":
+        return FileText;
+      case "review":
+        return Star;
+      case "user":
+        return Users;
+      case "admin":
+        return Shield;
+      default:
+        return ActivityIcon;
+    }
+  };
+
+  const getActivityColor = (action: string) => {
+    switch (action) {
+      case "create":
+        return "text-green-600";
+      case "update":
+        return "text-blue-600";
+      case "delete":
+        return "text-red-600";
+      case "approve":
+        return "text-green-600";
+      case "reject":
+        return "text-red-600";
+      default:
+        return "text-gray-600";
+    }
+  };
+
+  const formatActivityTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return "Baru saja";
+    if (diffMins < 60) return `${diffMins} menit yang lalu`;
+    if (diffHours < 24) return `${diffHours} jam yang lalu`;
+    if (diffDays < 7) return `${diffDays} hari yang lalu`;
+
+    return date.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  useEffect(() => {
     fetchDashboardData();
   }, []);
 
@@ -254,28 +344,19 @@ export default function AdminDashboard() {
     return <div className="text-center py-10 text-red-500">{error}</div>;
   }
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: "user_registration",
-      user: "Sarah Wijaya",
-      action: "mendaftar sebagai pengguna baru",
-      time: "2 menit yang lalu",
-      icon: UserPlus,
-      color: "text-green-600",
-    },
-    // Add more activities as needed
-  ];
-
   const quickActions = [
     {
       title: "Tambah Destinasi Baru",
-      description: "Tambahkan destinasi wisata baru",
       icon: Plus,
       color: "bg-blue-500 hover:bg-blue-600",
       href: "/admin/destinations/new",
     },
-    // Add more actions as needed
+    {
+      title: "Tambah Artikel Baru",
+      icon: Plus,
+      color: "bg-blue-500 hover:bg-blue-600",
+      href: "/admin/articles/new",
+    }
   ];
 
   const alerts = [
@@ -326,21 +407,29 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <div className="p-6 space-y-8">
+      <div className="px-6 space-y-8">
         {/* Statistics Overview */}
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Dashboard Overview
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+            <div>
+              <h1 className="text-2xl font-bold">Dashboard</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={refresh} disabled={loading}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {kpiData.map((kpi, index) => {
               const Icon = kpi.icon;
               return (
                 <Card key={index} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
+                  <CardContent className="px-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">
+                        <p className="text-sm font-medium text-gray-600 mb-1">
                           {kpi.title}
                         </p>
                         <p className="text-2xl font-bold text-gray-900">
@@ -379,10 +468,9 @@ export default function AdminDashboard() {
           {/* User Registration Trend */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle>User Registration Trend</CardTitle>
-              <CardDescription>Monthly user registrations</CardDescription>
+              <CardTitle>Tren Registrasi Pengguna</CardTitle>
             </CardHeader>
-            <CardContent className="pb-6">
+            <CardContent>
               <ChartContainer
                 config={{
                   users: {
@@ -422,10 +510,9 @@ export default function AdminDashboard() {
           {/* Popular Destinations */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle>Popular Destinations</CardTitle>
-              <CardDescription>Most visited destinations</CardDescription>
+              <CardTitle>Destinasi Populer</CardTitle>
             </CardHeader>
-            <CardContent className="pb-6">
+            <CardContent>
               <ChartContainer
                 config={{
                   visits: {
@@ -466,10 +553,9 @@ export default function AdminDashboard() {
           {/* Trip Plans by Month */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle>Trip Plans by Month</CardTitle>
-              <CardDescription>Monthly trip planning activity</CardDescription>
+              <CardTitle>Rencana Perjalanan per Bulan</CardTitle>
             </CardHeader>
-            <CardContent className="pb-6">
+            <CardContent>
               <ChartContainer
                 config={{
                   plans: {
@@ -515,10 +601,9 @@ export default function AdminDashboard() {
           {/* Review Ratings Distribution */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle>Review Ratings Distribution</CardTitle>
-              <CardDescription>Distribution of review ratings</CardDescription>
+              <CardTitle>Distribusi Rating Review</CardTitle>
             </CardHeader>
-            <CardContent className="pb-6">
+            <CardContent>
               <ChartContainer
                 config={{
                   count: {
@@ -560,40 +645,50 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent Activities */}
           <Card className="lg:col-span-2">
-            <CardHeader className="pb-3">
-              <CardTitle>Recent Activities</CardTitle>
-              <CardDescription>
-                Latest system activities and user actions
-              </CardDescription>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Aktivitas Terbaru</CardTitle>
+                <Link href="/admin/activities">
+                  <Button variant="outline">
+                    Lihat Semua Aktivitas
+                    <ArrowRightCircle className="h-4 w-4 ml-1" />
+                  </Button>
+                </Link>
+              </div>
             </CardHeader>
-            <CardContent className="pb-6">
+            <CardContent>
               <div className="space-y-4">
-                {recentActivities.map(
-                  (activity: {
-                    id: number;
-                    type: string;
-                    user: string;
-                    action: string;
-                    time: string;
-                    icon: React.ComponentType<{ className?: string }>;
-                    color: string;
-                  }) => {
-                    const Icon = activity.icon;
+                {activitiesLoading ? (
+                  <div className="text-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
+                    <p className="mt-2 text-sm text-gray-600">Memuat aktivitas...</p>
+                  </div>
+                ) : activitiesError ? (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-red-600">{activitiesError}</p>
+                  </div>
+                ) : activities.length === 0 ? (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-gray-600">Belum ada aktivitas</p>
+                  </div>
+                ) : (
+                  activities.map((activity) => {
+                    const Icon = getActivityIcon(activity.entityType, activity.action);
+                    const color = getActivityColor(activity.action);
                     return (
                       <div key={activity.id} className="flex items-start space-x-3">
                         <div className={`p-2 rounded-full bg-gray-100`}>
-                          <Icon className={`h-4 w-4 ${activity.color}`} />
+                          <Icon className={`h-4 w-4 ${color}`} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-gray-900">
-                            <span className="font-medium">{activity.user}</span>{" "}
-                            {activity.action}
+                            <span className="font-medium">{activity.details}</span>
                           </p>
-                          <p className="text-xs text-gray-500">{activity.time}</p>
+                          <p className="text-xs text-gray-500">{formatActivityTime(activity.timestamp)}</p>
                         </div>
                       </div>
                     );
-                  }
+                  })
                 )}
               </div>
             </CardContent>
@@ -601,11 +696,10 @@ export default function AdminDashboard() {
 
           {/* Quick Actions */}
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Common administrative tasks</CardDescription>
+            <CardHeader>
+              <CardTitle>Aksi Cepat</CardTitle>
             </CardHeader>
-            <CardContent className="pb-6">
+            <CardContent>
               <div className="space-y-3">
                 {quickActions.map((action, index) => {
                   const Icon = action.icon;
@@ -615,9 +709,6 @@ export default function AdminDashboard() {
                           <Icon className="h-4 w-4 mr-3" />
                           <div className="text-left">
                             <div className="font-medium">{action.title}</div>
-                            <div className="text-xs text-gray-500">
-                              {action.description}
-                            </div>
                           </div>
                         </Link>
                       </Button>
