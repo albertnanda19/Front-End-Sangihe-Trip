@@ -146,7 +146,7 @@ export default function AdminAlertsPage() {
   } = useAdminList<AlertItem>({
     endpoint: "/api/admin/alerts",
     searchFields: ["title", "description", "entityTitle"],
-    pageSize: 20,
+    pageSize: 10,
   });
 
   const handleAcknowledge = async (alertId: string) => {

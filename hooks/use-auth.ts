@@ -58,7 +58,6 @@ export function useAuth(): UseAuthReturn {
 
       window.dispatchEvent(new Event("auth-change"));
 
-      // Decode token to determine role-based destination
       type Payload = { 
         id: string;
         email: string;

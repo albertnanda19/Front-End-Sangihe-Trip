@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -9,12 +10,8 @@ import {
   Star,
   MapPin,
   Clock,
-  Wifi,
-  Car,
-  Utensils,
   ChevronRight,
   ChevronLeft,
-  Play,
   Heart,
   Calendar,
   Navigation,
@@ -31,6 +28,26 @@ import { useAuthStatus } from "@/hooks/use-auth-status";
 import { ReviewForm } from "@/components/review-form";
 import { ReviewList } from "@/components/review-list";
 
+const MapView = dynamic(() => import("@/components/map-view").then(mod => ({ default: mod.MapView })), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full w-full bg-slate-200 rounded-lg flex items-center justify-center">
+      <MapPin className="w-8 h-8 text-slate-400" />
+    </div>
+  ),
+});
+
+const categoryTranslations: Record<string, string> = {
+  beach: "Pantai",
+  culinary: "Kuliner",
+  nature: "Alam",
+  cultural: "Budaya",
+  historical: "Sejarah",
+  adventure: "Petualangan",
+  religious: "Religi",
+  mountain: "Gunung",
+};
+
 const DestinationDetailContent = ({ id }: { id: string }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState("reviews");
@@ -39,6 +56,8 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
 
   const { destination, loading, error } = useDestinationDetail(id);
   const isAuthenticated = useAuthStatus();
+  
+  const destinationId = destination?.id || "";
   
   const {
     reviews,
@@ -49,11 +68,11 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
     submitReview,
     toggleLike,
     isReviewLiked,
-  } = useReviews(id, {
+  } = useReviews(destinationId, {
     page: reviewPage,
     limit: 10,
     sortBy: reviewSortBy as "newest" | "oldest" | "highest" | "lowest" | "helpful",
-    autoFetch: true,
+    autoFetch: !!destinationId
   });
   
   const relatedDestinations: { id: string; name: string; image: string; rating: number; price: number }[] = [];
@@ -106,7 +125,6 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
     }
   };
   const hasFacilities = Boolean(destination?.facilities?.length);
-  const hasTips = Boolean(destination?.tips?.length);
   const hasRelated = relatedDestinations.length > 0;
 
   const handleSubmitReview = async (data: {
@@ -141,8 +159,12 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
         <div className="mb-8">
           <div className="relative h-96 md:h-[500px] rounded-xl overflow-hidden mb-4">
             <Image
-              src={destination.images[currentImageIndex] || "/placeholder.svg"}
-              alt={destination.name}
+              src={
+                (Array.isArray(destination.images) && destination.images.length > 0
+                  ? destination.images[currentImageIndex].image_url
+                  : "/placeholder.svg")
+              }
+              alt={destination.images[currentImageIndex]?.alt_text || destination.name}
               fill
               className="object-cover"
             />
@@ -164,17 +186,6 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
             >
               <ChevronRight className="w-6 h-6" />
             </Button>
-
-            {/* Video Play Button */}
-            {destination.hasVideo && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-16 h-16 rounded-full"
-              >
-                <Play className="w-8 h-8 ml-1" />
-              </Button>
-            )}
 
             {/* Share Buttons */}
             <div className="absolute top-4 right-4 flex gap-2">
@@ -207,9 +218,9 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
 
           {/* Thumbnail Navigation */}
           <div className="flex gap-2 overflow-x-auto pb-2">
-            {destination.images.map((image: string, index: number) => (
+            {destination.images.map((image, index: number) => (
               <button
-                key={index}
+                key={image.id || index}
                 onClick={() => setCurrentImageIndex(index)}
                 className={`relative w-20 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 ${
                   index === currentImageIndex
@@ -218,8 +229,8 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
                 }`}
               >
                 <Image
-                  src={image || "/placeholder.svg"}
-                  alt={`${destination.name} ${index + 1}`}
+                  src={image.image_url || "/placeholder.svg"}
+                  alt={image.alt_text || `${destination.name} ${index + 1}`}
                   fill
                   className="object-cover"
                 />
@@ -238,14 +249,16 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-800">
                   {destination.name}
                 </h1>
-                <Badge className="bg-sky-500">{destination.category}</Badge>
+                <Badge className="bg-sky-500">
+                  {categoryTranslations[destination.category] || destination.category}
+                </Badge>
               </div>
 
               <div className="flex items-center gap-4 mb-6">
                 <div className="flex items-center">
                   <Star className="w-5 h-5 text-yellow-400 fill-current" />
                   <span className="font-semibold ml-1">
-                    {destination.rating}
+                    {destination.avgRating?.toFixed(1) || "0.0"}
                   </span>
                   <span className="text-slate-600 ml-1">
                     ({destination.totalReviews} review)
@@ -253,7 +266,7 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
                 </div>
                 <div className="flex items-center text-slate-600">
                   <MapPin className="w-4 h-4 mr-1" />
-                  <span>{destination.location}</span>
+                  <span>{destination.address}</span>
                 </div>
               </div>
 
@@ -263,53 +276,6 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
                 </p>
               </div>
             </div>
-
-            {/* Facilities */}
-            {hasFacilities && (
-            <Card>
-              <CardHeader>
-                <h3 className="text-xl font-semibold">Fasilitas Tersedia</h3>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {destination.facilities.map((facility, index) => (
-                    <div
-                      key={index}
-                      className={`flex items-center gap-3 p-3 rounded-lg ${
-                        facility.available
-                          ? "bg-emerald-50 text-emerald-700"
-                          : "bg-slate-100 text-slate-400"
-                      }`}
-                    >
-                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                        {facility.icon === "car" && <Car className="w-4 h-4" />}
-                        {facility.icon === "building" && (
-                          <div className="w-4 h-4 bg-slate-400 rounded" />
-                        )}
-                        {facility.icon === "utensils" && (
-                          <Utensils className="w-4 h-4" />
-                        )}
-                        {facility.icon === "wifi" && (
-                          <Wifi className="w-4 h-4" />
-                        )}
-                        {facility.icon === "home" && (
-                          <div className="w-4 h-4 bg-slate-400" />
-                        )}
-                        {facility.icon === "waves" && (
-                          <div className="w-4 h-4 bg-blue-400 rounded-full" />
-                        )}
-                        {facility.icon === "parking" && <Car className="w-4 h-4" />}
-                        {facility.icon === "toilet" && (
-                          <div className="w-4 h-4 bg-slate-400 rounded" />
-                        )}
-                      </div>
-                      <span className="font-medium">{facility.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            )}
 
             {/* Operating Hours & Price */}
             <div className="grid md:grid-cols-2 gap-6">
@@ -332,63 +298,139 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
                   <h3 className="text-lg font-semibold">Harga Tiket</h3>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold text-emerald-600">
-                    Rp {(destination.price ?? 0).toLocaleString('id-ID')}
+                  <p>
+                    <span className="text-2xl font-bold text-emerald-600">
+                    {destination.entryFee === 0
+                      ? "Gratis"
+                      : `Rp ${destination.entryFee.toLocaleString('id-ID')}`}
+                    </span>
+                    <span className="text-slate-600"> per orang</span>
                   </p>
-                  <p className="text-slate-600">per orang</p>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Tips */}
-            {hasTips && (
-            <Card>
-              <CardHeader>
-                <h3 className="text-xl font-semibold">Tips Berkunjung</h3>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {destination.tips.map((tip, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-sky-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-sky-600 text-sm font-medium">
-                          {index + 1}
-                        </span>
-                      </div>
-                      <span className="text-slate-700">{tip}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-            )}
+            {/* Facilities & Activities */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Facilities */}
+              {hasFacilities && (
+                <Card>
+                  <CardHeader>
+                    <h3 className="text-xl font-semibold">Fasilitas Tersedia</h3>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-2">
+                      {destination.facilities.map((facility, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center pl-4 py-2 rounded-lg bg-emerald-50 text-emerald-700"
+                        >
+                          <span className="font-medium">{facility}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Activities */}
+              {destination.activities && destination.activities.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <h3 className="text-xl font-semibold">Aktivitas Tersedia</h3>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {destination.activities.map((activity, index) => (
+                        <div key={index} className="flex items-center justify-between px-4 py-2 bg-sky-50 rounded-lg">
+                          <span className="font-medium text-slate-800 text-sm">{activity.name}</span>
+                          <span className="text-xs text-slate-600">
+                            {activity.startTime} - {activity.endTime}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
 
           {/* Right Column - Sticky Card */}
           <div className="lg:col-span-1">
             <Card className="sticky top-24">
-              <CardContent className="p-6">
-                {/* Map Placeholder */}
-                <div className="h-48 bg-slate-200 rounded-lg mb-4 flex items-center justify-center">
-                  <MapPin className="w-8 h-8 text-slate-400" />
+              <CardContent>
+                {/* OpenStreetMap View */}
+                <div className="relative h-48 rounded-lg mb-4 overflow-hidden">
+                  <MapView
+                    latitude={destination.latitude}
+                    longitude={destination.longitude}
+                    name={destination.name}
+                  />
+                  {/* Floating Google Maps Button */}
+                  <Button
+                    size="sm"
+                    className="absolute top-3 left-3 bg-white hover:bg-slate-50 text-slate-900 shadow-lg z-[1000] border border-slate-200"
+                    onClick={() => window.open(`https://www.google.com/maps?q=${destination.latitude},${destination.longitude}`, '_blank')}
+                  >
+                    <Navigation className="w-3 h-3 mr-1" />
+                    <span className="text-xs">Google Maps</span>
+                  </Button>
                 </div>
 
                 <div className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold text-slate-800 mb-2">
-                      Lokasi
-                    </h4>
-                    <p className="text-slate-600 text-sm">
-                      {destination.location}
-                    </p>
-                    
+                  <div className="space-y-3">
+                    {/* Lokasi */}
+                    <div className="flex items-start gap-3">
+                      <span className="text-slate-800 font-semibold text-sm min-w-[80px]">Lokasi:</span>
+                      <span className="text-slate-600 text-sm flex-1">
+                        {destination.address}
+                      </span>
+                    </div>
+
+                    {/* Telepon */}
+                    {destination.phone && (
+                      <div className="flex items-center gap-3">
+                        <span className="text-slate-800 font-semibold text-sm min-w-[80px]">Telepon:</span>
+                        <a
+                          href={`tel:${destination.phone}`}
+                          className="text-sky-600 hover:underline text-sm"
+                        >
+                          {destination.phone}
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Email */}
+                    {destination.email && (
+                      <div className="flex items-center gap-3">
+                        <span className="text-slate-800 font-semibold text-sm min-w-[80px]">Email:</span>
+                        <a
+                          href={`mailto:${destination.email}`}
+                          className="text-sky-600 hover:underline text-sm break-all"
+                        >
+                          {destination.email}
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Website */}
+                    {destination.website && (
+                      <div className="flex items-center gap-3">
+                        <span className="text-slate-800 font-semibold text-sm min-w-[80px]">Website:</span>
+                        <a
+                          href={destination.website.startsWith("http") ? destination.website : `https://${destination.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sky-600 hover:underline text-sm break-all"
+                        >
+                          {destination.website}
+                        </a>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-3">
-                    <Button className="w-full bg-sky-500 hover:bg-sky-600">
-                      <Navigation className="w-4 h-4 mr-2" />
-                      Buka di Google Maps
-                    </Button>
                     <Button variant="outline" className="w-full">
                       <Calendar className="w-4 h-4 mr-2" />
                       Tambah ke Rencana Perjalanan

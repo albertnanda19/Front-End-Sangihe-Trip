@@ -42,8 +42,9 @@ export default function NewDestinationPage() {
   const [openingHours, setOpeningHours] = useState("");
   const [entryFee, setEntryFee] = useState<string>("");
   const [facilities, setFacilities] = useState<string[]>([]);
+  const [newFacility, setNewFacility] = useState("");
+  const [activities, setActivities] = useState<{ name: string; startTime: string; endTime: string }[]>([]);
   const [images, setImages] = useState<{ url: string; alt?: string }[]>([]);
-  const [published, setPublished] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
 
@@ -64,8 +65,8 @@ export default function NewDestinationPage() {
         entryFee: entryFee ? Number(entryFee) : undefined,
         categories: [categoryMap[category] || category],
         facilities,
+        activities,
         images: images.map((i) => ({ url: i.url, alt: i.alt })),
-        published: Boolean(published),
       };
 
       const res = await post("/api/admin/destinations", body, { auth: "required" });
@@ -80,12 +81,29 @@ export default function NewDestinationPage() {
     }
   };
 
-  const toggleFacility = (facility: string) => {
-    setFacilities(prev =>
-      prev.includes(facility)
-        ? prev.filter(f => f !== facility)
-        : [...prev, facility]
-    );
+  const addFacility = () => {
+    if (newFacility.trim() && !facilities.includes(newFacility.trim())) {
+      setFacilities(prev => [...prev, newFacility.trim()]);
+      setNewFacility("");
+    }
+  };
+
+  const removeFacility = (facility: string) => {
+    setFacilities(prev => prev.filter(f => f !== facility));
+  };
+
+  const addActivity = () => {
+    setActivities(prev => [...prev, { name: "", startTime: "", endTime: "" }]);
+  };
+
+  const updateActivity = (index: number, field: "name" | "startTime" | "endTime", value: string) => {
+    setActivities(prev => prev.map((activity, i) => 
+      i === index ? { ...activity, [field]: value } : activity
+    ));
+  };
+
+  const removeActivity = (index: number) => {
+    setActivities(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -177,27 +195,94 @@ export default function NewDestinationPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Fasilitas</label>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="toilet"
-                      checked={facilities.includes("toilet")}
-                      onChange={() => toggleFacility("toilet")}
-                      className="rounded"
-                    />
-                    <label htmlFor="toilet" className="text-sm">Toilet</label>
+                <div className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {facilities.map((facility, index) => (
+                      <div key={index} className="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-md">
+                        <span className="text-sm capitalize">{facility}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeFacility(facility)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="parking"
-                      checked={facilities.includes("parking")}
-                      onChange={() => toggleFacility("parking")}
-                      className="rounded"
+                  
+                  <div className="flex gap-2">
+                    <Input
+                      value={newFacility}
+                      onChange={(e) => setNewFacility((e.target as HTMLInputElement).value)}
+                      placeholder="Tambah fasilitas baru (contoh: wifi, restaurant)"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addFacility();
+                        }
+                      }}
                     />
-                    <label htmlFor="parking" className="text-sm">Parkir</label>
+                    <Button type="button" onClick={addFacility} variant="outline">
+                      Tambah
+                    </Button>
                   </div>
+                  <p className="text-xs text-gray-500">
+                    Tekan Enter atau klik Tambah untuk menambahkan fasilitas. Klik × untuk menghapus.
+                  </p>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Aktivitas</label>
+                <div className="space-y-3">
+                  {activities.map((activity, index) => (
+                    <div key={index} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">Aktivitas {index + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeActivity(index)}
+                          className="text-red-500 hover:text-red-700 text-sm"
+                        >
+                          🗑️ Hapus
+                        </button>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Nama Aktivitas</label>
+                        <Input
+                          value={activity.name}
+                          onChange={(e) => updateActivity(index, "name", e.target.value)}
+                          placeholder="Contoh: Snorkeling, Island Hopping"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium mb-1">Waktu Mulai</label>
+                          <Input
+                            type="time"
+                            value={activity.startTime}
+                            onChange={(e) => updateActivity(index, "startTime", e.target.value)}
+                            placeholder="09:00"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium mb-1">Waktu Selesai</label>
+                          <Input
+                            type="time"
+                            value={activity.endTime}
+                            onChange={(e) => updateActivity(index, "endTime", e.target.value)}
+                            placeholder="11:00"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <Button type="button" onClick={addActivity} variant="outline" className="w-full">
+                    + Tambah Aktivitas
+                  </Button>
+                  <p className="text-xs text-gray-500">
+                    Aktivitas adalah kegiatan yang tersedia di destinasi ini. User akan memilih dari list ini saat membuat trip plan.
+                  </p>
                 </div>
               </div>
               <div>
@@ -208,13 +293,6 @@ export default function NewDestinationPage() {
                   existingImages={images}
                   onRemoveExisting={(index) => setImages((prev) => prev.filter((_, i) => i !== index))}
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Published</label>
-                <label className="inline-flex items-center">
-                  <input type="checkbox" checked={published} onChange={(e) => setPublished((e.target as HTMLInputElement).checked)} className="mr-2" />
-                  <span className="text-sm">Published</span>
-                </label>
               </div>
               <div className="flex items-center gap-2">
                 <Button type="submit" disabled={submitting}>{submitting ? "Menyimpan..." : "Simpan"}</Button>

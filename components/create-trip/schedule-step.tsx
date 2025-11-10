@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +11,12 @@ import { id } from "date-fns/locale"
 import Image from "next/image"
 import type { TripData, ScheduleItem } from "@/app/(user)/create-trip/page"
 import { Input } from "@/components/ui/input"
+
+interface DestinationActivity {
+  name: string
+  startTime: string
+  endTime: string
+}
 
 interface ScheduleStepProps {
   data: TripData
@@ -41,14 +47,51 @@ const timeSlots = [
 export function ScheduleStep({ data, updateData, onNext, onPrev }: ScheduleStepProps) {
   const [selectedDay, setSelectedDay] = useState(1)
   const [showAddActivity, setShowAddActivity] = useState(false)
+  const [destinationActivities, setDestinationActivities] = useState<Record<string, DestinationActivity[]>>({})
+  const [loadingActivities, setLoadingActivities] = useState(false)
   
   const [newActivity, setNewActivity] = useState({
     destinationId: "",
     startTime: "",
     endTime: "",
     activity: "",
+    activityName: "",
     notes: "",
   })
+
+  useEffect(() => {
+    const fetchActivities = async (destinationId: string) => {
+      if (!destinationId || destinationActivities[destinationId]) return
+
+      const destination = data.selectedDestinations.find((dest) => dest.id === destinationId)
+      if (!destination?.slug) {
+        console.warn('No slug found for destination:', destinationId)
+        return
+      }
+
+      setLoadingActivities(true)
+      try {
+        const response = await fetch(`http://localhost:8000/api/destination/id/${destination.slug}`)
+        if (response.ok) {
+          const result = await response.json()
+          if (result.data?.activities && Array.isArray(result.data.activities)) {
+            setDestinationActivities(prev => ({
+              ...prev,
+              [destinationId]: result.data.activities
+            }))
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching activities:', error)
+      } finally {
+        setLoadingActivities(false)
+      }
+    }
+
+    if (newActivity.destinationId) {
+      fetchActivities(newActivity.destinationId)
+    }
+  }, [newActivity.destinationId, destinationActivities, data.selectedDestinations])
 
   const tripDays = data.startDate && data.endDate ? differenceInDays(data.endDate, data.startDate) + 1 : 0
 
@@ -62,7 +105,7 @@ export function ScheduleStep({ data, updateData, onNext, onPrev }: ScheduleStepP
   }
 
   const addActivity = () => {
-    if (!newActivity.destinationId || !newActivity.startTime || !newActivity.endTime || !newActivity.activity) {
+    if (!newActivity.destinationId || !newActivity.startTime || !newActivity.endTime || !newActivity.activityName) {
       alert("Harap lengkapi semua field yang wajib diisi")
       return
     }
@@ -76,7 +119,8 @@ export function ScheduleStep({ data, updateData, onNext, onPrev }: ScheduleStepP
       day: selectedDay,
       startTime: newActivity.startTime,
       endTime: newActivity.endTime,
-      activity: newActivity.activity,
+      activity: newActivity.activity || newActivity.activityName,
+      activityName: newActivity.activityName,
       notes: newActivity.notes,
     }
 
@@ -91,6 +135,7 @@ export function ScheduleStep({ data, updateData, onNext, onPrev }: ScheduleStepP
       startTime: "",
       endTime: "",
       activity: "",
+      activityName: "",
       notes: "",
     })
   }
@@ -234,51 +279,18 @@ export function ScheduleStep({ data, updateData, onNext, onPrev }: ScheduleStepP
                 <h4 className="font-semibold text-sky-800">Tambah Aktivitas Baru</h4>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-slate-700 mb-2 block">Waktu Mulai *</label>
-                    <Select value={newActivity.startTime} onValueChange={(value) => setNewActivity(prev => ({ ...prev, startTime: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih waktu" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {timeSlots.map((time) => (
-                          <SelectItem key={time} value={time}>
-                            {time}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-700 mb-2 block">Waktu Selesai *</label>
-                    <Select value={newActivity.endTime} onValueChange={(value) => setNewActivity(prev => ({ ...prev, endTime: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih waktu" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {timeSlots.map((time) => (
-                          <SelectItem key={time} value={time}>
-                            {time}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700 mb-2 block">Nama Aktivitas *</label>
-                  <Input
-                    placeholder="Contoh: Snorkeling, Makan siang, dll"
-                    value={newActivity.activity}
-                    onChange={(e) => setNewActivity(prev => ({ ...prev, activity: e.target.value }))}
-                  />
-                </div>
-
                 <div>
                   <label className="text-sm font-medium text-slate-700 mb-2 block">Destinasi *</label>
-                  <Select value={newActivity.destinationId} onValueChange={(value) => setNewActivity(prev => ({ ...prev, destinationId: value }))}>
+                  <Select 
+                    value={newActivity.destinationId} 
+                    onValueChange={(value) => setNewActivity(prev => ({ 
+                      ...prev, 
+                      destinationId: value,
+                      activityName: "", // Reset activity when destination changes
+                      startTime: "",
+                      endTime: ""
+                    }))}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih destinasi" />
                     </SelectTrigger>
@@ -292,14 +304,105 @@ export function ScheduleStep({ data, updateData, onNext, onPrev }: ScheduleStepP
                   </Select>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium text-slate-700 mb-2 block">Catatan</label>
-                  <Input
-                    placeholder="Catatan tambahan (opsional)"
-                    value={newActivity.notes}
-                    onChange={(e) => setNewActivity(prev => ({ ...prev, notes: e.target.value }))}
-                  />
-                </div>
+                {newActivity.destinationId && (
+                  <>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-2 block">Aktivitas *</label>
+                      {loadingActivities ? (
+                        <div className="text-sm text-slate-500">Memuat aktivitas...</div>
+                      ) : destinationActivities[newActivity.destinationId]?.length > 0 ? (
+                        <Select 
+                          value={newActivity.activityName} 
+                          onValueChange={(value) => {
+                            const selectedActivity = destinationActivities[newActivity.destinationId]?.find(
+                              act => act.name === value
+                            )
+                            setNewActivity(prev => ({
+                              ...prev,
+                              activityName: value,
+                              activity: value,
+                              startTime: selectedActivity?.startTime || prev.startTime,
+                              endTime: selectedActivity?.endTime || prev.endTime
+                            }))
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Pilih aktivitas" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {destinationActivities[newActivity.destinationId].map((act) => (
+                              <SelectItem key={act.name} value={act.name}>
+                                {act.name} ({act.startTime} - {act.endTime})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="text-sm text-slate-500 p-3 bg-slate-100 rounded">
+                          Tidak ada aktivitas tersedia untuk destinasi ini.
+                        </div>
+                      )}
+                    </div>
+
+                    {newActivity.activityName && (
+                      <>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium text-slate-700 mb-2 block">Waktu Mulai *</label>
+                            <Select value={newActivity.startTime} onValueChange={(value) => setNewActivity(prev => ({ ...prev, startTime: value }))}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Pilih waktu" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {timeSlots.map((time) => (
+                                  <SelectItem key={time} value={time}>
+                                    {time}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-slate-700 mb-2 block">Waktu Selesai *</label>
+                            <Select value={newActivity.endTime} onValueChange={(value) => setNewActivity(prev => ({ ...prev, endTime: value }))}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Pilih waktu" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {timeSlots.map((time) => (
+                                  <SelectItem key={time} value={time}>
+                                    {time}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-2 block">Nama Custom (opsional)</label>
+                          <Input
+                            placeholder="Kosongkan jika menggunakan nama aktivitas default"
+                            value={newActivity.activity === newActivity.activityName ? "" : newActivity.activity}
+                            onChange={(e) => setNewActivity(prev => ({ ...prev, activity: e.target.value || prev.activityName }))}
+                          />
+                          <p className="text-xs text-slate-500 mt-1">
+                            Anda bisa mengubah nama aktivitas sesuai kebutuhan
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-2 block">Catatan</label>
+                          <Input
+                            placeholder="Catatan tambahan (opsional)"
+                            value={newActivity.notes}
+                            onChange={(e) => setNewActivity(prev => ({ ...prev, notes: e.target.value }))}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
 
                 <div className="flex gap-2">
                   <Button onClick={() => setShowAddActivity(false)} variant="outline">

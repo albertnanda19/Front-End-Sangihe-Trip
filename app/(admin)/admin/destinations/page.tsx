@@ -20,14 +20,18 @@ import { Eye, Trash2, RefreshCw } from "lucide-react";
 interface DestinationItem {
   id: string;
   name: string;
-  category?: string;
-  status?: string;
+  status: string;
+  category: string;
+  is_featured: boolean;
   avg_rating: number;
+  total_reviews: number;
+  view_count: number;
   created_by?: {
     firstName: string;
     lastName: string;
   };
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 const getCategoryDisplayName = (category?: string): string => {
@@ -48,7 +52,6 @@ const getStatusDisplayName = (status?: string): string => {
   switch (status) {
     case "active": return "Aktif";
     case "inactive": return "Tidak Aktif";
-    case "pending": return "Menunggu";
     default: return status ?? "unknown";
   }
 };
@@ -136,20 +139,20 @@ export default function AdminDestinationsList() {
                 <SelectItem value="all">Semua</SelectItem>
                 <SelectItem value="active">Aktif</SelectItem>
                 <SelectItem value="inactive">Tidak Aktif</SelectItem>
-                <SelectItem value="pending">Menunggu</SelectItem>
               </SelectContent>
             </Select>
-            <Select onValueChange={(v) => setFilter("avg_rating", v === "all" ? undefined : parseInt(v))}>
-              <SelectTrigger className="w-full lg:w-40">
-                <SelectValue placeholder="Rating" />
+            <Select onValueChange={(v) => setFilter("sort", v === "default" ? undefined : v)}>
+              <SelectTrigger className="w-full lg:w-48">
+                <SelectValue placeholder="Urutkan" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Semua</SelectItem>
-                <SelectItem value="5">5 Bintang</SelectItem>
-                <SelectItem value="4">4 Bintang</SelectItem>
-                <SelectItem value="3">3 Bintang</SelectItem>
-                <SelectItem value="2">2 Bintang</SelectItem>
-                <SelectItem value="1">1 Bintang</SelectItem>
+                <SelectItem value="default">Default</SelectItem>
+                <SelectItem value="createdAt:desc">Terbaru</SelectItem>
+                <SelectItem value="createdAt:asc">Terlama</SelectItem>
+                <SelectItem value="rating:desc">Rating Tertinggi</SelectItem>
+                <SelectItem value="viewCount:desc">Paling Banyak Dilihat</SelectItem>
+                <SelectItem value="name:asc">Nama A-Z</SelectItem>
+                <SelectItem value="name:desc">Nama Z-A</SelectItem>
               </SelectContent>
             </Select>
             <div className="lg:w-auto">
@@ -176,9 +179,12 @@ export default function AdminDestinationsList() {
                   <TableHead className="text-center">Nama</TableHead>
                   <TableHead className="text-center">Kategori</TableHead>
                   <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-center hidden lg:table-cell">Rating Rata-rata</TableHead>
+                  <TableHead className="text-center hidden lg:table-cell">Rating Rata-Rata</TableHead>
+                  <TableHead className="text-center hidden xl:table-cell">Total Reviews</TableHead>
+                  <TableHead className="text-center hidden lg:table-cell">Views</TableHead>
                   <TableHead className="text-center hidden md:table-cell">Pembuat</TableHead>
-                  <TableHead className="text-center hidden md:table-cell">Terakhir Diupdate</TableHead>
+                  <TableHead className="text-center hidden md:table-cell">Dibuat</TableHead>
+                  <TableHead className="text-center hidden md:table-cell">Diupdate</TableHead>
                   <TableHead className="text-center">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
@@ -195,12 +201,27 @@ export default function AdminDestinationsList() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center hidden lg:table-cell">
-                      {d.avg_rating ? `${d.avg_rating} bintang` : "-"}
+                      <div className="text-sm">
+                        {d.avg_rating ? `${d.avg_rating.toFixed(1)} ⭐` : "-"}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center hidden xl:table-cell">
+                      <div className="text-sm font-medium">
+                        {d.total_reviews.toLocaleString()}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center hidden lg:table-cell">
+                      <div className="text-sm font-medium">
+                        {d.view_count.toLocaleString()}
+                      </div>
                     </TableCell>
                     <TableCell className="text-center hidden md:table-cell">
                       <div className="text-sm">
                         {d.created_by ? `${d.created_by.firstName} ${d.created_by.lastName}`.trim() : 'Unknown'}
                       </div>
+                    </TableCell>
+                    <TableCell className="text-center hidden md:table-cell text-sm text-gray-600">
+                      {d.created_at ? new Date(d.created_at).toLocaleString('id-ID') : "-"}
                     </TableCell>
                     <TableCell className="text-center hidden md:table-cell text-sm text-gray-600">
                       {d.updated_at ? new Date(d.updated_at).toLocaleString('id-ID') : "-"}

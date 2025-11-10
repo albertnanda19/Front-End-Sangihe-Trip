@@ -7,27 +7,16 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, MapPin, Star, DollarSign, GripVertical, X, Map } from "lucide-react"
+import { Search, MapPin, Star, GripVertical, X, Map } from "lucide-react"
 import { apiUrl } from "@/lib/api"
 import Image from "next/image"
-import type { TripData } from "@/app/(user)/create-trip/page"
+import type { TripData, Destination } from "@/app/(user)/create-trip/page"
 
 interface DestinationStepProps {
   data: TripData
   updateData: (data: Partial<TripData>) => void
   onNext: () => void
   onPrev: () => void
-}
-
-interface Destination {
-  id: string
-  name: string
-  category: string
-  rating: number
-  price: number | null
-  imageUrl: string
-  location: string
-  description: string
 }
 
 const INITIAL_CATEGORIES = ["Semua"]
@@ -40,24 +29,34 @@ export function DestinationStep({ data, updateData, onNext, onPrev }: Destinatio
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [categories, setCategories] = useState<string[]>(INITIAL_CATEGORIES)
 
-  // Fetch destinations once on mount
   useEffect(() => {
     let cancelled = false
 
     async function load() {
       try {
-        const res = await fetch(apiUrl("/api/all-destination"))
+        const res = await fetch(apiUrl("/api/destination"))
         if (!res.ok) throw new Error("Gagal memuat destinasi")
         const json = await res.json()
-        const items: Destination[] = (json?.data || []).map((d: any) => ({
+        
+        const dataArray = Array.isArray(json?.data) ? json.data : []
+        
+        const items: Destination[] = dataArray.map((d: any) => ({
           id: d.id,
           name: d.name,
-          category: d.category,
-          rating: d.rating,
-          price: d.price ?? 0,
-          imageUrl: d.image || "/placeholder.svg",
-          location: d.location,
+          slug: d.slug,
           description: d.description,
+          address: d.address,
+          latitude: d.latitude,
+          longitude: d.longitude,
+          opening_hours: d.opening_hours,
+          category: d.category,
+          avg_rating: d.avg_rating || 0,
+          total_reviews: d.total_reviews || 0,
+          is_featured: d.is_featured || false,
+          images: Array.isArray(d.images) ? d.images.map((img: any) => ({
+            id: img.id,
+            image_url: img.image_url
+          })) : [],
         }))
 
         if (!cancelled) {
@@ -191,12 +190,15 @@ export function DestinationStep({ data, updateData, onNext, onPrev }: Destinatio
                 <div className="relative">
                   <div className="relative h-32 overflow-hidden rounded-t-lg">
                     <Image
-                      src={destination.imageUrl || "/placeholder.svg"}
+                      src={destination.images[0]?.image_url || "/placeholder.svg"}
                       alt={destination.name}
                       fill
                       className="object-cover"
                     />
                     <Badge className="absolute top-2 left-2 bg-emerald-500">{destination.category}</Badge>
+                    {destination.is_featured && (
+                      <Badge className="absolute top-2 right-12 bg-yellow-500">Featured</Badge>
+                    )}
                     <div className="absolute top-2 right-2">
                       <Checkbox
                         checked={isSelected(destination.id)}
@@ -208,22 +210,23 @@ export function DestinationStep({ data, updateData, onNext, onPrev }: Destinatio
                 </div>
                 <CardContent className="p-4">
                   <h3 className="font-semibold text-slate-800 mb-1">{destination.name}</h3>
-                  <p className="text-sm text-slate-600 mb-2">{destination.description}</p>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center">
-                      <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                      <span className="ml-1">{destination.rating}</span>
-                    </div>
-                    <div className="flex items-center text-emerald-600">
-                      <DollarSign className="w-4 h-4" />
-                      <span>
-                        {!destination.price || destination.price === 0
-                          ? "Gratis"
-                          : `${destination.price?.toLocaleString()}`}
-                      </span>
-                    </div>
+                  <p className="text-sm text-slate-600 mb-2 line-clamp-2">{destination.description}</p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+                    <MapPin className="w-3 h-3" />
+                    <span className="line-clamp-1">{destination.address}</span>
                   </div>
-                  {/* Durasi dihapus karena tidak tersedia pada data API */}
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                      <span className="font-medium">{destination.avg_rating.toFixed(1)}</span>
+                      <span className="text-xs text-slate-500">({destination.total_reviews})</span>
+                    </div>
+                    {destination.opening_hours && (
+                      <div className="text-xs text-slate-600">
+                        🕐 {destination.opening_hours}
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -256,7 +259,7 @@ export function DestinationStep({ data, updateData, onNext, onPrev }: Destinatio
                     </div>
                     <div className="relative w-16 h-12 rounded overflow-hidden">
                       <Image
-                        src={destination.imageUrl || "/placeholder.svg"}
+                        src={destination.images?.[0]?.image_url || "/placeholder.svg"}
                         alt={destination.name}
                         fill
                         className="object-cover"
@@ -264,7 +267,13 @@ export function DestinationStep({ data, updateData, onNext, onPrev }: Destinatio
                     </div>
                     <div className="flex-1">
                       <h4 className="font-medium text-slate-800">{destination.name}</h4>
-                      <p className="text-sm text-slate-600">{destination.location}</p>
+                      <p className="text-xs text-slate-600 line-clamp-1">{destination.address}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                        <span className="text-xs text-slate-600">
+                          {destination.avg_rating.toFixed(1)} ({destination.total_reviews})
+                        </span>
+                      </div>
                     </div>
                     <Badge variant="outline">{destination.category}</Badge>
                   </div>

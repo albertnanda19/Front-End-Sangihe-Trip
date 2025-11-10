@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { SITE_CONFIG } from "@/lib/constants/site";
 import { useAdminNavigation } from "@/hooks/admin/use-admin-navigation";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -54,9 +53,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <h1 className="text-lg sm:text-xl font-bold text-gray-900">
                     {SITE_CONFIG.fullName}
                   </h1>
-                  <Badge variant="secondary" className="text-xs hidden sm:inline-block">
-                    ADMIN
-                  </Badge>
                 </div>
               </Link>
 
@@ -78,10 +74,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <SheetHeader>
                     <SheetTitle className="flex items-center space-x-2">
                       <Shield className="h-6 w-6 text-blue-600" />
-                      <span>{SITE_CONFIG.fullName} Admin</span>
+                      <span>{SITE_CONFIG.fullName}</span>
                     </SheetTitle>
                   </SheetHeader>
-                  <nav className="mt-6 space-y-2">
+                  <nav className="mx-6 space-y-2">
                     <NavItems mobile />
                   </nav>
                 </SheetContent>

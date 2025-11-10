@@ -19,11 +19,20 @@ import { toast } from "sonner"
 export interface Destination {
   id: string
   name: string
-  category?: string
-  location?: string
-  price?: number | null
-  rating?: number
-  imageUrl?: string
+  slug: string
+  description: string
+  address: string
+  latitude: number
+  longitude: number
+  opening_hours: string
+  category: string
+  avg_rating: number
+  total_reviews: number
+  is_featured: boolean
+  images: Array<{
+    id: string
+    image_url: string
+  }>
 }
 
 export interface ScheduleItem {
@@ -98,14 +107,51 @@ export default function EditTripPage() {
         const json = await res.json()
         const data = json.data
 
-        const selectedDestinations: Destination[] = (data.destinations || []).map((d: any) => ({
+        const selectedDestinations: Destination[] = (data.destinations || []).map((d: {
+          id: string
+          name: string
+          slug: string
+          description: string
+          address: string
+          latitude: number
+          longitude: number
+          opening_hours: string
+          category: string
+          avg_rating: number
+          total_reviews: number
+          is_featured: boolean
+          images: Array<{ id: string; image_url: string; }>
+        }) => ({
           id: d.id,
-          name: d.name || d.title || "",
-          imageUrl: d.image || undefined,
+          name: d.name,
+          slug: d.slug,
+          description: d.description,
+          address: d.address,
+          latitude: d.latitude,
+          longitude: d.longitude,
+          opening_hours: d.opening_hours,
+          category: d.category,
+          avg_rating: d.avg_rating,
+          total_reviews: d.total_reviews,
+          is_featured: d.is_featured,
+          images: Array.isArray(d.images) ? d.images.map(img => ({
+            id: img.id,
+            image_url: img.image_url
+          })) : []
         }))
 
-        const schedule: ScheduleItem[] = (data.schedule || []).flatMap((day: any) =>
-          (day.items || []).map((it: any) => ({
+        const schedule: ScheduleItem[] = (data.schedule || []).flatMap((day: {
+          day: number
+          items: Array<{
+            destinationId: string
+            destinationName?: string
+            startTime: string
+            endTime: string
+            activity: string
+            notes?: string
+          }>
+        }) =>
+          (day.items || []).map((it) => ({
             day: day.day,
             destinationId: it.destinationId,
             destinationName: it.destinationName || undefined,
@@ -174,7 +220,20 @@ export default function EditTripPage() {
         return
       }
 
-      const payload: any = {
+      interface PayloadScheduleItem {
+        destinationId: string
+        startTime: string
+        endTime: string
+        activity: string
+        notes?: string
+      }
+
+      interface PayloadScheduleDay {
+        day: number
+        items: PayloadScheduleItem[]
+      }
+
+      const payload = {
         name: tripData.tripName,
         startDate: tripData.startDate ? format(tripData.startDate, "yyyy-MM-dd") : null,
         endDate: tripData.endDate ? format(tripData.endDate, "yyyy-MM-dd") : null,
@@ -182,7 +241,7 @@ export default function EditTripPage() {
         tripType: tripData.tripType,
         isPublic: tripData.isPublic,
         destinations: tripData.selectedDestinations.map((d) => d.id),
-        schedule: tripData.schedule.reduce((acc: any[], item) => {
+        schedule: tripData.schedule.reduce((acc: PayloadScheduleDay[], item) => {
           const dayObj = acc.find((d) => d.day === item.day)
           const entry = {
             destinationId: item.destinationId,
@@ -194,7 +253,7 @@ export default function EditTripPage() {
           if (dayObj) dayObj.items.push(entry)
           else acc.push({ day: item.day, items: [entry] })
           return acc
-        }, []),
+        }, [] as PayloadScheduleDay[]),
         budget: tripData.budget,
         notes: tripData.notes,
         packingList: tripData.packingList,

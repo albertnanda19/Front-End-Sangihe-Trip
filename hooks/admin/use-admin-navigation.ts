@@ -12,6 +12,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: "Destinations", href: "/admin/destinations" },
   { label: "Articles", href: "/admin/articles" },
   { label: "Reviews", href: "/admin/reviews" },
+  { label: "Trip Plans", href: "/admin/trip-plans" },
   { label: "Analytics", href: "/admin/analytics" },
 ];
 

@@ -1,50 +1,63 @@
 import { useEffect, useState } from "react";
 import { get, ApiError } from "@/lib/api";
 
-interface Location {
-  address: string;
-  lat: number;
-  lng: number;
+interface Activity {
+  name: string;
+  startTime: string;
+  endTime: string;
 }
 
-interface Facility {
-  icon: string;
-  name: string;
-  available: boolean;
+interface ImageDetail {
+  id: string;
+  image_url: string;
+  alt_text: string | null;
+  image_type: string;
+  sort_order: number;
+  is_featured: boolean;
 }
 
 interface RawDestinationDetail {
   id: string;
   name: string;
-  category: string;
-  location: string | Location;
-  price: number | null;
-  openHours?: string;
+  slug: string;
   description: string;
-  facilities?: Facility[];
-  tips?: string[];
-  images: string[];
-  rating: number;
-  totalReviews: number;
+  address: string;
+  latitude: number;
+  longitude: number;
+  phone: string;
+  email: string;
+  website: string;
+  opening_hours: string;
+  entry_fee: number;
+  category: string;
+  facilities: string[];
+  avg_rating: number;
+  total_reviews: number;
+  is_featured: boolean;
+  activities: Activity[];
+  images: ImageDetail[];
 }
 
 export interface DestinationDetail {
   id: string;
   name: string;
+  slug: string;
   category: string;
-  location: string;
-  locationObj?: Location;
-  price: number | null;
-  openHours: string;
   description: string;
-  facilities: Facility[];
-  tips: string[];
-  images: string[];
-  hasVideo: boolean;
-  /** Computed or placeholder rating so the existing UI keeps working */
-  rating: number;
-  /** Computed or placeholder review count so the existing UI keeps working */
+  address: string;
+  latitude: number;
+  longitude: number;
+  phone: string;
+  email: string;
+  website: string;
+  openHours: string;
+  entryFee: number;
+  facilities: string[];
+  avgRating: number;
   totalReviews: number;
+  isFeatured: boolean;
+  activities: Activity[];
+  images: ImageDetail[];
 }
 
 interface HookState {
@@ -57,7 +70,7 @@ interface HookState {
  * Fetches a single destination detail by id from the back-end REST API.
  * Returned data is normalised so that existing UI can consume it without major changes.
  */
-export function useDestinationDetail(id: string) {
+export function useDestinationDetail(slug: string) {
   const [state, setState] = useState<HookState>({
     destination: null,
     loading: true,
@@ -65,13 +78,13 @@ export function useDestinationDetail(id: string) {
   });
 
   useEffect(() => {
-    if (!id) return;
+    if (!slug) return;
     const controller = new AbortController();
 
     async function fetchDetail() {
       setState((s) => ({ ...s, loading: true, error: null }));
       try {
-        const result = await get<RawDestinationDetail>(`/api/destination/${id}`, {
+        const result = await get<RawDestinationDetail>(`/api/destination/slug/${slug}`, {
           auth: false,
           signal: controller.signal,
         });
@@ -81,24 +94,23 @@ export function useDestinationDetail(id: string) {
         const destination: DestinationDetail = {
           id: apiData.id,
           name: apiData.name,
+          slug: apiData.slug,
           category: apiData.category,
-          location: typeof apiData.location === "object"
-            ? apiData.location.address
-            : apiData.location || "",
-          locationObj: typeof apiData.location === "object"
-            ? apiData.location
-            : undefined,
-          price: apiData.price ?? null,
-          openHours: apiData.openHours ?? "",
-          description: apiData.description ?? "",
-          facilities: apiData.facilities ?? [],
-          tips: apiData.tips ?? [],
-          images: apiData.images ?? [],
-          hasVideo: Array.isArray(apiData.images)
-            ? apiData.images.some((url: string) => /\.(mp4|mov|webm)$/i.test(url))
-            : false,
-          rating: apiData.rating ?? 0,
-          totalReviews: apiData.totalReviews ?? 0,
+          description: apiData.description,
+          address: apiData.address,
+          latitude: apiData.latitude,
+          longitude: apiData.longitude,
+          phone: apiData.phone,
+          email: apiData.email,
+          website: apiData.website,
+          openHours: apiData.opening_hours,
+          entryFee: apiData.entry_fee,
+          facilities: apiData.facilities || [],
+          avgRating: apiData.avg_rating,
+          totalReviews: apiData.total_reviews,
+          isFeatured: apiData.is_featured,
+          activities: apiData.activities || [],
+          images: apiData.images || [],
         };
 
         setState({ destination, loading: false, error: null });
@@ -115,7 +127,7 @@ export function useDestinationDetail(id: string) {
     fetchDetail();
 
     return () => controller.abort();
-  }, [id]);
+  }, [slug]);
 
   return state;
 }

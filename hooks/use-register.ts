@@ -6,9 +6,10 @@ import { apiUrl } from "@/lib/api";
 import { toast } from "sonner";
 
 interface RegisterPayload {
-  name: string;
+  firstName: string;
   email: string;
   password: string;
+  lastName?: string;
 }
 
 interface UseRegisterReturn {
@@ -26,28 +27,40 @@ export function useRegister(): UseRegisterReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const register = async ({ name, email, password }: RegisterPayload) => {
+  const register = async ({ firstName, email, password, lastName }: RegisterPayload) => {
     setIsLoading(true);
     setError("");
     try {
+      const requestBody: {
+        firstName: string;
+        email: string;
+        password: string;
+        lastName?: string;
+      } = {
+        firstName,
+        email,
+        password,
+      };
+
+      if (lastName) {
+        requestBody.lastName = lastName;
+      }
+
       const res = await fetch(apiUrl("/api/auth/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!res.ok) {
-        // Attempt to extract message from API, fallback to generic error
         const { message } = await res.json().catch(() => ({ message: "Gagal mendaftar" }));
         throw new Error(message || "Gagal mendaftar");
       }
 
       const { message } = await res.json();
 
-      // Show success toast
       toast.success(message || "Berhasil mendaftar. Silakan login");
 
-      // Redirect to login page
       router.push("/masuk");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Terjadi kesalahan saat mendaftar";

@@ -22,8 +22,8 @@ interface ArticleFormData {
 }
 
 const categories = [
-  { value: "travel_tips", label: "Tips Perjalanan" },
-  { value: "destination_guide", label: "Panduan Destinasi" },
+  { value: "tips", label: "Tips" },
+  { value: "guide", label: "Panduan" },
   { value: "culture", label: "Budaya" },
   { value: "food", label: "Makanan" },
   { value: "adventure", label: "Petualangan" },

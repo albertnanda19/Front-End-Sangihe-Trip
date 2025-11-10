@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { get, patch } from "@/lib/api";
+import { get, patch, del } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit2, Check, X, MapPin, Phone, Mail, Globe, Clock, DollarSign } from "lucide-react";
+import { ArrowLeft, Edit2, Check, X, MapPin, Phone, Mail, Globe, Clock, DollarSign, Trash2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
@@ -34,9 +34,10 @@ interface DestinationDetail {
   website: string;
   opening_hours: string;
   entry_fee: number;
-  status: "active" | "inactive" | "pending";
+  status: "active" | "inactive";
   category: string;
   facilities: string[] | { name: string; icon?: string; available: boolean }[];
+  activities: { name: string; startTime: string; endTime: string }[];
   view_count: number;
   avg_rating: number;
   total_reviews: number;
@@ -77,7 +78,6 @@ const getStatusDisplayName = (status?: string): string => {
   switch (status) {
     case "active": return "Aktif";
     case "inactive": return "Tidak Aktif";
-    case "pending": return "Menunggu";
     default: return status ?? "unknown";
   }
 };
@@ -86,7 +86,6 @@ const getStatusColor = (status?: string): "default" | "secondary" | "destructive
   switch (status) {
     case "active": return "default";
     case "inactive": return "secondary";
-    case "pending": return "outline";
     default: return "outline";
   }
 };
@@ -99,10 +98,12 @@ export default function DestinationDetailPage() {
   const [destination, setDestination] = useState<DestinationDetail | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
   const [mapLat, setMapLat] = useState<number | null>(null);
   const [mapLng, setMapLng] = useState<number | null>(null);
   const [mapAddress, setMapAddress] = useState("");
+  const [newFacility, setNewFacility] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -116,6 +117,7 @@ export default function DestinationDetailPage() {
     entry_fee: "",
     category: "",
     facilities: [] as string[],
+    activities: [] as { name: string; startTime: string; endTime: string }[],
     images: [] as { url: string; alt?: string }[],
   });
 
@@ -137,7 +139,6 @@ export default function DestinationDetailPage() {
 
   useEffect(() => {
     if (destination) {
-      // Handle facilities - convert objects to strings if needed
       let facilitiesArray: string[] = [];
       if (Array.isArray(destination.facilities)) {
         facilitiesArray = destination.facilities.map(facility => {
@@ -163,17 +164,16 @@ export default function DestinationDetailPage() {
         entry_fee: destination.entry_fee.toString(),
         category: destination.category,
         facilities: facilitiesArray,
+        activities: destination.activities || [],
         images: destination.images.map(img => ({ url: img.image_url, alt: img.alt_text })),
       });
 
-      // Initialize map state
       setMapLat(destination.latitude);
       setMapLng(destination.longitude);
       setMapAddress(destination.address);
     }
   }, [destination]);
 
-  // Sync map changes to form data
   useEffect(() => {
     if (isEditing && mapLat !== null && mapLng !== null) {
       setFormData(prev => ({
@@ -205,23 +205,45 @@ export default function DestinationDetailPage() {
     setFormErrors({});
     setSaving(true);
     try {
-      const body = {
-        name: formData.name,
-        description: formData.description,
-        address: formData.address,
-        latitude: parseFloat(formData.latitude),
-        longitude: parseFloat(formData.longitude),
-        phone: formData.phone,
-        email: formData.email,
-        website: formData.website,
-        opening_hours: formData.opening_hours,
-        entry_fee: parseInt(formData.entry_fee),
-        category: formData.category,
-        facilities: formData.facilities,
-        images: formData.images.map(img => ({ url: img.url })),
-      };
+      if (!destination) {
+        alert("Data destinasi tidak tersedia");
+        return;
+      }
 
-      await patch(`/api/admin/destinations/${destinationId}`, body, { auth: "required" });
+      const changedFields: Record<string, unknown> = {};
+      
+      if (formData.name !== destination.name) changedFields.name = formData.name;
+      if (formData.description !== destination.description) changedFields.description = formData.description;
+      if (formData.address !== destination.address) changedFields.address = formData.address;
+      if (parseFloat(formData.latitude) !== destination.latitude) changedFields.latitude = parseFloat(formData.latitude);
+      if (parseFloat(formData.longitude) !== destination.longitude) changedFields.longitude = parseFloat(formData.longitude);
+      if (formData.phone !== destination.phone) changedFields.phone = formData.phone;
+      if (formData.email !== destination.email) changedFields.email = formData.email;
+      if (formData.website !== destination.website) changedFields.website = formData.website;
+      if (formData.opening_hours !== destination.opening_hours) changedFields.opening_hours = formData.opening_hours;
+      if (parseInt(formData.entry_fee) !== destination.entry_fee) changedFields.entry_fee = parseInt(formData.entry_fee);
+      if (formData.category !== destination.category) changedFields.category = formData.category;
+      
+      const currentFacilities = Array.isArray(destination.facilities) 
+        ? destination.facilities.map(f => typeof f === 'string' ? f : f?.name || '').filter(f => f !== '')
+        : [];
+      const facilitiesChanged = JSON.stringify(formData.facilities.sort()) !== JSON.stringify(currentFacilities.sort());
+      if (facilitiesChanged) changedFields.facilities = formData.facilities;
+      
+      const currentActivities = destination.activities || [];
+      const activitiesChanged = JSON.stringify(formData.activities) !== JSON.stringify(currentActivities);
+      if (activitiesChanged) changedFields.activities = formData.activities;
+      
+      const currentImages = destination.images.map(img => ({ url: img.image_url }));
+      const imagesChanged = JSON.stringify(formData.images) !== JSON.stringify(currentImages);
+      if (imagesChanged) changedFields.images = formData.images.map(img => ({ url: img.url }));
+
+      if (Object.keys(changedFields).length === 0) {
+        setIsEditing(false);
+        return;
+      }
+
+      await patch(`/api/admin/destinations/${destinationId}`, changedFields, { auth: "required" });
       alert("Destinasi berhasil diperbarui!");
       setIsEditing(false);
       fetchDestination();
@@ -235,7 +257,7 @@ export default function DestinationDetailPage() {
 
   const handlePublish = async () => {
     try {
-      await patch(`/api/admin/destinations/${destinationId}/publish`, {}, { auth: "required" });
+      await patch(`/api/admin/destinations/${destinationId}`, { status: "active" }, { auth: "required" });
       alert("Destinasi berhasil dipublikasikan!");
       fetchDestination();
     } catch (error) {
@@ -246,7 +268,7 @@ export default function DestinationDetailPage() {
 
   const handleUnpublish = async () => {
     try {
-      await patch(`/api/admin/destinations/${destinationId}/unpublish`, {}, { auth: "required" });
+      await patch(`/api/admin/destinations/${destinationId}`, { status: "inactive" }, { auth: "required" });
       alert("Destinasi berhasil tidak dipublikasikan!");
       fetchDestination();
     } catch (error) {
@@ -255,12 +277,62 @@ export default function DestinationDetailPage() {
     }
   };
 
-  const toggleFacility = (facility: string) => {
+  const handleDelete = async () => {
+    if (!confirm("Apakah Anda yakin ingin menghapus destinasi ini? Tindakan ini tidak dapat dibatalkan.")) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      await del(`/api/admin/destinations/${destinationId}`, { auth: "required" });
+
+      alert("Destinasi berhasil dihapus!");
+      window.location.href = "/admin/destinations";
+    } catch (error) {
+      console.error("Error deleting destination:", error);
+      alert("Terjadi kesalahan saat menghapus destinasi");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const addFacility = () => {
+    if (newFacility.trim() && !formData.facilities.includes(newFacility.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        facilities: [...prev.facilities, newFacility.trim()]
+      }));
+      setNewFacility("");
+    }
+  };
+
+  const removeFacility = (facility: string) => {
     setFormData(prev => ({
       ...prev,
-      facilities: prev.facilities.includes(facility)
-        ? prev.facilities.filter(f => f !== facility)
-        : [...prev.facilities, facility]
+      facilities: prev.facilities.filter(f => f !== facility)
+    }));
+  };
+
+  const addActivity = () => {
+    setFormData(prev => ({
+      ...prev,
+      activities: [...prev.activities, { name: "", startTime: "", endTime: "" }]
+    }));
+  };
+
+  const updateActivity = (index: number, field: "name" | "startTime" | "endTime", value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      activities: prev.activities.map((activity, i) => 
+        i === index ? { ...activity, [field]: value } : activity
+      )
+    }));
+  };
+
+  const removeActivity = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      activities: prev.activities.filter((_, i) => i !== index)
     }));
   };
 
@@ -309,6 +381,16 @@ export default function DestinationDetailPage() {
           <Badge variant={getStatusColor(destination.status)}>
             {getStatusDisplayName(destination.status)}
           </Badge>
+          {destination.status === "inactive" && !isEditing && (
+            <Button onClick={handlePublish} variant="outline">
+              Publikasikan
+            </Button>
+          )}
+          {destination.status === "active" && !isEditing && (
+            <Button onClick={handleUnpublish} variant="outline">
+              Tidak Publikasikan
+            </Button>
+          )}
           {isEditing ? (
             <>
               <Button onClick={handleSave} disabled={saving}>
@@ -326,14 +408,14 @@ export default function DestinationDetailPage() {
               Edit
             </Button>
           )}
-          {destination.status === "inactive" && !isEditing && (
-            <Button onClick={handlePublish} variant="outline">
-              Publikasikan
-            </Button>
-          )}
-          {destination.status === "active" && !isEditing && (
-            <Button onClick={handleUnpublish} variant="outline">
-              Tidak Publikasikan
+          {!isEditing && (
+            <Button
+              onClick={handleDelete}
+              disabled={deleting}
+              variant="destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {deleting ? "Menghapus..." : "Hapus"}
             </Button>
           )}
         </div>
@@ -602,21 +684,95 @@ export default function DestinationDetailPage() {
 
                   <div>
                     <Label className="text-sm font-medium text-gray-500">Fasilitas</Label>
-                    <div className="mt-2 space-y-2">
-                      {["toilet", "parking", "wifi", "restaurant", "accommodation"].map((facility) => (
-                        <div key={facility} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id={facility}
-                            checked={formData.facilities.includes(facility)}
-                            onChange={() => toggleFacility(facility)}
-                            className="rounded"
-                          />
-                          <label htmlFor={facility} className="text-sm capitalize">
-                            {facility === "accommodation" ? "Penginapan" : facility}
-                          </label>
+                    <div className="mt-2 space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        {formData.facilities.map((facility, index) => (
+                          <div key={index} className="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-md">
+                            <span className="text-sm capitalize">{facility}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeFacility(facility)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Input
+                          value={newFacility}
+                          onChange={(e) => setNewFacility(e.target.value)}
+                          placeholder="Tambah fasilitas baru (contoh: wifi, restaurant)"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addFacility();
+                            }
+                          }}
+                        />
+                        <Button type="button" onClick={addFacility} variant="outline">
+                          Tambah
+                        </Button>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Tekan Enter atau klik Tambah untuk menambahkan fasilitas. Klik × untuk menghapus.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Aktivitas</Label>
+                    <div className="mt-2 space-y-3">
+                      {formData.activities.map((activity, index) => (
+                        <div key={index} className="border rounded-lg p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">Aktivitas {index + 1}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeActivity(index)}
+                              className="text-red-500 hover:text-red-700 text-sm"
+                            >
+                              🗑️ Hapus
+                            </button>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium mb-1">Nama Aktivitas</label>
+                            <Input
+                              value={activity.name}
+                              onChange={(e) => updateActivity(index, "name", e.target.value)}
+                              placeholder="Contoh: Snorkeling, Island Hopping"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium mb-1">Waktu Mulai</label>
+                              <Input
+                                type="time"
+                                value={activity.startTime}
+                                onChange={(e) => updateActivity(index, "startTime", e.target.value)}
+                                placeholder="09:00"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium mb-1">Waktu Selesai</label>
+                              <Input
+                                type="time"
+                                value={activity.endTime}
+                                onChange={(e) => updateActivity(index, "endTime", e.target.value)}
+                                placeholder="11:00"
+                              />
+                            </div>
+                          </div>
                         </div>
                       ))}
+                      <Button type="button" onClick={addActivity} variant="outline" className="w-full">
+                        + Tambah Aktivitas
+                      </Button>
+                      <p className="text-xs text-gray-500">
+                        Aktivitas adalah kegiatan yang tersedia di destinasi ini. User akan memilih dari list ini saat membuat trip plan.
+                      </p>
                     </div>
                   </div>
 
@@ -724,6 +880,27 @@ export default function DestinationDetailPage() {
                             </Badge>
                           );
                         })}
+                      </div>
+                    </div>
+                  )}
+
+                  {destination.activities && destination.activities.length > 0 && (
+                    <div className="pt-4 border-t">
+                      <Label className="text-sm font-medium text-gray-500">Aktivitas Tersedia</Label>
+                      <div className="mt-2 space-y-2">
+                        {destination.activities.map((activity, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">🏖️</span>
+                              <div>
+                                <p className="text-sm font-medium">{activity.name}</p>
+                                <p className="text-xs text-gray-500">
+                                  {activity.startTime} - {activity.endTime}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}

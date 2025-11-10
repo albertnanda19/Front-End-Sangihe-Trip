@@ -15,17 +15,24 @@ export interface DestinationFilters {
 
 export interface DestinationItem {
   id: string;
+  slug: string;
   name: string;
-  category: string;
-  rating: number;
-  totalReviews: number;
-  reviews: number;
-  location: string;
-  price: number | null;
-  image: string;
-  images: string[];
-  facilities: string[];
   description: string;
+  address: string;
+  opening_hours: string;
+  entry_fee: number;
+  category: string;
+  avg_rating: number;
+  total_reviews: number;
+  is_featured: boolean;
+  images: Array<{
+    id: string;
+    image_url: string;
+    alt_text: string | null;
+    image_type: string;
+    sort_order: number;
+    is_featured: boolean;
+  }>;
 }
 
 interface DestinationMeta {
@@ -82,14 +89,12 @@ export function useDestinations(filters: DestinationFilters) {
           signal: controller.signal,
         });
 
-        const items = result.data.map((d) => ({
-          ...d,
-          reviews: d.totalReviews,
-        }));
+        const items = Array.isArray(result.data) ? result.data : [];
+        const meta = result.meta || null;
 
         setState({
           destinations: items,
-          meta: result.meta || null,
+          meta: meta,
         });
       } catch (err: unknown) {
         if (err instanceof Error && err.name !== "AbortError") {

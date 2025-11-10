@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { DollarSign, Plane, Hotel, Utensils, Camera, Plus, X } from "lucide-react"
+import { DollarSign, Plane, Plus, X } from "lucide-react"
 import type { TripData } from "@/app/(user)/create-trip/page"
 
 interface BudgetStepProps {
@@ -100,60 +100,6 @@ export function BudgetStep({ data, updateData, onNext, onPrev }: BudgetStepProps
                     placeholder="0"
                     value={data.budget.transport || ""}
                     onChange={(e) => updateBudget("transport", Number.parseInt(e.target.value) || 0)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              {/* Lodging */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Hotel className="w-4 h-4 text-emerald-500" />
-                  Akomodasi
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500">Rp</span>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={data.budget.lodging || ""}
-                    onChange={(e) => updateBudget("lodging", Number.parseInt(e.target.value) || 0)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              {/* Food */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Utensils className="w-4 h-4 text-orange-500" />
-                  Makanan & Minuman
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500">Rp</span>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={data.budget.food || ""}
-                    onChange={(e) => updateBudget("food", Number.parseInt(e.target.value) || 0)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              {/* Activities */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Camera className="w-4 h-4 text-purple-500" />
-                  Aktivitas & Wisata
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500">Rp</span>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={data.budget.activities || ""}
-                    onChange={(e) => updateBudget("activities", Number.parseInt(e.target.value) || 0)}
                     className="pl-10"
                   />
                 </div>

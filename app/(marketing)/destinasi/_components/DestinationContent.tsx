@@ -29,13 +29,6 @@ import {
   List,
   X,
   ChevronRight,
-  Wifi,
-  Car,
-  Utensils,
-  Waves,
-  TreePine,
-  Building,
-  Users,
   Heart,
   Calendar,
 } from "lucide-react";
@@ -56,22 +49,16 @@ const categoryMap: Record<(typeof categories)[number], string | undefined> = {
   "Religi": "religious",
   "Gunung": "mountain",
 };
-const locations = [
-  "Semua Lokasi",
-  "Kecamatan Tahuna",
-  "Kecamatan Siau",
-  "Kecamatan Tabukan Utara",
-  "Kecamatan Kendahe",
-];
 
-const facilityIcons = {
-  parking: Car,
-  toilet: Building,
-  food: Utensils,
-  wifi: Wifi,
-  guide: Users,
-  boat: Waves,
-  camping: TreePine,
+const categoryTranslations: Record<string, string> = {
+  beach: "Pantai",
+  culinary: "Kuliner",
+  nature: "Alam",
+  cultural: "Budaya",
+  historical: "Sejarah",
+  adventure: "Petualangan",
+  religious: "Religi",
+  mountain: "Gunung",
 };
 
 import { useDestinations } from "@/hooks/use-destinations";
@@ -79,25 +66,26 @@ import { useDestinations } from "@/hooks/use-destinations";
 const DestinationContent = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
-  const [selectedLocation, setSelectedLocation] = useState("Semua Lokasi");
+  const [locationQuery, setLocationQuery] = useState("");
   const [minRating, setMinRating] = useState([0]);
-  const [priceRange, setPriceRange] = useState([0, 100000]);
+  const [priceMin, setPriceMin] = useState<string>("");
+  const [priceMax, setPriceMax] = useState<string>("");
   const [sortBy, setSortBy] = useState<"popular" | "rating" | "price-low" | "newest">("popular");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const router = useRouter();
   const [showFilters, setShowFilters] = useState(false);
 
-  const { destinations, meta, loading, error } = useDestinations({
+  const { destinations, loading } = useDestinations({
     search: searchQuery || undefined,
     category:
       selectedCategory !== "Semua"
         ? categoryMap[selectedCategory as keyof typeof categoryMap]
         : undefined,
-    location: selectedLocation !== "Semua Lokasi" ? selectedLocation : undefined,
-    minRating: minRating[0] || undefined,
-    priceMin: priceRange[0],
-    priceMax: priceRange[1],
+    location: locationQuery || undefined,
+    minRating: minRating[0] > 0 ? minRating[0] : undefined,
+    priceMin: priceMin ? parseInt(priceMin) : undefined,
+    priceMax: priceMax ? parseInt(priceMax) : undefined,
     sortBy,
     page: 1,
     pageSize: 12,
@@ -107,7 +95,7 @@ const DestinationContent = () => {
   const removeFilter = (filter: string) => {
     setActiveFilters((prev) => prev.filter((f) => f !== filter));
     if (filter.includes("Kategori")) setSelectedCategory("Semua");
-    if (filter.includes("Lokasi")) setSelectedLocation("Semua Lokasi");
+    if (filter.includes("Lokasi")) setLocationQuery("");
   };
   return (
     <div className="container mx-auto px-4 py-6">
@@ -154,6 +142,22 @@ const DestinationContent = () => {
                 </div>
               </div>
 
+              {/* Location Filter */}
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-2 block">
+                  Cari Lokasi
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                  <Input
+                    placeholder="Cari berdasarkan lokasi..."
+                    value={locationQuery}
+                    onChange={(e) => setLocationQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
               {/* Category Filter */}
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-3 block">
@@ -180,28 +184,6 @@ const DestinationContent = () => {
                 </div>
               </div>
 
-              {/* Location Filter */}
-              <div>
-                <label className="text-sm font-medium text-slate-700 mb-2 block">
-                  Lokasi
-                </label>
-                <Select
-                  value={selectedLocation}
-                  onValueChange={setSelectedLocation}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations.map((location) => (
-                      <SelectItem key={location} value={location}>
-                        {location}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               {/* Rating Filter */}
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-3 block">
@@ -223,21 +205,32 @@ const DestinationContent = () => {
 
               {/* Price Filter */}
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-3 block">
-                  Harga Tiket: Rp {priceRange[0].toLocaleString('id-ID')} - Rp{" "}
-                  {priceRange[1].toLocaleString('id-ID')}
+                <label className="text-sm font-medium text-slate-700 mb-2 block">
+                  Harga (Rp)
                 </label>
-                <Slider
-                  value={priceRange}
-                  onValueChange={setPriceRange}
-                  max={100000}
-                  min={0}
-                  step={5000}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-slate-500 mt-1">
-                  <span>Gratis</span>
-                  <span>100k</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-slate-600 mb-1 block">Minimum</label>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={priceMin}
+                      onChange={(e) => setPriceMin(e.target.value)}
+                      min="0"
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-600 mb-1 block">Maksimum</label>
+                    <Input
+                      type="number"
+                      placeholder="Tanpa batas"
+                      value={priceMax}
+                      onChange={(e) => setPriceMax(e.target.value)}
+                      min="0"
+                      className="w-full"
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -343,7 +336,7 @@ const DestinationContent = () => {
             {!loading && sortedDestinations.map((destination) => (
               <Card
                 key={destination.id}
-                className={`overflow-hidden hover:shadow-lg transition-shadow duration-300 ${
+                className={`group overflow-hidden hover:shadow-lg transition-shadow duration-300 ${
                   viewMode === "list" ? "flex flex-row" : ""
                 }`}
               >
@@ -352,13 +345,17 @@ const DestinationContent = () => {
                 >
                   <div className="relative h-48 overflow-hidden">
                     <Image
-                      src={destination.image || "/placeholder.svg"}
+                      src={
+                        (Array.isArray(destination.images) && destination.images.length > 0
+                          ? destination.images[0].image_url
+                          : "/placeholder.svg")
+                      }
                       alt={destination.name}
                       fill
                       className="object-cover hover:scale-105 transition-transform duration-300"
                     />
                     <Badge className="absolute top-3 left-3 bg-sky-500">
-                      {destination.category}
+                      {categoryTranslations[destination.category] || destination.category}
                     </Badge>
                     <Button
                       variant="ghost"
@@ -370,10 +367,10 @@ const DestinationContent = () => {
                   </div>
                 </div>
 
-                <div className="flex-1">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div>
+                <div className="flex-1 flex flex-col">
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-lg text-slate-800 mb-1">
                           {destination.name}
                         </h3>
@@ -381,62 +378,60 @@ const DestinationContent = () => {
                           <div className="flex items-center">
                             <Star className="w-4 h-4 text-yellow-400 fill-current" />
                             <span className="text-sm font-medium ml-1">
-                              {destination.rating}
+                              {destination.avg_rating?.toFixed(1) || "0.0"}
                             </span>
                           </div>
                           <span className="text-sm text-slate-500">
-                            ({destination.reviews} review)
-                          </span>
-                        </div>
-                        <div className="flex items-center text-slate-600 mb-2">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          <span className="text-sm">
-                            {destination.location}
+                            ({destination.total_reviews || 0} review)
                           </span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-emerald-600">
-                          {(destination.price ?? 0) === 0
+                      <div className="text-right flex-shrink-0 w-24">
+                        <div className="text-lg font-bold text-emerald-600 whitespace-nowrap">
+                          {(destination.entry_fee ?? 0) === 0
                             ? "Gratis"
-                            : `Rp ${(destination.price ?? 0).toLocaleString('id-ID')}`}
+                            : `Rp ${(destination.entry_fee ?? 0).toLocaleString('id-ID')}`}
                         </div>
-                        <div className="text-sm text-slate-500">per orang</div>
+                        <div className="text-xs text-slate-500 whitespace-nowrap">per orang</div>
                       </div>
                     </div>
                   </CardHeader>
 
-                  <CardContent className="pt-0">
-                    <p className="text-slate-600 text-sm mb-3 line-clamp-2">
-                      {destination.description}
-                    </p>
-
-                    {/* Facilities */}
-                    <div className="flex items-center gap-2 mb-4">
-                      {destination.facilities.slice(0, 4).map((facility) => {
-                        const Icon =
-                          facilityIcons[facility as keyof typeof facilityIcons];
-                        return Icon ? (
-                          <div
-                            key={facility}
-                            className="flex items-center justify-center w-8 h-8 bg-slate-100 rounded-full"
-                          >
-                            <Icon className="w-4 h-4 text-slate-600" />
-                          </div>
-                        ) : null;
-                      })}
-                      {destination.facilities.length > 4 && (
-                        <span className="text-xs text-slate-500">
-                          +{destination.facilities.length - 4} lainnya
+                  <CardContent className="pt-0 flex-1">
+                    <div className="relative group/address">
+                      <div className="flex items-start text-slate-600 mb-2">
+                        <MapPin className="w-4 h-4 mr-1 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm line-clamp-2 cursor-pointer">
+                          {destination.address || "Lokasi tidak tersedia"}
                         </span>
-                      )}
+                      </div>
+                      {/* Floating tooltip for full address */}
+                      <div className="absolute left-0 top-full mt-1 z-50 invisible group-hover/address:visible opacity-0 group-hover/address:opacity-100 transition-all duration-200 pointer-events-none">
+                        <div className="bg-slate-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg max-w-xs">
+                          <div className="flex items-start gap-2">
+                            <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                            <span>{destination.address || "Lokasi tidak tersedia"}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="relative group/desc">
+                      <p className="text-slate-600 text-sm mb-3 line-clamp-2 cursor-pointer">
+                        {destination.description}
+                      </p>
+                      {/* Floating tooltip for full description */}
+                      <div className="absolute left-0 top-full mt-1 z-50 invisible group-hover/desc:visible opacity-0 group-hover/desc:opacity-100 transition-all duration-200 pointer-events-none">
+                        <div className="bg-slate-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg max-w-sm">
+                          <p className="leading-relaxed">{destination.description}</p>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
 
                   <CardFooter className="pt-0 gap-2 flex-wrap">
                     <Button
                       className="flex-1 bg-sky-500 hover:bg-sky-600"
-                      onClick={() => router.push(`/destinasi/${destination.id}`)}
+                      onClick={() => router.push(`/destinasi/${destination.slug}`)}
                     >
                       Lihat Detail
                     </Button>

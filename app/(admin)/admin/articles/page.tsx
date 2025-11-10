@@ -29,12 +29,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Eye, Trash2, RefreshCw, Plus } from "lucide-react";
 
+type ArticleStatus = "draft" | "published";
+
 interface ArticleItem {
   id: string;
   title: string;
-  excerpt?: string;
   category: string;
-  status: "draft" | "published" | "archived";
+  status: ArticleStatus;
   viewCount: number;
   publishedAt?: string;
   createdAt: string;
@@ -42,32 +43,29 @@ interface ArticleItem {
   author?: {
     firstName: string;
     lastName: string;
-    email: string;
   };
 }
 
-const getStatusDisplayName = (status: string): string => {
+const getStatusDisplayName = (status: ArticleStatus): string => {
   switch (status) {
     case "draft": return "Draft";
     case "published": return "Dipublikasikan";
-    case "archived": return "Diarsipkan";
     default: return status;
   }
 };
 
-const getStatusColor = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+const getStatusColor = (status: ArticleStatus): "default" | "secondary" => {
   switch (status) {
     case "draft": return "secondary";
     case "published": return "default";
-    case "archived": return "outline";
-    default: return "outline";
+    default: return "secondary";
   }
 };
 
 const getCategoryDisplayName = (category: string): string => {
   switch (category) {
-    case "travel_tips": return "Tips Perjalanan";
-    case "destination_guide": return "Panduan Destinasi";
+    case "tips": return "Tips";
+    case "guide": return "Panduan";
     case "culture": return "Budaya";
     case "food": return "Makanan";
     case "adventure": return "Petualangan";
@@ -91,8 +89,8 @@ export default function AdminArticlesList() {
     refresh,
   } = useAdminList<ArticleItem>({
     endpoint: "/api/admin/articles",
-    searchFields: ["title", "excerpt"],
-    pageSize: 20,
+    searchFields: ["title"],
+    pageSize: 10,
   });
 
   const handleDelete = async (articleId: string, permanent: boolean = false) => {
@@ -144,7 +142,7 @@ export default function AdminArticlesList() {
           <div className="flex flex-col lg:flex-row gap-3 items-end">
             <div className="w-full flex-1 min-w-0">
               <Input
-                placeholder="Cari judul atau excerpt artikel..."
+                placeholder="Cari judul artikel..."
                 value={search}
                 onChange={(e) => setSearchAndFetch(e.target.value)}
                 onKeyDown={(e) => {
@@ -162,7 +160,6 @@ export default function AdminArticlesList() {
                 <SelectItem value="all">Semua</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
                 <SelectItem value="published">Dipublikasikan</SelectItem>
-                <SelectItem value="archived">Diarsipkan</SelectItem>
               </SelectContent>
             </Select>
             <Select onValueChange={(v) => setFilter("category", v === "all" ? undefined : v)}>
@@ -171,24 +168,25 @@ export default function AdminArticlesList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua</SelectItem>
-                <SelectItem value="travel_tips">Tips Perjalanan</SelectItem>
-                <SelectItem value="destination_guide">Panduan Destinasi</SelectItem>
+                <SelectItem value="tips">Tips</SelectItem>
+                <SelectItem value="guide">Panduan</SelectItem>
                 <SelectItem value="culture">Budaya</SelectItem>
                 <SelectItem value="food">Makanan</SelectItem>
                 <SelectItem value="adventure">Petualangan</SelectItem>
                 <SelectItem value="news">Berita</SelectItem>
               </SelectContent>
             </Select>
-            <Select onValueChange={(v) => setFilter("sortBy", v === "default" ? undefined : v)}>
+            <Select onValueChange={(v) => setFilter("sort", v === "default" ? undefined : v)}>
               <SelectTrigger className="w-full lg:w-40">
                 <SelectValue placeholder="Urutkan" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="default">Default</SelectItem>
-                <SelectItem value="created_at">Tanggal Dibuat</SelectItem>
-                <SelectItem value="updated_at">Tanggal Diupdate</SelectItem>
-                <SelectItem value="view_count">Jumlah View</SelectItem>
-                <SelectItem value="title">Judul</SelectItem>
+                <SelectItem value="createdAt:desc">Terbaru</SelectItem>
+                <SelectItem value="createdAt:asc">Terlama</SelectItem>
+                <SelectItem value="viewCount:desc">Paling Banyak Dilihat</SelectItem>
+                <SelectItem value="title:asc">Judul A-Z</SelectItem>
+                <SelectItem value="title:desc">Judul Z-A</SelectItem>
               </SelectContent>
             </Select>
             <div className="lg:w-auto">

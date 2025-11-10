@@ -1,7 +1,7 @@
 export const SITE_CONFIG = {
   name: "SANGIHE TRIP",
   shortName: "S",
-  fullName: "SANGIHETRIP",
+  fullName: "SANGIHE TRIP",
   description: "Platform terpercaya untuk merencanakan perjalanan wisata ke Kepulauan Sangihe",
   tagline: "Jelajahi Keindahan Kepulauan Sangihe",
   url: "https://sangihetrip.com",

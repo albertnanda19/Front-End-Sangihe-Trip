@@ -31,7 +31,7 @@ export function middleware(req: NextRequest) {
       const payload = decodeJwt<{ role?: string }>(token);
       const role = payload?.role;
       
-      const destination = role === "admin" ? "/admin/beranda" : "/beranda";
+      const destination = role === "admin" ? "/" : "/masuk";
       return NextResponse.redirect(new URL(destination, req.url));
     }
     

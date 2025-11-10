@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { get, put } from "@/lib/api";
+import { get, put, patch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -14,15 +14,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+type ArticleStatus = "draft" | "published";
+
 interface ArticleDetail {
   id: string;
   title: string;
+  slug: string;
   excerpt: string | null;
   content: string;
   category: string;
-  status: "draft" | "published" | "archived";
+  status: ArticleStatus;
   featuredImage?: string;
   viewCount: number;
+  readingTime: number;
   publishedAt?: string;
   createdAt: string;
   updatedAt: string;
@@ -34,28 +38,26 @@ interface ArticleDetail {
   };
 }
 
-const getStatusDisplayName = (status: string): string => {
+const getStatusDisplayName = (status: ArticleStatus): string => {
   switch (status) {
     case "draft": return "Draft";
     case "published": return "Dipublikasikan";
-    case "archived": return "Diarsipkan";
     default: return status;
   }
 };
 
-const getStatusColor = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+const getStatusColor = (status: ArticleStatus): "default" | "secondary" => {
   switch (status) {
     case "draft": return "secondary";
     case "published": return "default";
-    case "archived": return "outline";
-    default: return "outline";
+    default: return "secondary";
   }
 };
 
 const getCategoryDisplayName = (category: string): string => {
   switch (category) {
-    case "travel_tips": return "Tips Perjalanan";
-    case "destination_guide": return "Panduan Destinasi";
+    case "tips": return "Tips";
+    case "guide": return "Panduan";
     case "culture": return "Budaya";
     case "food": return "Makanan";
     case "adventure": return "Petualangan";
@@ -129,7 +131,25 @@ export default function ArticleViewPage() {
     setFormErrors({});
     setSaving(true);
     try {
-      await put(`/api/admin/articles/${articleId}`, formData, { auth: "required" });
+      if (!article) {
+        alert("Data artikel tidak tersedia");
+        return;
+      }
+
+      const changedFields: Partial<typeof formData> = {};
+      
+      if (formData.title !== article.title) changedFields.title = formData.title;
+      if (formData.excerpt !== (article.excerpt || "")) changedFields.excerpt = formData.excerpt;
+      if (formData.content !== article.content) changedFields.content = formData.content;
+      if (formData.category !== article.category) changedFields.category = formData.category;
+      if (formData.featuredImage !== (article.featuredImage || "")) changedFields.featuredImage = formData.featuredImage;
+
+      if (Object.keys(changedFields).length === 0) {
+        setIsEditing(false);
+        return;
+      }
+
+      await patch(`/api/admin/articles/${articleId}`, changedFields, { auth: "required" });
       alert("Artikel berhasil diperbarui!");
       setIsEditing(false);
       fetchArticle();
@@ -256,6 +276,10 @@ export default function ArticleViewPage() {
                 <p className="text-sm text-gray-600">{getCategoryDisplayName(article.category)}</p>
               </div>
               <div>
+                <Label className="text-sm font-medium">Waktu Baca</Label>
+                <p className="text-sm text-gray-600">{article.readingTime} menit baca</p>
+              </div>
+              <div>
                 <Label className="text-sm font-medium">Jumlah View</Label>
                 <p className="text-sm text-gray-600">{(article.viewCount || 0).toLocaleString()}</p>
               </div>
@@ -354,8 +378,8 @@ export default function ArticleViewPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="travel_tips">Tips Perjalanan</SelectItem>
-                        <SelectItem value="destination_guide">Panduan Destinasi</SelectItem>
+                        <SelectItem value="tips">Tips</SelectItem>
+                        <SelectItem value="guide">Panduan</SelectItem>
                         <SelectItem value="culture">Budaya</SelectItem>
                         <SelectItem value="food">Makanan</SelectItem>
                         <SelectItem value="adventure">Petualangan</SelectItem>

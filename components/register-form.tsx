@@ -17,14 +17,12 @@ import {
   Loader2,
   AlertCircle,
   ArrowLeft,
-  CheckCircle,
-  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 interface FormData {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -38,9 +36,9 @@ interface PasswordStrength {
 }
 
 const RegisterForm = () => {
-  const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -48,14 +46,9 @@ const RegisterForm = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  // Loading states
-  const [socialLoading, setSocialLoading] = useState(false);
-  const { register, isLoading, error: registerError } = useRegister();
-  const combinedLoading = isLoading || socialLoading;
+  const { register, isLoading } = useRegister();
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [generalError, setGeneralError] = useState("");
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [isResending, setIsResending] = useState(false);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -109,10 +102,14 @@ const RegisterForm = () => {
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = "Nama lengkap harus diisi";
-    } else if (formData.fullName.trim().length < 2) {
-      newErrors.fullName = "Nama minimal 2 karakter";
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "Nama depan harus diisi";
+    } else if (formData.firstName.trim().length < 2) {
+      newErrors.firstName = "Nama depan minimal 2 karakter";
+    }
+
+    if (formData.lastName.trim() && formData.lastName.trim().length < 2) {
+      newErrors.lastName = "Nama belakang minimal 2 karakter jika diisi";
     }
 
     if (!formData.email) {
@@ -144,7 +141,6 @@ const RegisterForm = () => {
     value: string | boolean
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
@@ -160,12 +156,22 @@ const RegisterForm = () => {
 
     setGeneralError("");
     try {
-      await register({
-        name: formData.fullName,
+      const registerData: {
+        firstName: string;
+        email: string;
+        password: string;
+        lastName?: string;
+      } = {
+        firstName: formData.firstName.trim(),
         email: formData.email,
         password: formData.password,
-      });
-      // register hook will redirect on success
+      };
+
+      if (formData.lastName.trim()) {
+        registerData.lastName = formData.lastName.trim();
+      }
+
+      await register(registerData);
     } catch (error) {
       setGeneralError(
         error instanceof Error
@@ -175,7 +181,6 @@ const RegisterForm = () => {
     }
   };
 
-  // Trigger register on Enter key within any input
   const handleEnterKey = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -224,27 +229,51 @@ const RegisterForm = () => {
           )}
 
           <div className="space-y-4" role="group">
-            {/* Full Name Field */}
+            {/* First Name Field */}
             <div className="space-y-2">
-              <Label htmlFor="fullName">Nama Lengkap</Label>
+              <Label htmlFor="firstName">Nama Depan</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input {...commonInputProps}
-                  id="fullName"
+                  id="firstName"
                   type="text"
-                  placeholder="Masukkan nama lengkap"
-                  value={formData.fullName}
+                  placeholder="Masukkan nama depan"
+                  value={formData.firstName}
                   onChange={(e) =>
-                    handleInputChange("fullName", e.target.value)
+                    handleInputChange("firstName", e.target.value)
                   }
                   className={`pl-10 ${
-                    errors.fullName ? "border-red-500 focus:border-red-500" : ""
+                    errors.firstName ? "border-red-500 focus:border-red-500" : ""
                   }`}
-                  disabled={combinedLoading}
+                  disabled={isLoading}
                 />
               </div>
-              {errors.fullName && (
-                <p className="text-sm text-red-500">{errors.fullName}</p>
+              {errors.firstName && (
+                <p className="text-sm text-red-500">{errors.firstName}</p>
+              )}
+            </div>
+
+            {/* Last Name Field */}
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Nama Belakang <span className="text-sm text-slate-400">(Opsional)</span></Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                <Input {...commonInputProps}
+                  id="lastName"
+                  type="text"
+                  placeholder="Masukkan nama belakang"
+                  value={formData.lastName}
+                  onChange={(e) =>
+                    handleInputChange("lastName", e.target.value)
+                  }
+                  className={`pl-10 ${
+                    errors.lastName ? "border-red-500 focus:border-red-500" : ""
+                  }`}
+                  disabled={isLoading}
+                />
+              </div>
+              {errors.lastName && (
+                <p className="text-sm text-red-500">{errors.lastName}</p>
               )}
             </div>
 
@@ -262,7 +291,7 @@ const RegisterForm = () => {
                   className={`pl-10 ${
                     errors.email ? "border-red-500 focus:border-red-500" : ""
                   }`}
-                  disabled={combinedLoading}
+                  disabled={isLoading}
                 />
               </div>
               {errors.email && (
@@ -286,13 +315,13 @@ const RegisterForm = () => {
                   className={`pl-10 pr-10 ${
                     errors.password ? "border-red-500 focus:border-red-500" : ""
                   }`}
-                  disabled={combinedLoading}
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  disabled={combinedLoading}
+                  disabled={isLoading}
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -349,13 +378,13 @@ const RegisterForm = () => {
                       ? "border-red-500 focus:border-red-500"
                       : ""
                   }`}
-                  disabled={combinedLoading}
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  disabled={combinedLoading}
+                  disabled={isLoading}
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -409,7 +438,7 @@ const RegisterForm = () => {
               type="button"
               onClick={handleRegister}
               className="w-full bg-sky-500 hover:bg-sky-600 text-white py-3"
-              disabled={combinedLoading}
+              disabled={isLoading}
             >
               {isLoading ? (
                 <>

@@ -18,11 +18,20 @@ import { SuccessPage } from "@/components/create-trip/success-page"
 export interface Destination {
   id: string
   name: string
-  category?: string
-  location?: string
-  price?: number | null
-  rating?: number
-  imageUrl?: string
+  slug: string
+  description: string
+  address: string
+  latitude: number
+  longitude: number
+  opening_hours: string
+  category: string
+  avg_rating: number
+  total_reviews: number
+  is_featured: boolean
+  images: Array<{
+    id: string
+    image_url: string
+  }>
 }
 
 export interface ScheduleItem {
@@ -33,6 +42,7 @@ export interface ScheduleItem {
   startTime: string
   endTime: string
   activity: string
+  activityName?: string
   notes?: string
 }
 
@@ -173,6 +183,7 @@ export default function CreateTripPage() {
             startTime: item.startTime,
             endTime: item.endTime,
             activity: item.activity,
+            activityName: item.activityName,
             notes: item.notes,
           }
           

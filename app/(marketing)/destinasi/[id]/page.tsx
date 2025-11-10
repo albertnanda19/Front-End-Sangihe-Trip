@@ -6,7 +6,6 @@ export default async function DestinationDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  // Next.js 15: params is a Promise in server components
   const { id } = await params;
 
   return (
