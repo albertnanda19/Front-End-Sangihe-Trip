@@ -190,12 +190,6 @@ export default function DestinationDetailPage() {
     if (formData.name.trim().length === 0) {
       errors.name = "Nama destinasi wajib diisi";
     }
-    if (formData.description.trim().length === 0) {
-      errors.description = "Deskripsi destinasi wajib diisi";
-    }
-    if (formData.address.trim().length === 0) {
-      errors.address = "Alamat destinasi wajib diisi";
-    }
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -529,6 +523,8 @@ export default function DestinationDetailPage() {
                         if (formErrors.name) setFormErrors(prev => ({ ...prev, name: "" }));
                       }}
                       className="mt-1"
+                      required
+                      placeholder="Masukkan nama destinasi"
                     />
                     {formErrors.name && (
                       <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>
