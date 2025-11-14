@@ -596,7 +596,16 @@ export default function DestinationDetailPage() {
                         type="number"
                         step="any"
                         value={formData.latitude}
-                        onChange={(e) => setFormData(prev => ({ ...prev, latitude: e.target.value }))}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setFormData(prev => ({ ...prev, latitude: v }));
+                          const num = v === "" ? null : Number(v);
+                          if (num !== null && !Number.isNaN(num)) {
+                            setMapLat(num);
+                          } else {
+                            setMapLat(null);
+                          }
+                        }}
                         className="mt-1"
                       />
                     </div>
@@ -606,7 +615,16 @@ export default function DestinationDetailPage() {
                         type="number"
                         step="any"
                         value={formData.longitude}
-                        onChange={(e) => setFormData(prev => ({ ...prev, longitude: e.target.value }))}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setFormData(prev => ({ ...prev, longitude: v }));
+                          const num = v === "" ? null : Number(v);
+                          if (num !== null && !Number.isNaN(num)) {
+                            setMapLng(num);
+                          } else {
+                            setMapLng(null);
+                          }
+                        }}
                         className="mt-1"
                       />
                     </div>

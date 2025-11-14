@@ -83,6 +83,15 @@ export default function MapComponent({ lat, lng, setLat, setLng, setAddress }: {
 
       leafletMapRef.current!.setView(newLatLng, leafletMapRef.current!.getZoom());
     }
+    if (isMapReady && (lat === null || lng === null)) {
+      if (markerRef.current) {
+        try {
+          leafletMapRef.current?.removeLayer(markerRef.current);
+        } catch {
+        }
+        markerRef.current = null;
+      }
+    }
   }, [isMapReady, lat, lng]);
 
   if (!isClient) {
