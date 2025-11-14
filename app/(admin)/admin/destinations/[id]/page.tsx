@@ -155,21 +155,21 @@ export default function DestinationDetailPage() {
         name: destination.name,
         description: destination.description,
         address: destination.address,
-        latitude: destination.latitude.toString(),
-        longitude: destination.longitude.toString(),
+        latitude: destination.latitude != null ? String(destination.latitude) : "",
+        longitude: destination.longitude != null ? String(destination.longitude) : "",
         phone: destination.phone,
         email: destination.email,
         website: destination.website,
         opening_hours: destination.opening_hours,
-        entry_fee: destination.entry_fee.toString(),
+        entry_fee: destination.entry_fee != null ? String(destination.entry_fee) : "",
         category: destination.category,
         facilities: facilitiesArray,
         activities: destination.activities || [],
         images: destination.images.map(img => ({ url: img.image_url, alt: img.alt_text })),
       });
 
-      setMapLat(destination.latitude);
-      setMapLng(destination.longitude);
+      setMapLat(typeof destination.latitude === "number" ? destination.latitude : null);
+      setMapLng(typeof destination.longitude === "number" ? destination.longitude : null);
       setMapAddress(destination.address);
     }
   }, [destination]);
