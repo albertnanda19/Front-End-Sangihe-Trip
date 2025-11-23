@@ -101,24 +101,51 @@ export default function EditTripPage() {
     let cancelled = false
     async function load() {
       try {
-        const result = await get<any>(`/api/trips/${id}`, { auth: false })
-        const data = result.data
-
-        const selectedDestinations: Destination[] = (data.destinations || []).map((d: {
+        interface TripApiResponse {
           id: string
           name: string
-          slug: string
-          description: string
-          address: string
-          latitude: number
-          longitude: number
-          opening_hours: string
-          category: string
-          avg_rating: number
-          total_reviews: number
-          is_featured: boolean
-          images: Array<{ id: string; image_url: string; }>
-        }) => ({
+          startDate: string
+          endDate: string
+          peopleCount: number
+          tripType: string
+          notes?: string
+          packingList?: string[]
+          isPublic: boolean
+          destinations?: Array<{
+            id: string
+            name: string
+            slug: string
+            description: string
+            address: string
+            latitude: number
+            longitude: number
+            opening_hours: string
+            category: string
+            avg_rating: number
+            total_reviews: number
+            is_featured: boolean
+            images: Array<{ id: string; image_url: string }>
+          }>
+          schedule?: Array<{
+            id: string
+            day: number
+            destinationId: string
+            startTime: string
+            endTime: string
+            activity: string
+            notes?: string
+          }>
+          budget?: {
+            transport: number
+            lodging: number
+            food: number
+            activities: number
+          }
+        }
+        const result = await get<TripApiResponse>(`/api/trips/${id}`, { auth: false })
+        const data = result.data
+
+        const selectedDestinations: Destination[] = (data.destinations || []).map((d) => ({
           id: d.id,
           name: d.name,
           slug: d.slug,
@@ -137,27 +164,15 @@ export default function EditTripPage() {
           })) : []
         }))
 
-        const schedule: ScheduleItem[] = (data.schedule || []).flatMap((day: {
-          day: number
-          items: Array<{
-            destinationId: string
-            destinationName?: string
-            startTime: string
-            endTime: string
-            activity: string
-            notes?: string
-          }>
-        }) =>
-          (day.items || []).map((it) => ({
-            day: day.day,
-            destinationId: it.destinationId,
-            destinationName: it.destinationName || undefined,
-            startTime: it.startTime,
-            endTime: it.endTime,
-            activity: it.activity,
-            notes: it.notes || "",
-          }))
-        )
+        const schedule: ScheduleItem[] = (data.schedule || []).map((item) => ({
+          id: item.id,
+          day: item.day,
+          destinationId: item.destinationId,
+          startTime: item.startTime,
+          endTime: item.endTime,
+          activity: item.activity,
+          notes: item.notes || "",
+        }))
 
         if (!cancelled) {
           setTripData({

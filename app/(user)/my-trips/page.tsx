@@ -51,7 +51,6 @@ export default function MyTripPage() {
     try {
       const { data } = await get<Trip[]>("/api/user/me/trips", {
         auth: "required",
-        cache: "no-store",
       });
       let list: Trip[] = [];
       if (Array.isArray(data)) {

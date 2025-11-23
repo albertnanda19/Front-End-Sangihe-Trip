@@ -15,8 +15,8 @@ import { get } from "@/lib/api"
 
 interface DestinationActivity {
   name: string
-  startTime: string
-  endTime: string
+  startTime?: string
+  endTime?: string
 }
 
 interface ScheduleStepProps {
@@ -72,11 +72,15 @@ export function ScheduleStep({ data, updateData, onNext, onPrev }: ScheduleStepP
 
       setLoadingActivities(true)
       try {
-        const result = await get<any>(`/api/destination/id/${destination.slug}`, { auth: false })
+        interface DestinationDetailResponse {
+          activities?: string[]
+        }
+        const result = await get<DestinationDetailResponse>(`/api/destination/id/${destination.slug}`, { auth: false })
         if (result.data?.activities && Array.isArray(result.data.activities)) {
+          const activityList: DestinationActivity[] = result.data.activities.map(name => ({ name }))
           setDestinationActivities(prev => ({
             ...prev,
-            [destinationId]: result.data.activities
+            [destinationId]: activityList
           }))
         }
       } catch (error) {

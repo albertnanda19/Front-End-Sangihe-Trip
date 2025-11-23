@@ -34,11 +34,26 @@ export function DestinationStep({ data, updateData, onNext, onPrev }: Destinatio
 
     async function load() {
       try {
-        const result = await get<any[]>("/api/destination", { auth: false })
+        interface DestinationApiResponse {
+          id: string
+          name: string
+          slug: string
+          description: string
+          address: string
+          latitude: number
+          longitude: number
+          opening_hours: string
+          category: string
+          avg_rating: number
+          total_reviews: number
+          is_featured: boolean
+          images: Array<{ id: string; image_url: string }>
+        }
+        const result = await get<DestinationApiResponse[]>("/api/destination", { auth: false })
         
         const dataArray = Array.isArray(result.data) ? result.data : []
         
-        const items: Destination[] = dataArray.map((d: any) => ({
+        const items: Destination[] = dataArray.map((d) => ({
           id: d.id,
           name: d.name,
           slug: d.slug,
@@ -51,7 +66,7 @@ export function DestinationStep({ data, updateData, onNext, onPrev }: Destinatio
           avg_rating: d.avg_rating || 0,
           total_reviews: d.total_reviews || 0,
           is_featured: d.is_featured || false,
-          images: Array.isArray(d.images) ? d.images.map((img: any) => ({
+          images: Array.isArray(d.images) ? d.images.map((img) => ({
             id: img.id,
             image_url: img.image_url
           })) : [],
@@ -89,7 +104,7 @@ export function DestinationStep({ data, updateData, onNext, onPrev }: Destinatio
     if (isCurrentlySelected) {
       const newSelected = data.selectedDestinations.filter((dest) => dest.id !== destination.id)
       // Clean up schedule items that reference removed destination
-      const cleanSchedule = data.schedule.filter((item: any) => item.destinationId !== destination.id)
+      const cleanSchedule = data.schedule.filter((item) => item.destinationId !== destination.id)
       updateData({ 
         selectedDestinations: newSelected,
         schedule: cleanSchedule
@@ -103,18 +118,11 @@ export function DestinationStep({ data, updateData, onNext, onPrev }: Destinatio
   const removeDestination = (destinationId: string) => {
     const newSelected = data.selectedDestinations.filter((dest) => dest.id !== destinationId)
     // Clean up schedule items that reference removed destination
-    const cleanSchedule = data.schedule.filter((item: any) => item.destinationId !== destinationId)
+    const cleanSchedule = data.schedule.filter((item) => item.destinationId !== destinationId)
     updateData({ 
       selectedDestinations: newSelected,
       schedule: cleanSchedule
     })
-  }
-
-  const reorderDestinations = (fromIndex: number, toIndex: number) => {
-    const newSelected = [...data.selectedDestinations]
-    const [removed] = newSelected.splice(fromIndex, 1)
-    newSelected.splice(toIndex, 0, removed)
-    updateData({ selectedDestinations: newSelected })
   }
 
   const canProceed = data.selectedDestinations.length > 0
