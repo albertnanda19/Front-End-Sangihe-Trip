@@ -29,7 +29,6 @@ export interface DestinationItem {
     id: string;
     image_url: string;
     alt_text: string | null;
-    image_type: string;
     sort_order: number;
     is_featured: boolean;
   }>;

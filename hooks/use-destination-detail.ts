@@ -10,8 +10,7 @@ interface Activity {
 interface ImageDetail {
   id: string;
   image_url: string;
-  alt_text: string | null;
-  image_type: string;
+  alt_text: string;
   sort_order: number;
   is_featured: boolean;
 }

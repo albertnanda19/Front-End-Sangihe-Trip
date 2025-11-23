@@ -101,7 +101,7 @@ export default function EditTripPage() {
     let cancelled = false
     async function load() {
       try {
-        const result = await get<any>(`/api/trip/${id}`, { auth: false })
+        const result = await get<any>(`/api/trips/${id}`, { auth: false })
         const data = result.data
 
         const selectedDestinations: Destination[] = (data.destinations || []).map((d: {

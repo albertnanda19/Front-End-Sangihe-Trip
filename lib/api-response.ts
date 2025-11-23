@@ -67,15 +67,12 @@ export interface ArticleResponse {
 export interface UserProfileResponse {
   id: string;
   email: string;
-  first_name?: string;
-  firstName?: string;
-  last_name?: string;
-  lastName?: string;
-  avatar_url?: string;
-  avatar?: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl?: string;
   role?: string;
   joinDate?: string;
-  created_at?: string;
+  createdAt?: string;
   profileCompletion?: number;
   stats?: {
     tripPlans?: number;

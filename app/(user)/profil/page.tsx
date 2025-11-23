@@ -49,12 +49,9 @@ export default function ProfilePage() {
     setSaving(true);
     try {
       await patch("/api/users/me", {
-        first_name: firstName.trim(),
         firstName: firstName.trim(),
-        last_name: lastName.trim(),
         lastName: lastName.trim(),
-        avatar_url: avatarUrl.trim() || undefined,
-        avatar: avatarUrl.trim() || undefined,
+        avatarUrl: avatarUrl.trim() || undefined,
       }, { auth: "required" });
       setSuccess("Profil berhasil diperbarui");
       await refetch();

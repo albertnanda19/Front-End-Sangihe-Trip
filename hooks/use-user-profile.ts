@@ -42,8 +42,8 @@ export function useUserProfile(): UseUserProfileReturn {
       const result = await get<UserProfileResponse>("/api/users/me", { auth: "required" });
       const userData = result.data;
 
-      const firstName = userData.first_name || userData.firstName || "";
-      const lastName = userData.last_name || userData.lastName || "";
+      const firstName = userData.firstName || "";
+      const lastName = userData.lastName || "";
       const displayName = firstName && lastName 
         ? `${firstName} ${lastName}`.trim()
         : firstName || lastName || userData.email?.split('@')[0] || "User";
@@ -52,9 +52,9 @@ export function useUserProfile(): UseUserProfileReturn {
         id: userData.id,
         name: displayName,
         email: userData.email,
-        avatar: userData.avatar_url || userData.avatar, 
+        avatar: userData.avatarUrl, 
         role: userData.role || "user",
-        joinDate: userData.joinDate || userData.created_at || new Date().toISOString(), 
+        joinDate: userData.joinDate || userData.createdAt || new Date().toISOString(), 
         profileCompletion: userData.profileCompletion || 0,
       });
 

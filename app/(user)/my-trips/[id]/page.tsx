@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { get, del, ApiError } from "@/lib/api";
-import { getCookie } from "@/lib/cookies";
+
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -92,7 +92,7 @@ export default function DetailTripPage() {
     if (!id) return;
     async function load() {
       try {
-        const result = await get<typeof trip>(`/api/trip/${id}`, { auth: false });
+        const result = await get<typeof trip>(`/api/trips/${id}`, { auth: false });
         setTrip(result.data);
       } catch (err) {
         const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Terjadi kesalahan";
