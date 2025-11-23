@@ -7,6 +7,7 @@ export interface RequestOptions {
   auth?: AuthRequirement;
   noAutoRedirectOn401?: boolean;
   headers?: Record<string, string>;
+  signal?: AbortSignal;
 }
 
 export interface ApiResult<TData = unknown, TMeta = unknown> {
@@ -122,6 +123,7 @@ export async function request<TData = unknown, TMeta = unknown>(
       method: (options.method || "GET") as AxiosRequestConfig["method"],
       headers: options.headers,
       data: options.body,
+      signal: options.signal,
     };
 
     const response = await apiClient.request(config);

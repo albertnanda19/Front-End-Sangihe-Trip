@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiUrl } from "@/lib/api";
-import { getCookie } from "@/lib/cookies";
+import { get, ApiError } from "@/lib/api";
 import type { UserProfileResponse } from "@/lib/api-response";
 
 export interface UserProfile {
@@ -40,35 +39,8 @@ export function useUserProfile(): UseUserProfileReturn {
     setError(null);
 
     try {
-      const token = getCookie("access_token");
-      if (!token) {
-        setError("Pengguna belum login");
-        setProfile(null);
-        setStats(null);
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch(apiUrl("/api/users/me"), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        cache: "no-store",
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          setError("Data profil pengguna belum tersedia");
-          setProfile(null);
-          setStats(null);
-          setLoading(false);
-          return;
-        }
-        throw new Error("Gagal memuat profil pengguna");
-      }
-
-      const json = await response.json();
-      const userData: UserProfileResponse = json.data;
+      const result = await get<UserProfileResponse>("/api/users/me", { auth: "required" });
+      const userData = result.data;
 
       const firstName = userData.first_name || userData.firstName || "";
       const lastName = userData.last_name || userData.lastName || "";
@@ -92,9 +64,15 @@ export function useUserProfile(): UseUserProfileReturn {
         reviewsWritten: userData.stats?.reviewsWritten || 0,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to load user profile";
-      setError(message);
-      console.error("useUserProfile error:", err);
+      if (err instanceof ApiError && err.status === 404) {
+        setError("Data profil pengguna belum tersedia");
+        setProfile(null);
+        setStats(null);
+      } else {
+        const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Failed to load user profile";
+        setError(message);
+        console.error("useUserProfile error:", err);
+      }
     } finally {
       setLoading(false);
     }

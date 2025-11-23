@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { apiUrl } from "@/lib/api";
+import { get, del, ApiError } from "@/lib/api";
 import { getCookie } from "@/lib/cookies";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -92,14 +92,10 @@ export default function DetailTripPage() {
     if (!id) return;
     async function load() {
       try {
-        const res = await fetch(apiUrl(`/api/trip/${id}`), {
-          cache: "no-store",
-        });
-        if (!res.ok) throw new Error("Gagal memuat detail perjalanan");
-        const json = await res.json();
-        setTrip(json.data);
+        const result = await get<typeof trip>(`/api/trip/${id}`, { auth: false });
+        setTrip(result.data);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Terjadi kesalahan";
+        const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Terjadi kesalahan";
         setError(msg);
       } finally {
         setLoading(false);
@@ -181,20 +177,11 @@ export default function DetailTripPage() {
                         onClick={async () => {
                           setIsDeleting(true);
                           try {
-                            const token = getCookie("access_token");
-                            const res = await fetch(apiUrl(`/api/users/me/trips/${trip.id}`), {
-                              method: "DELETE",
-                              headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-                            });
-                            if (!res.ok) {
-                              const body = await res.json().catch(() => null);
-                              const msg = body?.message || "Gagal menghapus perjalanan";
-                              throw new Error(msg);
-                            }
+                            await del(`/api/users/me/trips/${trip.id}`, { auth: "required" });
                             toast.success("Perjalanan berhasil dihapus");
                             router.push("/my-trips");
                           } catch (err: unknown) {
-                            const message = err instanceof Error ? err.message : "Gagal menghapus perjalanan";
+                            const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Gagal menghapus perjalanan";
                             toast.error(message);
                             console.error(err);
                           } finally {

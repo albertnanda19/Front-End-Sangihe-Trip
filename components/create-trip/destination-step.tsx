@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, MapPin, Star, GripVertical, X, Map } from "lucide-react"
-import { apiUrl } from "@/lib/api"
+import { get, ApiError } from "@/lib/api"
 import Image from "next/image"
 import type { TripData, Destination } from "@/app/(user)/create-trip/page"
 
@@ -34,11 +34,9 @@ export function DestinationStep({ data, updateData, onNext, onPrev }: Destinatio
 
     async function load() {
       try {
-        const res = await fetch(apiUrl("/api/destination"))
-        if (!res.ok) throw new Error("Gagal memuat destinasi")
-        const json = await res.json()
+        const result = await get<any[]>("/api/destination", { auth: false })
         
-        const dataArray = Array.isArray(json?.data) ? json.data : []
+        const dataArray = Array.isArray(result.data) ? result.data : []
         
         const items: Destination[] = dataArray.map((d: any) => ({
           id: d.id,
@@ -65,7 +63,7 @@ export function DestinationStep({ data, updateData, onNext, onPrev }: Destinatio
           setCategories(["Semua", ...cats])
         }
       } catch (err) {
-        console.error(err)
+        console.error("Failed to load destinations:", err instanceof ApiError ? err.message : err)
       }
     }
 

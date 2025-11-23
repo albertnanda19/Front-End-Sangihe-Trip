@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiUrl } from "@/lib/api";
-import { getCookie } from "@/lib/cookies";
+import { get } from "@/lib/api";
 import type {
   TripResponse,
   ReviewResponse,
@@ -86,33 +85,15 @@ export function useUserDashboard(): UseUserDashboardReturn {
     setError(null);
 
     try {
-      const token = getCookie("access_token");
-      if (!token) {
-        console.warn("No access token found");
-        setLoading(false);
-        return;
-      }
-
       const [tripsRes, reviewsRes, destRes, articlesRes] = await Promise.allSettled([
-        fetch(apiUrl("/api/users/me/trips?per_page=3&page=1"), {
-          headers: { Authorization: `Bearer ${token}` },
-          cache: "no-store",
-        }),
-        fetch(apiUrl("/api/users/me/reviews?limit=3"), {
-          headers: { Authorization: `Bearer ${token}` },
-          cache: "no-store",
-        }),
-        fetch(apiUrl("/api/destination?sortBy=popular&pageSize=3"), {
-          cache: "no-store",
-        }),
-        fetch(apiUrl("/api/article?per_page=3&page=1"), {
-          cache: "no-store",
-        }),
+        get<{ data: TripResponse[] }>("/api/users/me/trips?per_page=3&page=1", { auth: "required" }),
+        get<{ data: ReviewResponse[] }>("/api/users/me/reviews?limit=3", { auth: "required" }),
+        get<{ data: DestinationResponse[] }>("/api/destination?sortBy=popular&pageSize=3", { auth: false }),
+        get<{ articles: ArticleResponse[] }>("/api/article?per_page=3&page=1", { auth: false }),
       ]);
 
-      if (tripsRes.status === "fulfilled" && tripsRes.value.ok) {
-        const json = await tripsRes.value.json();
-        const tripsData = json.data?.data || [];
+      if (tripsRes.status === "fulfilled") {
+        const tripsData = tripsRes.value.data?.data || [];
 
         const trips = tripsData.map((trip: TripResponse) => {
           const now = new Date();
@@ -172,9 +153,8 @@ export function useUserDashboard(): UseUserDashboardReturn {
         setUpcomingTrips(upcoming);
       }
 
-      if (reviewsRes.status === "fulfilled" && reviewsRes.value.ok) {
-        const json = await reviewsRes.value.json();
-        const reviewsData = json.data?.data || [];
+      if (reviewsRes.status === "fulfilled") {
+        const reviewsData = reviewsRes.value.data?.data || [];
 
         const reviews = reviewsData.map((review: ReviewResponse) => {
           const reviewDate = new Date(review.createdAt || review.date || new Date());
@@ -191,7 +171,7 @@ export function useUserDashboard(): UseUserDashboardReturn {
           return {
             id: review.id,
             destination: review.destinationName || review.destination?.name || "Destination",
-            destinationId: review.destinationId || review.destination?.id,
+            destinationId: review.destinationId || review.destination?.id || "",
             rating: review.rating || 5,
             date: dateStr,
             excerpt: review.comment || review.content || "", 
@@ -201,9 +181,8 @@ export function useUserDashboard(): UseUserDashboardReturn {
         setRecentReviews(reviews);
       }
 
-      if (destRes.status === "fulfilled" && destRes.value.ok) {
-        const json = await destRes.value.json();
-        const destinationsData = json.data?.data || [];
+      if (destRes.status === "fulfilled") {
+        const destinationsData = destRes.value.data?.data || [];
 
         const destinations = destinationsData.map((dest: DestinationResponse) => ({
           id: dest.id,
@@ -216,9 +195,8 @@ export function useUserDashboard(): UseUserDashboardReturn {
         setRecommendedDestinations(destinations);
       }
 
-      if (articlesRes.status === "fulfilled" && articlesRes.value.ok) {
-        const json = await articlesRes.value.json();
-        const articlesData = json.data?.articles || [];
+      if (articlesRes.status === "fulfilled") {
+        const articlesData = articlesRes.value.data?.articles || [];
 
         const articles = articlesData.map((article: ArticleResponse) => ({
           id: article.id,

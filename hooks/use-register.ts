@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiUrl } from "@/lib/api";
+import { post, ApiError } from "@/lib/api";
 import { toast } from "sonner";
 
 interface RegisterPayload {
@@ -46,26 +46,15 @@ export function useRegister(): UseRegisterReturn {
         requestBody.lastName = lastName;
       }
 
-      const res = await fetch(apiUrl("/api/auth/register"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
+      const result = await post("/api/auth/register", requestBody, { auth: false });
 
-      if (!res.ok) {
-        const { message } = await res.json().catch(() => ({ message: "Gagal mendaftar" }));
-        throw new Error(message || "Gagal mendaftar");
-      }
-
-      const { message } = await res.json();
-
-      toast.success(message || "Berhasil mendaftar. Silakan login");
+      toast.success(result.message || "Berhasil mendaftar. Silakan login");
 
       router.push("/masuk");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Terjadi kesalahan saat mendaftar";
+      const msg = e instanceof ApiError ? e.message : e instanceof Error ? e.message : "Terjadi kesalahan saat mendaftar";
       setError(msg);
-      throw new Error(msg);
+      throw e;
     } finally {
       setIsLoading(false);
     }

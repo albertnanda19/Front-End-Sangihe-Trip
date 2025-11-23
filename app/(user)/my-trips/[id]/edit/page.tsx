@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { apiUrl } from "@/lib/api"
-import { getCookie } from "@/lib/cookies"
+import { get, patch, ApiError } from "@/lib/api"
 import { format } from "date-fns"
 import { Progress } from "@/components/ui/progress"
 import { ArrowLeft, Check, MapPin, Calendar, DollarSign, FileText } from "lucide-react"
@@ -102,10 +101,8 @@ export default function EditTripPage() {
     let cancelled = false
     async function load() {
       try {
-        const res = await fetch(apiUrl(`/api/trip/${id}`), { cache: "no-store" })
-        if (!res.ok) throw new Error("Gagal memuat data rencana")
-        const json = await res.json()
-        const data = json.data
+        const result = await get<any>(`/api/trip/${id}`, { auth: false })
+        const data = result.data
 
         const selectedDestinations: Destination[] = (data.destinations || []).map((d: {
           id: string
@@ -211,9 +208,6 @@ export default function EditTripPage() {
     setIsSubmitting(true)
     setSubmitError(null)
     try {
-      const accessToken = getCookie("access_token")
-      if (!accessToken) throw new Error("Pengguna belum login")
-
       if (tripData.selectedDestinations.length === 0) {
         setSubmitError("Anda belum memilih destinasi. Tambahkan minimal satu destinasi.")
         setIsSubmitting(false)
@@ -259,22 +253,12 @@ export default function EditTripPage() {
         packingList: tripData.packingList,
       }
 
-      const res = await fetch(apiUrl(`/api/users/me/trips/${id}`), {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
-        body: JSON.stringify(payload),
-      })
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => null)
-        const msg = errJson?.message || "Gagal menyimpan perubahan"
-        throw new Error(Array.isArray(msg) ? msg.join("\n") : msg)
-      }
+      await patch(`/api/users/me/trips/${id}`, payload, { auth: "required" })
 
       toast.success("Perubahan rencana berhasil disimpan")
       router.push(`/my-trips/${id}`)
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Terjadi kesalahan"
+      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Terjadi kesalahan"
       setSubmitError(msg)
       toast.error(msg)
     } finally {

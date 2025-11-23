@@ -6,8 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { getCookie } from "@/lib/cookies";
-import { apiUrl } from "@/lib/api";
+import { patch, ApiError } from "@/lib/api";
 
 export default function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -33,34 +32,13 @@ export default function SettingsPage() {
 
     setSaving(true);
     try {
-      const token = getCookie("access_token");
-      if (!token) {
-        setError("Pengguna belum login");
-        setSaving(false);
-        return;
-      }
-      const res = await fetch(apiUrl("/api/users/me/password"), {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-      if (!res.ok) {
-        let msg = "Gagal mengubah password";
-        try {
-          const j = await res.json();
-          msg = j?.message || j?.error || msg;
-        } catch {}
-        throw new Error(msg);
-      }
+      await patch("/api/users/me/password", { currentPassword, newPassword }, { auth: "required" });
       setSuccess("Password berhasil diperbarui");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Terjadi kesalahan");
+      setError(err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Terjadi kesalahan");
     } finally {
       setSaving(false);
     }

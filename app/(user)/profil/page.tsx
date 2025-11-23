@@ -7,8 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { getCookie } from "@/lib/cookies";
-import { apiUrl } from "@/lib/api";
+import { patch, ApiError } from "@/lib/api";
 import { useUserProfile } from "@/hooks/use-user-profile";
 
 export default function ProfilePage() {
@@ -49,39 +48,18 @@ export default function ProfilePage() {
 
     setSaving(true);
     try {
-      const token = getCookie("access_token");
-      if (!token) {
-        setError("Pengguna belum login");
-        setSaving(false);
-        return;
-      }
-      const res = await fetch(apiUrl("/api/users/me"), {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          first_name: firstName.trim(),
-          firstName: firstName.trim(),
-          last_name: lastName.trim(),
-          lastName: lastName.trim(),
-          avatar_url: avatarUrl.trim() || undefined,
-          avatar: avatarUrl.trim() || undefined,
-        }),
-      });
-      if (!res.ok) {
-        let msg = "Gagal menyimpan profil";
-        try {
-          const j = await res.json();
-          msg = j?.message || j?.error || msg;
-        } catch {}
-        throw new Error(msg);
-      }
+      await patch("/api/users/me", {
+        first_name: firstName.trim(),
+        firstName: firstName.trim(),
+        last_name: lastName.trim(),
+        lastName: lastName.trim(),
+        avatar_url: avatarUrl.trim() || undefined,
+        avatar: avatarUrl.trim() || undefined,
+      }, { auth: "required" });
       setSuccess("Profil berhasil diperbarui");
       await refetch();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Terjadi kesalahan");
+      setError(err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Terjadi kesalahan");
     } finally {
       setSaving(false);
     }

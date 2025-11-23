@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { apiUrl } from "@/lib/api"
-import { getCookie } from "@/lib/cookies"
+import { post, ApiError } from "@/lib/api"
 import { format } from "date-fns"
 import { Progress } from "@/components/ui/progress"
 import { ArrowLeft, Check, MapPin, Calendar, DollarSign, FileText } from "lucide-react"
@@ -146,9 +145,6 @@ export default function CreateTripPage() {
     setSubmitError(null)
     
     try {
-      const accessToken = getCookie("access_token")
-      if (!accessToken) throw new Error("Pengguna belum login")
-
       // --- Client-side validations ---
       if (tripData.selectedDestinations.length === 0) {
         setSubmitError("Anda belum memilih destinasi apa pun. Silakan pilih minimal satu destinasi.")
@@ -205,27 +201,11 @@ export default function CreateTripPage() {
       console.log("=== DEBUG: Final Payload ===")
       console.log(JSON.stringify(payload, null, 2))
 
-      const res = await fetch(apiUrl("/api/trips"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(payload),
-      })
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => null)
-        let msg = "Gagal menyimpan rencana"
-        if (errJson?.message) {
-          msg = Array.isArray(errJson.message) ? errJson.message.join("\n") : errJson.message
-        }
-        throw new Error(msg)
-      }
+      await post("/api/trips", payload, { auth: "required" })
 
       setIsCompleted(true)
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Terjadi kesalahan"
+      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Terjadi kesalahan"
       setSubmitError(msg)
     } finally {
       setIsSubmitting(false)
