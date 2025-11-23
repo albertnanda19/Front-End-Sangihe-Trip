@@ -48,7 +48,7 @@ export default function ProfilePage() {
 
     setSaving(true);
     try {
-      await patch("/api/users/me", {
+      await patch("/api/user/me", {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         avatarUrl: avatarUrl.trim() || undefined,

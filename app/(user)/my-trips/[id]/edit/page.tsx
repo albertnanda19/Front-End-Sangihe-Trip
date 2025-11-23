@@ -253,7 +253,7 @@ export default function EditTripPage() {
         packingList: tripData.packingList,
       }
 
-      await patch(`/api/users/me/trips/${id}`, payload, { auth: "required" })
+      await patch(`/api/user/me/trips/${id}`, payload, { auth: "required" })
 
       toast.success("Perubahan rencana berhasil disimpan")
       router.push(`/my-trips/${id}`)

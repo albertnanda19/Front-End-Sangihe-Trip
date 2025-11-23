@@ -177,7 +177,7 @@ export default function DetailTripPage() {
                         onClick={async () => {
                           setIsDeleting(true);
                           try {
-                            await del(`/api/users/me/trips/${trip.id}`, { auth: "required" });
+                            await del(`/api/user/me/trips/${trip.id}`, { auth: "required" });
                             toast.success("Perjalanan berhasil dihapus");
                             router.push("/my-trips");
                           } catch (err: unknown) {

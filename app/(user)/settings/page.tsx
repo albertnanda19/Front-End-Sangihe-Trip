@@ -32,7 +32,7 @@ export default function SettingsPage() {
 
     setSaving(true);
     try {
-      await patch("/api/users/me/password", { currentPassword, newPassword }, { auth: "required" });
+      await patch("/api/user/me/password", { currentPassword, newPassword }, { auth: "required" });
       setSuccess("Password berhasil diperbarui");
       setCurrentPassword("");
       setNewPassword("");

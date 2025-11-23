@@ -11,6 +11,7 @@ import { id } from "date-fns/locale"
 import Image from "next/image"
 import type { TripData, ScheduleItem } from "@/app/(user)/create-trip/page"
 import { Input } from "@/components/ui/input"
+import { get } from "@/lib/api"
 
 interface DestinationActivity {
   name: string
@@ -71,15 +72,12 @@ export function ScheduleStep({ data, updateData, onNext, onPrev }: ScheduleStepP
 
       setLoadingActivities(true)
       try {
-        const response = await fetch(`http://localhost:8000/api/destination/id/${destination.slug}`)
-        if (response.ok) {
-          const result = await response.json()
-          if (result.data?.activities && Array.isArray(result.data.activities)) {
-            setDestinationActivities(prev => ({
-              ...prev,
-              [destinationId]: result.data.activities
-            }))
-          }
+        const result = await get<any>(`/api/destination/id/${destination.slug}`, { auth: false })
+        if (result.data?.activities && Array.isArray(result.data.activities)) {
+          setDestinationActivities(prev => ({
+            ...prev,
+            [destinationId]: result.data.activities
+          }))
         }
       } catch (error) {
         console.error('Error fetching activities:', error)
@@ -233,7 +231,7 @@ export function ScheduleStep({ data, updateData, onNext, onPrev }: ScheduleStepP
                           {destination && (
                             <div className="relative w-16 h-12 rounded overflow-hidden flex-shrink-0">
                               <Image
-                                src={destination.imageUrl || "/placeholder.svg"}
+                                src={destination.images?.[0]?.image_url || "/placeholder.svg"}
                                 alt={destination.name}
                                 fill
                                 className="object-cover"

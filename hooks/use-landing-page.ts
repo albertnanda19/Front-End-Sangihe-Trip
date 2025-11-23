@@ -61,7 +61,7 @@ export function useLandingPage() {
       setLoading(true);
       setError(null);
       try {
-        const result = await get<LandingPageData>("/api/landing-page", {
+        const result = await get<LandingPageData>("/api/landing", {
           auth: false,
           signal: controller.signal,
         });

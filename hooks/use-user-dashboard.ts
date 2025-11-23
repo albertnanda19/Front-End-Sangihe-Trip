@@ -86,8 +86,8 @@ export function useUserDashboard(): UseUserDashboardReturn {
 
     try {
       const [tripsRes, reviewsRes, destRes, articlesRes] = await Promise.allSettled([
-        get<{ data: TripResponse[] }>("/api/users/me/trips?per_page=3&page=1", { auth: "required" }),
-        get<{ data: ReviewResponse[] }>("/api/users/me/reviews?limit=3", { auth: "required" }),
+        get<{ data: TripResponse[] }>("/api/user/me/trips?per_page=3&page=1", { auth: "required" }),
+        get<{ data: ReviewResponse[] }>("/api/user/me/reviews?limit=3", { auth: "required" }),
         get<{ data: DestinationResponse[] }>("/api/destination?sortBy=popular&pageSize=3", { auth: false }),
         get<{ articles: ArticleResponse[] }>("/api/article?per_page=3&page=1", { auth: false }),
       ]);

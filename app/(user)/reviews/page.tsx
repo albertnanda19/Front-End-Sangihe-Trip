@@ -47,10 +47,9 @@ export default function UserReviewsPage() {
       params.set("order", order);
       if (rating !== "all") params.set("rating", rating);
 
-      const urlPath = `/api/users/me/reviews?${params.toString()}`;
+      const urlPath = `/api/user/me/reviews?${params.toString()}`;
       const { data: items, meta } = await get<ReviewResponse[], ReviewsMeta>(urlPath, {
         auth: "required",
-        cache: "no-store",
       });
       setData({ items: items ?? [], meta });
     } catch (err) {

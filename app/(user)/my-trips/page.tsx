@@ -49,7 +49,7 @@ export default function MyTripPage() {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await get<Trip[]>("/api/users/me/trips", {
+      const { data } = await get<Trip[]>("/api/user/me/trips", {
         auth: "required",
         cache: "no-store",
       });

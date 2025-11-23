@@ -39,7 +39,7 @@ export function useUserProfile(): UseUserProfileReturn {
     setError(null);
 
     try {
-      const result = await get<UserProfileResponse>("/api/users/me", { auth: "required" });
+      const result = await get<UserProfileResponse>("/api/user/me", { auth: "required" });
       const userData = result.data;
 
       const firstName = userData.firstName || "";
