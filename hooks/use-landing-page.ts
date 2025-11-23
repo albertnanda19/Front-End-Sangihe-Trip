@@ -21,7 +21,13 @@ export interface DestinationData {
   location: string;
   rating: number;
   price: string;
-  image: string;
+  images: Array<{
+    id: string;
+    image_url: string;
+    alt_text: string | null;
+    sort_order: number;
+    is_featured: boolean;
+  }>;
 }
 
 export interface ArticleData {

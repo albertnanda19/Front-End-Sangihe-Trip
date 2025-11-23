@@ -151,7 +151,7 @@ export const DestinationsSection: React.FC<DestinationsSectionProps> = ({ destin
               <CardHeader className="p-0">
                 <div className="relative h-48 overflow-hidden">
                   <Image
-                    src={destination.image || "/placeholder.svg"}
+                    src={(destination.images && destination.images.length > 0 ? destination.images[0].image_url : "/placeholder.svg")}
                     alt={destination.name}
                     fill
                     className="object-cover hover:scale-105 transition-transform duration-300"
