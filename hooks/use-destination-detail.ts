@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
 import { get, ApiError } from "@/lib/api";
 
-interface Activity {
-  name: string;
-  startTime: string;
-  endTime: string;
-}
-
 interface ImageDetail {
   id: string;
   image_url: string;
@@ -33,7 +27,7 @@ interface RawDestinationDetail {
   avg_rating: number;
   total_reviews: number;
   is_featured: boolean;
-  activities: Activity[];
+  activities: string[];
   images: ImageDetail[];
 }
 
@@ -55,7 +49,7 @@ export interface DestinationDetail {
   avgRating: number;
   totalReviews: number;
   isFeatured: boolean;
-  activities: Activity[];
+  activities: string[];
   images: ImageDetail[];
 }
 

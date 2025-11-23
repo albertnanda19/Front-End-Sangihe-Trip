@@ -125,7 +125,8 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
     }
   };
   const hasFacilities = Boolean(destination?.facilities?.length);
-  const hasRelated = relatedDestinations.length > 0;
+  // Hide related destinations since backend doesn't provide this data
+  const hasRelated = false;
 
   const handleSubmitReview = async (data: {
     rating: number;
@@ -340,13 +341,10 @@ const DestinationDetailContent = ({ id }: { id: string }) => {
                     <h3 className="text-xl font-semibold">Aktivitas Tersedia</h3>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
                       {destination.activities.map((activity, index) => (
-                        <div key={index} className="flex items-center justify-between px-4 py-2 bg-sky-50 rounded-lg">
-                          <span className="font-medium text-slate-800 text-sm">{activity.name}</span>
-                          <span className="text-xs text-slate-600">
-                            {activity.startTime} - {activity.endTime}
-                          </span>
+                        <div key={index} className="flex items-center px-4 py-2 bg-sky-50 rounded-lg">
+                          <span className="font-medium text-slate-800 text-sm">{activity}</span>
                         </div>
                       ))}
                     </div>

@@ -61,16 +61,52 @@ export function useLandingPage() {
       setLoading(true);
       setError(null);
       try {
-        const result = await get<LandingPageData>("/api/landing", {
+        interface LandingApiResponse {
+          featuredDestinations?: DestinationData[];
+          popularDestinations?: DestinationData[];
+          recentArticles?: ArticleData[];
+          statistics?: Record<string, number>;
+        }
+        const result = await get<LandingApiResponse>("/api/landing-page", {
           auth: false,
           signal: controller.signal,
         });
 
+        // Use featured or popular destinations
+        const destinations = result.data.featuredDestinations || result.data.popularDestinations || [];
+        const articles = result.data.recentArticles || [];
+
+        // Generate hero from first destination or use defaults
+        const firstDest = destinations[0];
+        const hero: HeroData = firstDest ? {
+          title: "Jelajahi Keindahan",
+          highlight: "Kepulauan Sangihe",
+          subtitle: "Temukan destinasi wisata terbaik di ujung utara Indonesia",
+          backgroundImage: firstDest.image || "/placeholder.svg",
+          ctas: [
+            { label: "Jelajahi Destinasi", type: "primary", href: "/destinasi" },
+            { label: "Rencanakan Trip", type: "outline", href: "/create-trip" },
+          ],
+        } : {
+          title: "Jelajahi Keindahan",
+          highlight: "Kepulauan Sangihe",
+          subtitle: "Temukan destinasi wisata terbaik di ujung utara Indonesia",
+          backgroundImage: "/placeholder.svg",
+          ctas: [
+            { label: "Jelajahi Destinasi", type: "primary", href: "/destinasi" },
+            { label: "Rencanakan Trip", type: "outline", href: "/create-trip" },
+          ],
+        };
+
+        // Generate filters from available categories
+        const categories = Array.from(new Set(destinations.map(d => d.location || "").filter(Boolean)));
+        const filters = ["Semua", ...categories];
+
         const parsed: LandingPageData = {
-          hero: result.data.hero || null,
-          filters: result.data.filters || [],
-          destinations: result.data.destinations || [],
-          articles: result.data.articles || [],
+          hero,
+          filters: filters.length > 1 ? filters : ["Semua", "Pantai", "Kuliner", "Alam", "Budaya"],
+          destinations: destinations.slice(0, 6),
+          articles: articles.slice(0, 3),
         };
 
         setData(parsed);

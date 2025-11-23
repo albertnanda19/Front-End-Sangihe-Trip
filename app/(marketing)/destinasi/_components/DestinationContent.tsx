@@ -75,8 +75,9 @@ const DestinationContent = () => {
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const router = useRouter();
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const { destinations, loading } = useDestinations({
+  const { destinations, meta, loading } = useDestinations({
     search: searchQuery || undefined,
     category:
       selectedCategory !== "Semua"
@@ -87,10 +88,15 @@ const DestinationContent = () => {
     priceMin: priceMin ? parseInt(priceMin) : undefined,
     priceMax: priceMax ? parseInt(priceMax) : undefined,
     sortBy,
-    page: 1,
+    page: currentPage,
     pageSize: 12,
   });
   const sortedDestinations = destinations;
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const removeFilter = (filter: string) => {
     setActiveFilters((prev) => prev.filter((f) => f !== filter));
@@ -445,12 +451,50 @@ const DestinationContent = () => {
             ))}
           </div>
 
-          {/* Load More */}
-          <div className="text-center mt-8">
-            <Button variant="outline" size="lg" className="cursor-pointer">
-              Muat Lebih Banyak
-            </Button>
-          </div>
+          {/* Pagination */}
+          {meta && meta.totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-8">
+              <Button
+                variant="outline"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1 || loading}
+              >
+                Sebelumnya
+              </Button>
+              <div className="flex items-center gap-2">
+                {Array.from({ length: Math.min(5, meta.totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (meta.totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= meta.totalPages - 2) {
+                    pageNum = meta.totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      onClick={() => handlePageChange(pageNum)}
+                      disabled={loading}
+                      className={currentPage === pageNum ? "bg-sky-500 hover:bg-sky-600" : ""}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === meta.totalPages || loading}
+              >
+                Selanjutnya
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
